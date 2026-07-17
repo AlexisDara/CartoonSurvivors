@@ -10,3 +10,4 @@ Todos los cambios importantes de este proyecto serán documentados en este archi
 - Creación del repositorio en GitHub.
 - Agregado del archivo README.md.
 - Creación del archivo CHANGELOG.md.
+
