@@ -43,7 +43,7 @@ public class MenuPrincipal  extends ScreenAdapter {
 
 
         batch.draw(fondo, 0, 0, ANCHO_MUNDO, ALTO_MUNDO);
-        font.draw(batch, "hola juan carlos como andas chupapija", 10, 50);
+        font.draw(batch, "Texto de prueba", 10, 50);
 
         batch.end();
 

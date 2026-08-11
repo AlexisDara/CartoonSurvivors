@@ -25,7 +25,7 @@ public class CartoonSurvivors extends Game {
         batch = new SpriteBatch();
         var generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
         var parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parametrosLetra.size = 4;
+        parametrosLetra.size = 32;
         parametrosLetra.color = Color.WHITE;
         font = generator.generateFont(parametrosLetra);
         generator.dispose();
