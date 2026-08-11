@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.cartoonsurvivors.game.pantallas.ControlesPantalla;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
+
 
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -21,18 +23,19 @@ public class CartoonSurvivors extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        var generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/CherryCreamSoda-Regular.ttf"));
+        var generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
         var parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parametrosLetra.size = 30;
-        parametrosLetra.color = Color.BLACK;
+        parametrosLetra.color = Color.WHITE;
         font = generator.generateFont(parametrosLetra);
         generator.dispose();
 
-        setScreen(new ControlesPantalla());
+        setScreen(new ControlesPantalla(this));
     }
 
     @Override
     public void render() {
+        super.render();
     }
 
 
