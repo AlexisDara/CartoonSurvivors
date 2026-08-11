@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.cartoonsurvivors.game.pantallas.ControlesPantalla;
+import com.cartoonsurvivors.game.pantallas.MenuPrincipal;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
 
 
@@ -25,12 +25,12 @@ public class CartoonSurvivors extends Game {
         batch = new SpriteBatch();
         var generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
         var parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parametrosLetra.size = 30;
+        parametrosLetra.size = 4;
         parametrosLetra.color = Color.WHITE;
         font = generator.generateFont(parametrosLetra);
         generator.dispose();
 
-        setScreen(new ControlesPantalla(this));
+        setScreen(new MenuPrincipal(this));
     }
 
     @Override

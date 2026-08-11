@@ -3,9 +3,7 @@ package com.cartoonsurvivors.game.utilidades;
 public final class Constantes {
 
     // Constructor privado para evitar que la clase sea instanciada
-    private Constantes() {
-        throw new UnsupportedOperationException("Esta es una clase utilitaria de constantes y no debe ser instanciada.");
-    }
+    private Constantes() {}
 
     // Configuración General del Mundo y Pantalla (16:9)
     public static final class Mundo {
