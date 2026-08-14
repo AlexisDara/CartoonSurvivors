@@ -14,17 +14,35 @@ A medida que avance la partida, la dificultad aumentará progresivamente mediant
 
 ## Tecnologías Principales
 
-- **Framework:** LibGDXversión 1.14.2.
-- **Lenguaje:** Java21
-- **GitHub**
-- **Plataformas objetivo:**
-  - Escritorio (Desktop)
-  - Web
-  - Móvil (Android)
+- **Lenguaje:** Java 21.
+- **Framework:** LibGDX versión 1.14.2.
+- **Control de versiones:** Git y GitHub.
+- **Herramientas de organización:** Trello.
+- **Editor de mapas:** Tiled.
+
+## Estado actual del proyecto
+
+Actualmente el proyecto se encuentra en una **etapa inicial de desarrollo**.
+
+### Implementado
+
+- Estructura base del proyecto con LibGDX.
+- Sistema de pantallas.
+- Fondo visual del menú principal.
+- Integración de una fuente personalizada para la interfaz.
+
+### En desarrollo
+
+- Menú principal.
+- Movimiento del jugador.
+- Sistema de enemigos.
+- HUD.
+- Sistema de combate.
+- Sistema de experiencia y niveles.
 
 ## Wiki del Proyecto
 
-La propuesta detallada del proyecto se encuentra disponible en la Wiki del repositorio:
+La documentación completa del proyecto, incluyendo la propuesta formal, los alcances, la planificación y el diseño general del juego, se encuentra disponible en la Wiki del repositorio.
 
 **<https://github.com/AlexisDara/CartoonSurvivors/wiki>**
 
@@ -32,29 +50,29 @@ La propuesta detallada del proyecto se encuentra disponible en la Wiki del repos
 
 ### Requisitos
 
-- Java JDK 17 (o la versión utilizada por el proyecto).
+- **Java JDK 21**.
 - Git.
-- Gradle (opcional, ya que se incluye el Gradle Wrapper).
+- Gradle (opcional, ya que el proyecto incluye el **Gradle Wrapper**).
 
 ### Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd <NOMBRE_DEL_REPOSITORIO>
+git clone https://github.com/AlexisDara/CartoonSurvivors.git
+cd CartoonSurvivors
 ```
 
-### Ejecutar el proyecto (Desktop)
+### Ejecutar el proyecto (LWJGL3)
 
 En Windows:
 
 ```bash
-gradlew.bat desktop:run
+gradlew.bat lwjgl3:run
 ```
 
 En Linux/macOS:
 
 ```bash
-./gradlew desktop:run
+./gradlew lwjgl3:run
 ```
 
 ### Compilar el proyecto
