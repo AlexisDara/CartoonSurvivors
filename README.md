@@ -46,6 +46,12 @@ La documentación completa del proyecto, incluyendo la propuesta formal, los alc
 
 **<https://github.com/AlexisDara/CartoonSurvivors/wiki>**
 
+## Trello del proyecto
+
+Tablero dónde se podrá ir actualizando el progreso del proyecto.
+
+**https://trello.com/invite/b/6a844123753463726cf39e4a/ATTIe62c33bef3b8297f15e1d74286ac0043A0D807D1/cartoonsurvivors**
+
 ## Compilación y Ejecución
 
 ### Requisitos
