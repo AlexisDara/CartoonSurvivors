@@ -17,10 +17,11 @@ import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_MUNDO;
 
 public class JuegoPantalla extends ScreenAdapter {
     private  SpriteBatch batch;
-    private Jugador jugador = new Jugador(100, 100, 100);
+
     private final OrthographicCamera camera = new OrthographicCamera();
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
-    private Texture texturaJugador;
+    private Texture texturaJugador = new Texture("jugador/mordecai.png");
+    private Jugador jugador = new Jugador( 100, 100,texturaJugador);
 
     public JuegoPantalla(SpriteBatch batch) {
         this.batch = batch;
@@ -39,7 +40,7 @@ public class JuegoPantalla extends ScreenAdapter {
         viewport.apply();
         batch.setProjectionMatrix(camera.combined);
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            jugador.moverX(100 * delta);
+            jugador.moverX((jugador.getVelocidad() * delta));
         }
         batch.begin();
         batch.draw(texturaJugador, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
@@ -48,7 +49,6 @@ public class JuegoPantalla extends ScreenAdapter {
     @Override
     public void show() {
         System.out.println("Entré a la pantalla de juego");
-        texturaJugador = new Texture("jugador/mordecai.png");
     }
 
 }

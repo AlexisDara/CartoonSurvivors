@@ -10,9 +10,11 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ## [0.1.7] - 2026-08-27
 
-### Agregado
+### Modificado
 
-* Pendiente.
+* Se modifico las entidades en si para que sea cada quien controla el sprite de si mismo.
+* se agrego el uso de las constantes para el jugador
+* se modifico el archivo para que no tenga vsync y este capeado a 60 fps.
 
 ## [0.1.6] - 2026-08-27
 

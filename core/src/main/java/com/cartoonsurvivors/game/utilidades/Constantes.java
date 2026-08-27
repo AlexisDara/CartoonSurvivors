@@ -17,10 +17,8 @@ public final class Constantes {
 
     // Atributos y Balance del Jugador
     public static final class Jugador {
-        public static final float ANCHO = 1f;       // Unidades del mundo
-        public static final float ALTO = 1f;        // Unidades del mundo
-        public static final float VELOCIDAD = 4f;   // Unidades / segundo
-        public static final int VIDA_MAXIMA = 100;
+        public static final int vidaInicial = 100;
+        public static final int velocidadInicial = 150;
     }
 
     // Atributos y Balance de Enemigos
