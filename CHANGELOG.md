@@ -8,6 +8,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 * Pendiente.
 
+## [0.1.6] - 2026-08-27
+
+### Agregado
+
+* Implementacion de clase entidad con los metodos de movimiento.
+* Creacion de la clase jugador.
+* Creacion de la clase Pantalla Juego.
+
 ## [0.1.5] - 2026-08-11
 
 ### Agregado
