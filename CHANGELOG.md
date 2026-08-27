@@ -8,13 +8,18 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 * Pendiente.
 
-## [0.1.6] - 2026-08-27
+## [0.1.7] - 2026-08-27
 
 ### Agregado
 
-* Implementacion de clase entidad con los metodos de movimiento.
-* Creacion de la clase jugador.
-* Creacion de la clase Pantalla Juego.
+* Pendiente.
+
+## [0.1.6] - 2026-08-27
+
+### Modificado
+
+* Se creo al jugador visible en la pantalla de juego.
+* Un metodo cavernicola de mover al player con las teclas de direccion.
 
 ## [0.1.5] - 2026-08-11
 

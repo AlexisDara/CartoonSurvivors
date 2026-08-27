@@ -2,19 +2,28 @@ package com.cartoonsurvivors.game.entidades;
 
 public class Entidad {
     private int vida;
-    private double posicionX;
-    private double posicionY;
+    private int posicionX;
+    private int posicionY;
 
-    protected Entidad(int vida, double posicionX, double posicionY) {
+    protected Entidad(int vida, int posicionX, int posicionY) {
         this.vida = vida;
         this.posicionX = posicionX;
         this.posicionY = posicionY;
     }
 
-    public void moverX(double deltaX) {
+    public void moverX(float deltaX) {
         this.posicionX += deltaX;
     }
-    public void moverY(double deltaY) {
+
+    public int getPosicionX() {
+        return posicionX;
+    }
+
+    public int getPosicionY() {
+        return posicionY;
+    }
+
+    public void moverY(float deltaY) {
         this.posicionY += deltaY;
     }
 

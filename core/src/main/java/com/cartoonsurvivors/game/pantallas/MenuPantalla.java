@@ -4,17 +4,15 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 
 
-public class MenuPrincipal  extends ScreenAdapter {
+public class MenuPantalla extends ScreenAdapter {
     private final CartoonSurvivors game;
     private final Batch batch;
     private final BitmapFont font;
@@ -22,7 +20,7 @@ public class MenuPrincipal  extends ScreenAdapter {
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private Texture fondo;
 
-    public MenuPrincipal(CartoonSurvivors game) {
+    public MenuPantalla(CartoonSurvivors game) {
         this.game = game;
         this.batch = game.getBatch();
         this.font = game.getFont();
@@ -31,7 +29,7 @@ public class MenuPrincipal  extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
-       viewport.update(width, height, true);
+        viewport.update(width, height, true);
     }
 
     @Override
@@ -46,6 +44,7 @@ public class MenuPrincipal  extends ScreenAdapter {
         font.draw(batch, "Texto de prueba", 10, 50);
 
         batch.end();
+
 
     }
     @Override

@@ -1,23 +1,21 @@
 package com.cartoonsurvivors.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.cartoonsurvivors.game.pantallas.MenuPrincipal;
+import com.cartoonsurvivors.game.pantallas.JuegoPantalla;
+import com.cartoonsurvivors.game.pantallas.MenuPantalla;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
 
 
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class CartoonSurvivors extends Game {
-    private Batch batch;
+    private SpriteBatch batch;
     private BitmapFont font;
 
     @Override
@@ -30,7 +28,7 @@ public class CartoonSurvivors extends Game {
         font = generator.generateFont(parametrosLetra);
         generator.dispose();
 
-        setScreen(new MenuPrincipal(this));
+        setScreen(new JuegoPantalla(this.batch));
     }
 
     @Override
