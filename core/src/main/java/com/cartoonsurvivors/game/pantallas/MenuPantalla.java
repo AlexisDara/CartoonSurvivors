@@ -16,10 +16,12 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.cartoonsurvivors.game.CartoonSurvivors;
+import com.cartoonsurvivors.game.audio.AudioManager;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
 public class MenuPantalla extends ScreenAdapter {
     private final CartoonSurvivors game;
+    private final AudioManager audioManager;
     private SpriteBatch batch;
     private BitmapFont font;
     private OrthographicCamera camera;
@@ -34,6 +36,7 @@ public class MenuPantalla extends ScreenAdapter {
         this.font = game.getFont();
         this.camera = new OrthographicCamera();
         this.viewport = new ExtendViewport(Constantes.Mundo.ANCHO_INTERFAZ, Constantes.Mundo.ALTO_INTERFAZ, camera);
+        this.audioManager = game.getAudioManager();
     }
 
     @Override
@@ -49,17 +52,19 @@ public class MenuPantalla extends ScreenAdapter {
         buttonStyle.overFontColor = Color.YELLOW;
         buttonStyle.downFontColor = Color.ORANGE;
 
+        audioManager.reproducirMusicaMenu();
+
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
 
         TextButton btnJugar = new TextButton("JUGAR", buttonStyle);
         TextButton btnSalir = new TextButton("SALIR", buttonStyle);
-
         btnJugar.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new JuegoPantalla(game.getBatch()));
+                audioManager.detenerMusicaMenu();
+                game.setScreen(new JuegoPantalla(game.getBatch(), game));
             }
         });
 

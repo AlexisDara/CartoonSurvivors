@@ -10,6 +10,15 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.13] 2026-08-28
+
+### Agregado
+
+* Se agrego la musica al menu.
+* Se agrego la musica al juego.
+
+---
+
 ## [0.1.12] 2026-08-28
 
 ### Modificado

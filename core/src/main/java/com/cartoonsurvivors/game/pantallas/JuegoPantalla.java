@@ -10,17 +10,20 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.cartoonsurvivors.game.audio.AudioManager;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.entidades.jugadores.Mordecai;
 import com.cartoonsurvivors.game.utilidades.Constantes;
+import com.cartoonsurvivors.game.CartoonSurvivors;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_MUNDO;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_MUNDO;
 
 public class JuegoPantalla extends ScreenAdapter {
     private  SpriteBatch batch;
+    private  AudioManager audioManager;
 
     private final OrthographicCamera camera = new OrthographicCamera();
     private TiledMap mapa;
@@ -31,8 +34,9 @@ public class JuegoPantalla extends ScreenAdapter {
     private Jugador jugador = new Mordecai();
     private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1);
 
-    public JuegoPantalla(SpriteBatch batch) {
+    public JuegoPantalla(SpriteBatch batch, CartoonSurvivors game) {
         this.batch = batch;
+        this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
     }
@@ -82,6 +86,7 @@ public class JuegoPantalla extends ScreenAdapter {
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
         enemigo1.setPosicion(calcularCentroX() + 200, calcularCentroY() + 200);
+        audioManager.reproducirMusicaJuego();
     }
 
 }

@@ -9,14 +9,18 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.cartoonsurvivors.game.pantallas.JuegoPantalla;
 import com.cartoonsurvivors.game.pantallas.MenuPantalla;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
+import com.cartoonsurvivors.game.audio.AudioManager;
 
 public class CartoonSurvivors extends Game {
     private SpriteBatch batch;
     private BitmapFont font;
+    private AudioManager audioManager;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
+        audioManager = new AudioManager();
+        audioManager.cargarAudio();
 
         var generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
         var parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -50,6 +54,7 @@ public class CartoonSurvivors extends Game {
         super.dispose();
         batch.dispose();
         font.dispose();
+        audioManager.dispose();
     }
 
     public SpriteBatch getBatch() {
@@ -59,4 +64,6 @@ public class CartoonSurvivors extends Game {
     public BitmapFont getFont() {
         return font;
     }
+
+    public AudioManager getAudioManager() { return audioManager; }
 }
