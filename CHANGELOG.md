@@ -10,6 +10,20 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.10]
+
+### Agregado
+
+* Se agregó el botón de salida.
+* Se agregó el cambio de pantalla de menu a juego.
+
+### Modificado
+
+* Ahora el juego inicia en la pantalla de menu.
+* El player aparece centrado en la pantalla de juego.
+
+---
+
 ## [0.1.9]
 
 ### Agregado

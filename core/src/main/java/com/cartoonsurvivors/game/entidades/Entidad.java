@@ -37,6 +37,11 @@ public class Entidad {
         return velocidad;
     }
 
+    public void setPosicion(int posicionX, int posicionY) {
+        this.posicionX = posicionX;
+        this.posicionY = posicionY;
+    }
+
 
 
 }

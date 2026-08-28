@@ -28,12 +28,21 @@ public class JuegoPantalla extends ScreenAdapter {
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private Texture texturaJugador = new Texture("jugador/mordecai.png");
-    private Jugador jugador = new Jugador( 100, 100,texturaJugador);
+    private Jugador jugador = new Jugador( 1100, 1,texturaJugador);
 
     public JuegoPantalla(SpriteBatch batch) {
         this.batch = batch;
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
+    }
+
+    private int calcularCentroX() {
+        int anchoMapa = (mapa.getProperties().get("width", Integer.class)) * (mapa.getProperties().get("tilewidth", Integer.class));
+        return anchoMapa / 2;
+    }
+    private int calcularCentroY() {
+        int altoMapa = (mapa.getProperties().get("height", Integer.class)) * (mapa.getProperties().get("tileheight", Integer.class));
+        return altoMapa / 2;
     }
 
     @Override
@@ -68,7 +77,7 @@ public class JuegoPantalla extends ScreenAdapter {
     }
     @Override
     public void show() {
-        System.out.println("Entré a la pantalla de juego");
+        jugador.setPosicion(calcularCentroX(), calcularCentroY());
     }
 
 }
