@@ -10,6 +10,19 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.12] 2026-08-28
+
+### Modificado
+
+* Se modificó la estructura de las entidades basicas del proyecto, el jugador ahora cada uno tiene que tener su clase propia.
+* Los enemigos ahora tienen su propio paquete aparte.
+
+### Agregado
+
+* Se agrego la animacion del personaje del jugador.
+
+---
+
 ## [0.1.11] 2026-08-28
 
 ### Agregado

@@ -1,20 +1,19 @@
 package com.cartoonsurvivors.game.pantallas;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
-import com.cartoonsurvivors.game.entidades.EnemigoBasico;
-import com.cartoonsurvivors.game.entidades.Jugador;
+import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
+import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
+import com.cartoonsurvivors.game.entidades.jugadores.Mordecai;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_MUNDO;
@@ -28,10 +27,9 @@ public class JuegoPantalla extends ScreenAdapter {
     private OrthogonalTiledMapRenderer renderizadorMapa;
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
-    private Texture texturaJugador = new Texture("jugador/mordecai.png");
     private Texture texturaEnemigo = new Texture("enemigos/minion.png");
-    private Jugador jugador = new Jugador( 1100, 1,texturaJugador);
-    private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1, texturaEnemigo);
+    private Jugador jugador = new Mordecai();
+    private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1);
 
     public JuegoPantalla(SpriteBatch batch) {
         this.batch = batch;
@@ -67,7 +65,7 @@ public class JuegoPantalla extends ScreenAdapter {
         jugador.mover(direccionX * jugador.getVelocidad() * delta, direccionY * jugador.getVelocidad() * delta);
         enemigo1.seguirJugador(jugador);
 
-        camera.position.set(jugador.getPosicionX(), jugador.getPosicionY(), 0);
+        camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
         camera.update();
 
         renderizadorMapa.setView(camera);
@@ -76,7 +74,7 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
-        batch.draw(texturaJugador, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+        batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
         batch.draw(texturaEnemigo, enemigo1.getPosicionX(), enemigo1.getPosicionY()-100, 100f, 100f);
         batch.end();
     }

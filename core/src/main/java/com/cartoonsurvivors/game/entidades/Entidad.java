@@ -8,15 +8,13 @@ public class Entidad {
     private float posicionX;
     private float posicionY;
     private int velocidad;
-    private Sprite sprite;
 
 
-    protected Entidad(int vida, float posicionX, float posicionY, int velocidad, Texture textura) {
+    protected Entidad(int vida, float posicionX, float posicionY, int velocidad) {
         this.vida = vida;
         this.posicionX = posicionX;
         this.posicionY = posicionY;
         this.velocidad = velocidad;
-        this.sprite = new Sprite(textura);
     }
 
     public void mover(float deltaX, float deltaY) {
