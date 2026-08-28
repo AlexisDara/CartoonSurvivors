@@ -20,6 +20,9 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 ### Agregado
 
 * Se agrego la animacion del personaje del jugador.
+* Agregado de los archivos de audio para la musica del menu y e juego.
+* Se agrego la clase de AudioManager.
+
 
 ---
 
