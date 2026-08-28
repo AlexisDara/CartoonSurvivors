@@ -8,6 +8,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.Jugador;
@@ -20,6 +23,8 @@ public class JuegoPantalla extends ScreenAdapter {
     private  SpriteBatch batch;
 
     private final OrthographicCamera camera = new OrthographicCamera();
+    private TiledMap mapa;
+    private OrthogonalTiledMapRenderer renderizadorMapa;
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private Texture texturaJugador = new Texture("jugador/mordecai.png");
@@ -27,6 +32,8 @@ public class JuegoPantalla extends ScreenAdapter {
 
     public JuegoPantalla(SpriteBatch batch) {
         this.batch = batch;
+        mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
+        renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
     }
 
     @Override
@@ -49,6 +56,9 @@ public class JuegoPantalla extends ScreenAdapter {
 
         camera.position.set(jugador.getPosicionX(), jugador.getPosicionY(), 0);
         camera.update();
+
+        renderizadorMapa.setView(camera);
+        renderizadorMapa.render();
 
         batch.setProjectionMatrix(camera.combined);
 
