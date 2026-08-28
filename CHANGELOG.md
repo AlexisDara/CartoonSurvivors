@@ -10,6 +10,17 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.11] 2026-08-28
+
+### Agregado
+
+* Clase abstracta para los enemigos.
+* Se agregó el enemigo básico y la clase jefe.
+* Se agregó el movimiento básico del enemigo y del jefe siguiendo al player.
+* Se agregó un enemigo de prueba en el mapa.
+
+---
+
 ## [0.1.10] 2026-08-28
 
 ### Agregado

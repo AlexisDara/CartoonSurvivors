@@ -13,6 +13,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
+import com.cartoonsurvivors.game.entidades.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.Jugador;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
@@ -28,7 +29,9 @@ public class JuegoPantalla extends ScreenAdapter {
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private Texture texturaJugador = new Texture("jugador/mordecai.png");
+    private Texture texturaEnemigo = new Texture("enemigos/minion.png");
     private Jugador jugador = new Jugador( 1100, 1,texturaJugador);
+    private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1, texturaEnemigo);
 
     public JuegoPantalla(SpriteBatch batch) {
         this.batch = batch;
@@ -62,6 +65,7 @@ public class JuegoPantalla extends ScreenAdapter {
         float direccionY = controladorEntrada.obtenerDireccionY();
 
         jugador.mover(direccionX * jugador.getVelocidad() * delta, direccionY * jugador.getVelocidad() * delta);
+        enemigo1.seguirJugador(jugador);
 
         camera.position.set(jugador.getPosicionX(), jugador.getPosicionY(), 0);
         camera.update();
@@ -73,11 +77,13 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.begin();
         batch.draw(texturaJugador, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+        batch.draw(texturaEnemigo, enemigo1.getPosicionX(), enemigo1.getPosicionY()-100, 100f, 100f);
         batch.end();
     }
     @Override
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
+        enemigo1.setPosicion(calcularCentroX() + 200, calcularCentroY() + 200);
     }
 
 }
