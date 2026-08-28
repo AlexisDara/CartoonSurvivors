@@ -18,7 +18,7 @@ public final class Constantes {
     // Atributos y Balance del Jugador
     public static final class Jugador {
         public static final int vidaInicial = 100;
-        public static final int velocidadInicial = 150;
+        public static final int velocidadInicial = 1500;
     }
 
     // Atributos y Balance de Enemigos
