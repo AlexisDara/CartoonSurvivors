@@ -10,6 +10,15 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.12] 2026-08-28
+
+### 
+
+* Agregado de los archivos de audio para la musica del menu y e juego.
+* Se agrego la clase de AudioManager.
+
+---
+
 ## [0.1.11] 2026-08-28
 
 ### Agregado
