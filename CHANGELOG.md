@@ -8,6 +8,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 * Pendiente.
 
+## [0.1.8]
+
+### Agregado
+
+* la camara ahora sigue al jugador.
+* Se agrego la clase aparte para los controles del jugador.
+* Se implemento el movimiento del jugador en diagonal y que puedan modificarse ambas dimensiones (x, y) a la vez.
+
 ## [0.1.7] - 2026-08-27
 
 ### Modificado

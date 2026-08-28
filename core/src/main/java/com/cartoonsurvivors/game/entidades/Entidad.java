@@ -19,8 +19,10 @@ public class Entidad {
         this.sprite = new Sprite(textura);
     }
 
-    public void moverX(float deltaX) {
+    public void mover(float deltaX, float deltaY) {
         this.posicionX += deltaX;
+        this.posicionY += deltaY;
+
     }
 
     public float getPosicionX() {
@@ -35,8 +37,6 @@ public class Entidad {
         return velocidad;
     }
 
-    public void moverY(float deltaY) {
-        this.posicionY += deltaY;
-    }
+
 
 }
