@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -33,6 +34,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private Texture texturaEnemigo = new Texture("enemigos/minion.png");
     private Jugador jugador = new Mordecai();
     private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1);
+    private boolean mirandoIzquierda = false;
 
     public JuegoPantalla(SpriteBatch batch, CartoonSurvivors game) {
         this.batch = batch;
@@ -66,8 +68,18 @@ public class JuegoPantalla extends ScreenAdapter {
         float direccionX = controladorEntrada.obtenerDireccionX();
         float direccionY = controladorEntrada.obtenerDireccionY();
 
+
         jugador.mover(direccionX * jugador.getVelocidad() * delta, direccionY * jugador.getVelocidad() * delta);
-        enemigo1.seguirJugador(jugador);
+        enemigo1.seguirJugador(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2);
+        boolean seEstaMoviendo = direccionX != 0 || direccionY != 0;
+
+        if (direccionX < 0) {
+            mirandoIzquierda = true;
+        }
+
+        if (direccionX > 0) {
+            mirandoIzquierda = false;
+        }
 
         camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
         camera.update();
@@ -78,7 +90,24 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
-        batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+
+        if (seEstaMoviendo) {
+            TextureRegion frame = jugador.getFrameCaminar(delta);
+
+            if (mirandoIzquierda) {
+                if (frame.isFlipX()) {
+                    frame.flip(true, false);
+                }
+            } else {
+                if (!frame.isFlipX()) {
+                    frame.flip(true, false);
+                }
+            }
+            batch.draw(frame, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+        } else {
+            batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+        }
+
         batch.draw(texturaEnemigo, enemigo1.getPosicionX(), enemigo1.getPosicionY()-100, 100f, 100f);
         batch.end();
     }

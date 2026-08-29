@@ -9,9 +9,9 @@ public abstract class Enemigo extends Entidad {
         super(vida, posicionX, posicionY, velocidad);
     }
 
-    public void seguirJugador(Jugador jugador){
-        float direccionX = jugador.getPosicionX() - this.getPosicionX();
-        float direccionY = jugador.getPosicionY() - this.getPosicionY();
+    public void seguirJugador(float posicionX, float posicionY) {
+        float direccionX = posicionX - this.getPosicionX();
+        float direccionY = posicionY - this.getPosicionY();
         // Usamos pitagoras para sacar la longitud de la distancia y normalizamos las direcciones.
         float longitud = (float) Math.sqrt(direccionX * direccionX + direccionY * direccionY);
         if (longitud != 0) {

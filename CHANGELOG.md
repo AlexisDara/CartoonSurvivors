@@ -10,12 +10,20 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.14] 2026-08-28
+
+### Agregado
+
+* Se agregó la function para que el jugador tenga la animation al caminar.
+
+---
+
 ## [0.1.13] 2026-08-28
 
 ### Agregado
 
 * Se agrego la musica al menu.
-* Se agrego la musica al juego.
+* Se agregó la música al juego.
 
 ---
 

@@ -10,6 +10,7 @@ public abstract class Jugador extends Entidad {
 
     private Texture texturaIdle;
     private Animation<TextureRegion> animacionCaminar;
+    private float tiempoAnimacion = 0;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
         super(Constantes.Jugador.VIDA_INICIAL, 0, 0, Constantes.Jugador.VELOCIDAD_INICIAL);
@@ -22,5 +23,10 @@ public abstract class Jugador extends Entidad {
     }
     public Animation<TextureRegion> getAnimacionCaminar() {
         return animacionCaminar;
+    }
+
+    public TextureRegion getFrameCaminar(float delta) {
+        tiempoAnimacion += delta;
+        return animacionCaminar.getKeyFrame(tiempoAnimacion, true);
     }
 }
