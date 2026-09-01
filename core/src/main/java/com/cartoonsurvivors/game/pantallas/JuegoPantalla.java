@@ -22,6 +22,9 @@ import com.cartoonsurvivors.game.entidades.jugadores.Mordecai;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 
+import java.util.ArrayList;
+
+import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.*;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
 public class JuegoPantalla extends ScreenAdapter {
@@ -95,62 +98,6 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.end();
     }
 
-    private void dibujarEnemigos(float delta) {
-        for (EnemigoBasico enemigo : enemigos) {
-            batch.draw(
-                enemigo.getFrameCaminar(delta),
-                enemigo.getPosicionX(),
-                enemigo.getPosicionY()
-            );
-        }
-    }
-
-    private void actualizarEnemigos(float delta) {
-        for (EnemigoBasico enemigo : enemigos) {
-            enemigo.seguirJugador(
-                jugador.getPosicionX(),
-                jugador.getPosicionY(),
-                delta
-            );
-        }
-    }
-
-    private void aparicionEnemigos() {
-        if (tiempoSpawn >= 1f) {
-            tiempoSpawn = 0;
-            float posicionX;
-            float posicionY;
-            int lado = MathUtils.random(3);
-
-            switch (lado) {
-
-                case 0: // Arriba
-                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
-                    posicionY = jugador.getPosicionY() + ALTO_MUNDO / 2f + DISTANCIA_SPAWN;
-                    break;
-                case 1: // Abajo
-                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
-                    posicionY = jugador.getPosicionY() - ALTO_MUNDO / 2f - DISTANCIA_SPAWN;
-                    break;
-                case 2: // Izquierda
-                    posicionX = jugador.getPosicionX() - ANCHO_MUNDO / 2f - DISTANCIA_SPAWN;
-                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
-                    break;
-                default: // Derecha
-                    posicionX = jugador.getPosicionX() + ANCHO_MUNDO / 2f + DISTANCIA_SPAWN;
-                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
-                    break;
-            }
-            EnemigoBasico enemigo = enemigoSpawner.spawn(posicionX, posicionY );
-            enemigos.add(enemigo);
-        }
-    }
-
-    private void camaraSeguirJugador() {
-        camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
-        camera.update();
-    }
-
     private boolean calcularLadoMirada(float direccionX, boolean mirandoDerecha) {
         if (direccionX < 0) {
             mirandoDerecha = true;
@@ -160,6 +107,49 @@ public class JuegoPantalla extends ScreenAdapter {
             mirandoDerecha = false;
         }
         return mirandoDerecha;
+    }
+
+    private void camaraSeguirJugador() {
+        camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
+        camera.update();
+    }
+
+    private void aparicionEnemigos() {
+        if (tiempoSpawn >= TIEMPO_APARICION) {
+            tiempoSpawn = 0;
+            float posicionX;
+            float posicionY;
+            int lado = MathUtils.random(3);
+
+            switch (lado) {
+
+                case 0: // Arriba
+                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
+                    posicionY = jugador.getPosicionY() + ALTO_MUNDO / 2f + MARGEN_APARICION;
+                    break;
+                case 1: // Abajo
+                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
+                    posicionY = jugador.getPosicionY() - ALTO_MUNDO / 2f - MARGEN_APARICION;
+                    break;
+                case 2: // Izquierda
+                    posicionX = jugador.getPosicionX() - ANCHO_MUNDO / 2f - MARGEN_APARICION;
+                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
+                    break;
+                default: // Derecha
+                    posicionX = jugador.getPosicionX() + ANCHO_MUNDO / 2f + MARGEN_APARICION;
+                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
+                    break;
+            }
+            EnemigoBasico enemigo = enemigoSpawner.spawn(posicionX, posicionY );
+            enemigos.add(enemigo);
+        }
+    }
+
+    private void actualizarEnemigos(float delta) {
+        for (EnemigoBasico enemigo : enemigos) {
+            enemigo.seguirJugador(jugador.getPosicionX(), jugador.getPosicionY(), delta
+            );
+        }
     }
 
     private void dibujarJugador(float delta, boolean seEstaMoviendo, boolean mirandoDerecha) {
@@ -178,6 +168,20 @@ public class JuegoPantalla extends ScreenAdapter {
             batch.draw(frame, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
         } else {
             batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+        }
+    }
+    private void dibujarEnemigos(float delta) {
+        for (EnemigoBasico enemigo : enemigos) {
+            if(enemigo.isMirandoIzquierda()) {
+                if (!enemigo.getFrameCaminar(delta).isFlipX()) {
+                    enemigo.getFrameCaminar(delta).flip(true, false);
+                }
+            } else {
+                if (enemigo.getFrameCaminar(delta).isFlipX()) {
+                    enemigo.getFrameCaminar(delta).flip(true, false);
+                }
+            }
+            batch.draw(enemigo.getFrameCaminar(delta), enemigo.getPosicionX(), enemigo.getPosicionY(), ANCHO_ENEMIGO, ALTO_ENEMIGO);
         }
     }
 

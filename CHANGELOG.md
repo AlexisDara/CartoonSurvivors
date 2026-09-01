@@ -10,6 +10,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.16] 2026-09-01
+
+### Modificado
+
+* Los enemigos ahora rotan su animación para siempre ver al jugador.
+
+---
+
 ## [0.1.15] 2026-09-01
 
 ### Agregado

@@ -9,7 +9,6 @@ public final class Constantes {
     public static final class Mundo {
         public static final float ANCHO_MUNDO = 1280f;
         public static final float ALTO_MUNDO = 720f;
-        public static final float DISTANCIA_SPAWN = 50f;
 
 
         // Píxeles virtuales para la cámara del HUD / Interfaz
@@ -28,7 +27,9 @@ public final class Constantes {
     public static final class Enemigos {
         public static final float VELOCIDAD_SLIME = 2f;
         public static final float TIEMPO_APARICION = 1.5f; // Cada cuántos segundos aparece un enemigo
-        public static final float MARGEN_APARICION = 2f;    // Distancia fuera del área visible de la cámara
+        public static final float MARGEN_APARICION = 2f;
+        public static final float ANCHO_ENEMIGO = 36f; // Ancho del sprite del enemigo
+        public static final float ALTO_ENEMIGO = 60f; // Alto del sprite del enemigo
     }
 
     // Rutas de Archivos (Assets)

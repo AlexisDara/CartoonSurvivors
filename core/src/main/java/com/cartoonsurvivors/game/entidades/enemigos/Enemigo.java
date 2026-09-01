@@ -5,6 +5,7 @@ import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 
 public abstract class Enemigo extends Entidad {
+    private boolean mirandoIzquierda = false;
     protected Enemigo(int vida, float posicionX, float posicionY, float velocidad, int danio) {
         super(vida, posicionX, posicionY, velocidad, danio);
     }
@@ -18,7 +19,16 @@ public abstract class Enemigo extends Entidad {
             direccionX /= longitud;
             direccionY /= longitud;
         }
+        if(direccionX < 0) {
+            mirandoIzquierda = true;
+        } else if(direccionX > 0) {
+            mirandoIzquierda = false;
+        }
         this.mover(direccionX * this.getVelocidad() * delta, direccionY * this.getVelocidad() * delta);
+
+    }
+    public boolean isMirandoIzquierda() {
+        return mirandoIzquierda;
     }
 
 }
