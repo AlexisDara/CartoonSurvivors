@@ -9,6 +9,8 @@ public final class Constantes {
     public static final class Mundo {
         public static final float ANCHO_MUNDO = 1280f;
         public static final float ALTO_MUNDO = 720f;
+        public static final float DISTANCIA_SPAWN = 50f;
+
 
         // Píxeles virtuales para la cámara del HUD / Interfaz
         public static final float ANCHO_INTERFAZ = 1280f;

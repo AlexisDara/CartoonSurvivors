@@ -10,17 +10,19 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.audio.AudioManager;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
+import com.cartoonsurvivors.game.entidades.enemigos.EnemigoSpawner;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.entidades.jugadores.Mordecai;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 
-import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_MUNDO;
-import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_MUNDO;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
 public class JuegoPantalla extends ScreenAdapter {
     private  SpriteBatch batch;
@@ -32,10 +34,13 @@ public class JuegoPantalla extends ScreenAdapter {
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private Jugador jugador = new Mordecai();
+    private EnemigoSpawner enemigoSpawner;
+    private float tiempoSpawn;
+    private Array<EnemigoBasico> enemigos = new Array<>();
 
 
-    public JuegoPantalla(SpriteBatch batch, CartoonSurvivors game) {
-        this.batch = batch;
+    public JuegoPantalla( CartoonSurvivors game) {
+        this.batch = game.getBatch();
         this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
@@ -62,7 +67,7 @@ public class JuegoPantalla extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
 
-
+        tiempoSpawn += delta;
         float direccionX = controladorEntrada.obtenerDireccionX();
         float direccionY = controladorEntrada.obtenerDireccionY();
         boolean mirandoDerecha = false;
@@ -74,7 +79,9 @@ public class JuegoPantalla extends ScreenAdapter {
         mirandoDerecha = calcularLadoMirada(direccionX, mirandoDerecha);
 
         camaraSeguirJugador();
+        aparicionEnemigos();
 
+        actualizarEnemigos(delta);
         renderizadorMapa.setView(camera);
         renderizadorMapa.render();
 
@@ -82,9 +89,61 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.begin();
 
+        dibujarEnemigos(delta);
         dibujarJugador(delta, seEstaMoviendo, mirandoDerecha);
 
         batch.end();
+    }
+
+    private void dibujarEnemigos(float delta) {
+        for (EnemigoBasico enemigo : enemigos) {
+            batch.draw(
+                enemigo.getFrameCaminar(delta),
+                enemigo.getPosicionX(),
+                enemigo.getPosicionY()
+            );
+        }
+    }
+
+    private void actualizarEnemigos(float delta) {
+        for (EnemigoBasico enemigo : enemigos) {
+            enemigo.seguirJugador(
+                jugador.getPosicionX(),
+                jugador.getPosicionY(),
+                delta
+            );
+        }
+    }
+
+    private void aparicionEnemigos() {
+        if (tiempoSpawn >= 1f) {
+            tiempoSpawn = 0;
+            float posicionX;
+            float posicionY;
+            int lado = MathUtils.random(3);
+
+            switch (lado) {
+
+                case 0: // Arriba
+                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
+                    posicionY = jugador.getPosicionY() + ALTO_MUNDO / 2f + DISTANCIA_SPAWN;
+                    break;
+                case 1: // Abajo
+                    posicionX = jugador.getPosicionX() + MathUtils.random(-ANCHO_MUNDO / 2f, ANCHO_MUNDO / 2f);
+                    posicionY = jugador.getPosicionY() - ALTO_MUNDO / 2f - DISTANCIA_SPAWN;
+                    break;
+                case 2: // Izquierda
+                    posicionX = jugador.getPosicionX() - ANCHO_MUNDO / 2f - DISTANCIA_SPAWN;
+                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
+                    break;
+                default: // Derecha
+                    posicionX = jugador.getPosicionX() + ANCHO_MUNDO / 2f + DISTANCIA_SPAWN;
+                    posicionY = jugador.getPosicionY() + MathUtils.random(-ALTO_MUNDO / 2f, ALTO_MUNDO / 2f);
+                    break;
+            }
+            EnemigoBasico enemigo = enemigoSpawner.spawn(posicionX, posicionY );
+            enemigos.add(enemigo);
+        }
     }
 
     private void camaraSeguirJugador() {
@@ -126,6 +185,11 @@ public class JuegoPantalla extends ScreenAdapter {
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
         audioManager.reproducirMusicaJuego();
+        enemigoSpawner = new EnemigoSpawner( 100, 50f, 10, new Texture("enemigos/minion.png"));
+
     }
+
+
+
 
 }

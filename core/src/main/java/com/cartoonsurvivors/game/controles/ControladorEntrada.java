@@ -34,4 +34,8 @@ public class ControladorEntrada {
             return direccionY;
         }
 
+        public boolean pasarPantalla() {
+            return Gdx.input.isKeyPressed(Input.Keys.SPACE);
+        }
+
 }

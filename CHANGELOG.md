@@ -10,6 +10,16 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.15] 2026-09-01
+
+### Agregado
+
+* Se añade la clase spawner enemigos para que controle la aparición de los enemigos.
+* Se añaden los enemigos al mapa para que aparezcan en el juego.
+* Se añade la pantalla de controles para que el jugador pueda ver los controles del juego antes de iniciar.
+
+---
+
 ## [0.1.14] 2026-08-28
 
 ### Agregado

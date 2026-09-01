@@ -13,7 +13,7 @@ public abstract class Jugador extends Entidad {
     private float tiempoAnimacion = 0;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
-        super(Constantes.Jugador.VIDA_INICIAL, 0, 0, Constantes.Jugador.VELOCIDAD_INICIAL);
+        super(Constantes.Jugador.VIDA_INICIAL, 0, 0, Constantes.Jugador.VELOCIDAD_INICIAL,0);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
     }

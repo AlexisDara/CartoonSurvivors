@@ -63,8 +63,7 @@ public class MenuPantalla extends ScreenAdapter {
         btnJugar.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                audioManager.detenerMusicaMenu();
-                game.setScreen(new JuegoPantalla(game.getBatch(), game));
+                game.setScreen(new ControlesPantalla(game));
             }
         });
 

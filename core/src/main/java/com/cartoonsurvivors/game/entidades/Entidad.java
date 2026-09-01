@@ -8,15 +8,15 @@ public class Entidad {
     private float posicionX;
     private float posicionY;
     private float velocidad;
-    private float danio;
+    private int danio;
 
 
-    protected Entidad(int vida, float posicionX, float posicionY, float velocidad) {
+    protected Entidad(int vida, float posicionX, float posicionY, float velocidad, int danio) {
         this.vida = vida;
         this.posicionX = posicionX;
         this.posicionY = posicionY;
         this.velocidad = velocidad;
-        this.danio = 10.0f; // Valor predeterminado, puede ser ajustado según sea necesario
+        this.danio = danio;
     }
 
     public void mover(float deltaX, float deltaY) {
