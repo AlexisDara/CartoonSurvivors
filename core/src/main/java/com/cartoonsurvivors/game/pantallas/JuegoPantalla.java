@@ -31,10 +31,8 @@ public class JuegoPantalla extends ScreenAdapter {
     private OrthogonalTiledMapRenderer renderizadorMapa;
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
-    private Texture texturaEnemigo = new Texture("enemigos/minion.png");
     private Jugador jugador = new Mordecai();
-    private EnemigoBasico enemigo1 = new EnemigoBasico(100, 500, 500, 1);
-    private boolean mirandoIzquierda = false;
+
 
     public JuegoPantalla(SpriteBatch batch, CartoonSurvivors game) {
         this.batch = batch;
@@ -67,22 +65,15 @@ public class JuegoPantalla extends ScreenAdapter {
 
         float direccionX = controladorEntrada.obtenerDireccionX();
         float direccionY = controladorEntrada.obtenerDireccionY();
+        boolean mirandoDerecha = false;
 
 
         jugador.mover(direccionX * jugador.getVelocidad() * delta, direccionY * jugador.getVelocidad() * delta);
-        enemigo1.seguirJugador(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2);
         boolean seEstaMoviendo = direccionX != 0 || direccionY != 0;
 
-        if (direccionX < 0) {
-            mirandoIzquierda = true;
-        }
+        mirandoDerecha = calcularLadoMirada(direccionX, mirandoDerecha);
 
-        if (direccionX > 0) {
-            mirandoIzquierda = false;
-        }
-
-        camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
-        camera.update();
+        camaraSeguirJugador();
 
         renderizadorMapa.setView(camera);
         renderizadorMapa.render();
@@ -91,10 +82,32 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.begin();
 
+        dibujarJugador(delta, seEstaMoviendo, mirandoDerecha);
+
+        batch.end();
+    }
+
+    private void camaraSeguirJugador() {
+        camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
+        camera.update();
+    }
+
+    private boolean calcularLadoMirada(float direccionX, boolean mirandoDerecha) {
+        if (direccionX < 0) {
+            mirandoDerecha = true;
+        }
+
+        if (direccionX > 0) {
+            mirandoDerecha = false;
+        }
+        return mirandoDerecha;
+    }
+
+    private void dibujarJugador(float delta, boolean seEstaMoviendo, boolean mirandoDerecha) {
         if (seEstaMoviendo) {
             TextureRegion frame = jugador.getFrameCaminar(delta);
 
-            if (mirandoIzquierda) {
+            if (mirandoDerecha) {
                 if (frame.isFlipX()) {
                     frame.flip(true, false);
                 }
@@ -107,14 +120,11 @@ public class JuegoPantalla extends ScreenAdapter {
         } else {
             batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
         }
-
-        batch.draw(texturaEnemigo, enemigo1.getPosicionX(), enemigo1.getPosicionY()-100, 100f, 100f);
-        batch.end();
     }
+
     @Override
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
-        enemigo1.setPosicion(calcularCentroX() + 200, calcularCentroY() + 200);
         audioManager.reproducirMusicaJuego();
     }
 

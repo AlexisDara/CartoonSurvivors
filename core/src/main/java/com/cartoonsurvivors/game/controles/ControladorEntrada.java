@@ -11,13 +11,10 @@ public class ControladorEntrada {
 
             if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 direccionX--;
-                System.out.println("A presionada");
             }
 
             if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 direccionX++;
-                System.out.println("D presionada");
-
             }
 
             return direccionX;
@@ -28,13 +25,10 @@ public class ControladorEntrada {
 
             if (Gdx.input.isKeyPressed(Input.Keys.S)) {
                 direccionY--;
-                System.out.println("S presionada");
-
             }
 
             if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 direccionY++;
-                System.out.println("W presionada");
             }
 
             return direccionY;

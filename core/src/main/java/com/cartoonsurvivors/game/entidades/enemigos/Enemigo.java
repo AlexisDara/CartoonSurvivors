@@ -5,11 +5,11 @@ import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 
 public abstract class Enemigo extends Entidad {
-    protected Enemigo(int vida, float posicionX, float posicionY, int velocidad) {
+    protected Enemigo(int vida, float posicionX, float posicionY, float velocidad) {
         super(vida, posicionX, posicionY, velocidad);
     }
 
-    public void seguirJugador(float posicionX, float posicionY) {
+    public void seguirJugador(float posicionX, float posicionY, float delta) {
         float direccionX = posicionX - this.getPosicionX();
         float direccionY = posicionY - this.getPosicionY();
         // Usamos pitagoras para sacar la longitud de la distancia y normalizamos las direcciones.
@@ -18,7 +18,7 @@ public abstract class Enemigo extends Entidad {
             direccionX /= longitud;
             direccionY /= longitud;
         }
-        this.mover(direccionX * this.getVelocidad(), direccionY * this.getVelocidad());
+        this.mover(direccionX * this.getVelocidad() * delta, direccionY * this.getVelocidad() * delta);
     }
 
 }
