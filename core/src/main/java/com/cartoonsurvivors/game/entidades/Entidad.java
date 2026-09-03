@@ -62,9 +62,8 @@ public abstract class Entidad {
 
     public abstract void dibujar(Batch batch, float delta);
 
-
-
-
-
+    public com.badlogic.gdx.math.Rectangle getHitbox() {
+        return hitbox;
+    }
 
 }

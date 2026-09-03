@@ -7,10 +7,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.audio.AudioManager;
@@ -39,11 +42,14 @@ public class JuegoPantalla extends ScreenAdapter {
     private float tiempoSpawn;
     private Array<EnemigoBasico> enemigos = new Array<>();
 
+    private ShapeRenderer shapeRenderer;
+
     public JuegoPantalla( CartoonSurvivors game) {
         this.batch = game.getBatch();
         this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
+        shapeRenderer = new ShapeRenderer();
     }
 
     private int calcularCentroX() {
@@ -92,6 +98,18 @@ public class JuegoPantalla extends ScreenAdapter {
         }
 
         batch.end();
+
+        // Dibujar hitboxes (debug)
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+        Rectangle r = jugador.getHitbox();
+        shapeRenderer.rect(r.x, r.y, r.width, r.height);
+        for (EnemigoBasico enemigo : enemigos) {
+            Rectangle re = enemigo.getHitbox();
+            shapeRenderer.rect(re.x, re.y, re.width, re.height);
+        }
+        shapeRenderer.end();
     }
 
     private void camaraSeguirJugador() {
@@ -112,6 +130,11 @@ public class JuegoPantalla extends ScreenAdapter {
         audioManager.reproducirMusicaJuego();
         enemigoSpawner = new EnemigoSpawner( 100, 50f, 10, new Texture("enemigos/minion.png"));
 
+    }
+
+    @Override
+    public void dispose() {
+        shapeRenderer.dispose();
     }
 
 }
