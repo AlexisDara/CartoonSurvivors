@@ -16,7 +16,7 @@ public class AudioManager {
     public void reproducirMusicaMenu() {
         if (!musicaMenu.isPlaying()) {
             musicaMenu.setLooping(true);
-            musicaMenu.setVolume(0.5f);
+            musicaMenu.setVolume(0.1f);
             musicaMenu.play();
         }
     }
@@ -30,7 +30,7 @@ public class AudioManager {
     public void reproducirMusicaJuego() {
         if (!musicaJuego.isPlaying()) {
             musicaJuego.setLooping(true);
-            musicaJuego.setVolume(0.5f);
+            musicaJuego.setVolume(0.1f);
             musicaJuego.play();
         }
     }

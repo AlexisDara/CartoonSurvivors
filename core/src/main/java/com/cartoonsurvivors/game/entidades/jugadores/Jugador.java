@@ -11,6 +11,8 @@ public abstract class Jugador extends Entidad {
     private Texture texturaIdle;
     private Animation<TextureRegion> animacionCaminar;
     private float tiempoAnimacion = 0;
+    private boolean mirandoDerecha = false;
+    private boolean seEstaMoviendo = false;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
         super(Constantes.Jugador.VIDA_INICIAL, 0, 0, Constantes.Jugador.VELOCIDAD_INICIAL,0);
@@ -29,4 +31,28 @@ public abstract class Jugador extends Entidad {
         tiempoAnimacion += delta;
         return animacionCaminar.getKeyFrame(tiempoAnimacion, true);
     }
+
+    public void seMueve(float direccionX, float direccionY) {
+        this.seEstaMoviendo = direccionX != 0 || direccionY != 0;
+    }
+
+    public void calcularLadoMirada(float direccionX) {
+        if (direccionX < 0) {
+            this.mirandoDerecha = false;
+        }
+
+        if (direccionX > 0) {
+            this.mirandoDerecha = true;
+        }
+    }
+
+    public boolean getSeEstaMoviendo() {
+        return seEstaMoviendo;
+    }
+
+    public boolean estaMirandoDerecha() {
+        return mirandoDerecha;
+    }
+
+
 }

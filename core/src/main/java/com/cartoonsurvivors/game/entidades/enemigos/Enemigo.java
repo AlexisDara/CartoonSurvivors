@@ -24,7 +24,7 @@ public abstract class Enemigo extends Entidad {
         } else if(direccionX > 0) {
             mirandoIzquierda = false;
         }
-        this.mover(direccionX * this.getVelocidad() * delta, direccionY * this.getVelocidad() * delta);
+        this.mover(direccionX , direccionY ,delta);
 
     }
     public boolean isMirandoIzquierda() {

@@ -1,36 +1,35 @@
 package com.cartoonsurvivors.game.entidades;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Entidad {
     private int vida;
-    private float posicionX;
-    private float posicionY;
     private float velocidad;
     private int danio;
+    private Rectangle hitbox;
 
 
-    protected Entidad(int vida, float posicionX, float posicionY, float velocidad, int danio) {
+    protected Entidad(int vida, float velocidad, int danio, float posicionX, float posicionY, float altura, float ancho) {
         this.vida = vida;
-        this.posicionX = posicionX;
-        this.posicionY = posicionY;
         this.velocidad = velocidad;
         this.danio = danio;
+        this.hitbox = new Rectangle(posicionX, posicionY, ancho, altura);
     }
 
-    public void mover(float deltaX, float deltaY) {
-        this.posicionX += deltaX;
-        this.posicionY += deltaY;
-
+    public void mover(float direccionX, float direccionY, float delta) {
+        float movimientoX = direccionX * delta * this.velocidad;
+        float movimientoY = direccionY * delta * this.velocidad;
+        hitbox.setPosition(hitbox.x + movimientoX, hitbox.y + movimientoY);
     }
 
     public float getPosicionX() {
-        return posicionX;
+        return hitbox.x;
     }
-
     public float getPosicionY() {
-        return posicionY;
+        return hitbox.y;
     }
 
     public float getVelocidad() {
@@ -38,9 +37,31 @@ public class Entidad {
     }
 
     public void setPosicion(float posicionX, float posicionY) {
-        this.posicionX = posicionX;
-        this.posicionY = posicionY;
+        this.hitbox.setPosition(posicionX, posicionY);
     }
+
+    public int getVida() {
+        return vida;
+    }
+
+    public int getDanio() {
+        return danio;
+    }
+
+    public void recibirDanio(int danio) {
+        vida -= danio;
+    }
+
+    public boolean estaVivo() {
+        return vida > 0;
+    }
+
+    public boolean colisionaCon(Entidad entidad) {
+        return hitbox.overlaps(entidad.hitbox);
+    }
+
+
+
 
 
 

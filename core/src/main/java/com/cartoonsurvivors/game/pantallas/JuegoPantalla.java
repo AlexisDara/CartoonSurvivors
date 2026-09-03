@@ -25,6 +25,7 @@ import com.cartoonsurvivors.game.CartoonSurvivors;
 import java.util.ArrayList;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.*;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
 public class JuegoPantalla extends ScreenAdapter {
@@ -73,13 +74,11 @@ public class JuegoPantalla extends ScreenAdapter {
         tiempoSpawn += delta;
         float direccionX = controladorEntrada.obtenerDireccionX();
         float direccionY = controladorEntrada.obtenerDireccionY();
-        boolean mirandoDerecha = false;
 
 
-        jugador.mover(direccionX * jugador.getVelocidad() * delta, direccionY * jugador.getVelocidad() * delta);
-        boolean seEstaMoviendo = direccionX != 0 || direccionY != 0;
-
-        mirandoDerecha = calcularLadoMirada(direccionX, mirandoDerecha);
+        jugador.mover( direccionX, direccionY , delta);
+        jugador.seMueve(direccionX, direccionY);
+        jugador.calcularLadoMirada(direccionX);
 
         camaraSeguirJugador();
         aparicionEnemigos();
@@ -93,21 +92,12 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.begin();
 
         dibujarEnemigos(delta);
-        dibujarJugador(delta, seEstaMoviendo, mirandoDerecha);
+        dibujarJugador(delta, jugador.getSeEstaMoviendo());
 
         batch.end();
     }
 
-    private boolean calcularLadoMirada(float direccionX, boolean mirandoDerecha) {
-        if (direccionX < 0) {
-            mirandoDerecha = true;
-        }
 
-        if (direccionX > 0) {
-            mirandoDerecha = false;
-        }
-        return mirandoDerecha;
-    }
 
     private void camaraSeguirJugador() {
         camera.position.set(jugador.getPosicionX() + Constantes.Jugador.TAMAÑO_SPRITE / 2, jugador.getPosicionY() + Constantes.Jugador.TAMAÑO_SPRITE / 2, 0);
@@ -152,22 +142,22 @@ public class JuegoPantalla extends ScreenAdapter {
         }
     }
 
-    private void dibujarJugador(float delta, boolean seEstaMoviendo, boolean mirandoDerecha) {
+    private void dibujarJugador(float delta, boolean seEstaMoviendo) {
         if (seEstaMoviendo) {
             TextureRegion frame = jugador.getFrameCaminar(delta);
 
-            if (mirandoDerecha) {
-                if (frame.isFlipX()) {
-                    frame.flip(true, false);
-                }
-            } else {
+            if (jugador.estaMirandoDerecha()) {
                 if (!frame.isFlipX()) {
                     frame.flip(true, false);
                 }
+            } else {
+                if (frame.isFlipX()) {
+                    frame.flip(true, false);
+                }
             }
-            batch.draw(frame, jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+            batch.draw(frame, jugador.getPosicionX(), jugador.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
         } else {
-            batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), 100f, 100f);
+            batch.draw(jugador.getTexturaIdle(), jugador.getPosicionX(), jugador.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
         }
     }
     private void dibujarEnemigos(float delta) {

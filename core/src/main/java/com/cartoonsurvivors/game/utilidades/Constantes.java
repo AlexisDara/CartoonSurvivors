@@ -21,6 +21,7 @@ public final class Constantes {
         public static final int VIDA_INICIAL = 100;
         public static final int VELOCIDAD_INICIAL = 200;
         public static final int TAMAÑO_SPRITE = 64;
+        public static final float TAMAÑO_REAL = 100f;
     }
 
     // Atributos y Balance de Enemigos
