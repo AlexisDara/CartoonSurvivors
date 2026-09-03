@@ -10,6 +10,15 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.18] 2026-09-03
+
+### Agregado
+
+* Se agregó la logica para atacar.
+* Se agregó un objeto arma al jugador.
+
+---
+
 ## [0.1.17] 2026-09-03
 
 ### Agregado
