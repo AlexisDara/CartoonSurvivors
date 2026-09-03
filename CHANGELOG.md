@@ -18,6 +18,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Se agrego la funcion de pausa y play en la clase de AudioManager para poder pausar y reanudar la musica del juego.
 * Se agrego un enum con los estados del juego para poder controlar el flujo del mismo.
 * Se agrego una funcion para poder detectar el escape en controlador de entrada y pausar el juego.
+
+## [0.1.18] 2026-09-03
+
+### Agregado
+
+* Se agregó la logica para atacar.
+* Se agregó un objeto arma al jugador.
+
 ---
 
 ## [0.1.17] 2026-09-03
