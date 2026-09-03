@@ -18,9 +18,11 @@ public abstract class Jugador extends Entidad {
     private boolean seEstaMoviendo = false;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
-        super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 0, 0, 0);
+        super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 0, 60f, 40f);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
+        // El sprite se dibuja con tamaño TAMAÑO_REAL, así que ajustar el tamaño para centrar la hitbox
+        setSpriteSize(TAMAÑO_REAL, TAMAÑO_REAL);
     }
 
     public Texture getTexturaIdle() {

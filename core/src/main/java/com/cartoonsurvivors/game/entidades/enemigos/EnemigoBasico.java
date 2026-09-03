@@ -17,6 +17,8 @@ public class EnemigoBasico extends Enemigo {
 
     public EnemigoBasico(int vida, float velocidad, int danio, float posicionX, float posicionY, Texture spriteSheet) {
         super(vida, velocidad, danio, posicionX, posicionY, 80, 48);
+        // Ajustar el tamaño del sprite para centrar la hitbox
+        setSpriteSize(ANCHO_ENEMIGO, ALTO_ENEMIGO);
         this.spriteSheet = spriteSheet;
         this.frames = TextureRegion.split(spriteSheet, 48, 80)[0];
         this.animacionCaminar = new Animation<>(0.1f, frames);
