@@ -21,6 +21,18 @@ public class AudioManager {
         }
     }
 
+    public void pausarMusicaJuego() {
+        if (musicaJuego != null && musicaJuego.isPlaying()) {
+            musicaJuego.pause();
+        }
+    }
+
+    public void reanudarMusicaJuego() {
+        if (musicaJuego != null && !musicaJuego.isPlaying()) {
+            musicaJuego.play();
+        }
+    }
+
     public void detenerMusicaMenu() {
         if (musicaMenu.isPlaying()) {
             musicaMenu.stop();

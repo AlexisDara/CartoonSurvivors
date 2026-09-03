@@ -27,11 +27,13 @@ import com.cartoonsurvivors.game.CartoonSurvivors;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.*;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
+import com.cartoonsurvivors.game.utilidades.EstadoJuego;
 
 public class JuegoPantalla extends ScreenAdapter {
+    private CartoonSurvivors game;
     private  SpriteBatch batch;
     private  AudioManager audioManager;
-
+    private  EstadoJuego estadoJuego = EstadoJuego.JUGANDO;
     private final OrthographicCamera camera = new OrthographicCamera();
     private TiledMap mapa;
     private OrthogonalTiledMapRenderer renderizadorMapa;
@@ -42,14 +44,39 @@ public class JuegoPantalla extends ScreenAdapter {
     private float tiempoSpawn;
     private Array<EnemigoBasico> enemigos = new Array<>();
 
+
     private ShapeRenderer shapeRenderer;
 
+    private PantallaPausa pantallaPausa;
+
     public JuegoPantalla( CartoonSurvivors game) {
+        this.game = game;
         this.batch = game.getBatch();
         this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
         shapeRenderer = new ShapeRenderer();
+        this.pantallaPausa = new PantallaPausa(game);
+        configurarCallbacksPausa();
+    }
+
+    private void configurarCallbacksPausa() {
+        pantallaPausa.setOnContinuar(() -> {
+            estadoJuego = EstadoJuego.JUGANDO;
+            Gdx.input.setInputProcessor(null); // Devuelve el control al juego
+            audioManager.reanudarMusicaJuego();
+        });
+
+        pantallaPausa.setOnReiniciar(() -> {
+            reiniciarJuego();
+            estadoJuego = EstadoJuego.JUGANDO;
+            Gdx.input.setInputProcessor(null);
+            audioManager.reanudarMusicaJuego();
+        });
+
+        pantallaPausa.setOnMenuPrincipal(() -> {
+            game.setScreen(new MenuPantalla(game));
+        });
     }
 
     private int calcularCentroX() {
@@ -71,10 +98,11 @@ public class JuegoPantalla extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
-
+        if (estadoJuego == EstadoJuego.JUGANDO) {
         tiempoSpawn += delta;
         float direccionX = controladorEntrada.obtenerDireccionX();
         float direccionY = controladorEntrada.obtenerDireccionY();
+        estadoJuego = controladorEntrada.pausarPantalla(estadoJuego, pantallaPausa, audioManager);
 
 
         jugador.mover( direccionX, direccionY , delta);
@@ -88,6 +116,7 @@ public class JuegoPantalla extends ScreenAdapter {
         renderizadorMapa.setView(camera);
         renderizadorMapa.render();
 
+        }
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
@@ -110,6 +139,10 @@ public class JuegoPantalla extends ScreenAdapter {
             shapeRenderer.rect(re.x, re.y, re.width, re.height);
         }
         shapeRenderer.end();
+
+        if (estadoJuego == EstadoJuego.PAUSADO) {
+            pantallaPausa.render(delta);
+        }
     }
 
     private void camaraSeguirJugador() {
@@ -124,17 +157,26 @@ public class JuegoPantalla extends ScreenAdapter {
         }
     }
 
+
+    private void reiniciarJuego() {
+        jugador.setPosicion(calcularCentroX(), calcularCentroY());
+        enemigos.clear();
+        tiempoSpawn = 0;
+    }
+
     @Override
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
         audioManager.reproducirMusicaJuego();
         enemigoSpawner = new EnemigoSpawner( 100, 50f, 10, new Texture("enemigos/minion.png"));
-
+        estadoJuego = EstadoJuego.JUGANDO;
+        Gdx.input.setInputProcessor(null);
     }
 
     @Override
     public void dispose() {
-        shapeRenderer.dispose();
+        if (pantallaPausa != null) pantallaPausa.dispose();
+        if (shapeRenderer != null) shapeRenderer.dispose();
     }
 
 }
