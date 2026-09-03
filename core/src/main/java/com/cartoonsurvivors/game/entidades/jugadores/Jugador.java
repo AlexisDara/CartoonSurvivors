@@ -21,8 +21,6 @@ public abstract class Jugador extends Entidad {
         super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 0, 60f, 40f);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
-        // El sprite se dibuja con tamaño TAMAÑO_REAL, así que ajustar el tamaño para centrar la hitbox
-        setSpriteSize(TAMAÑO_REAL, TAMAÑO_REAL);
     }
 
     public Texture getTexturaIdle() {
@@ -61,6 +59,8 @@ public abstract class Jugador extends Entidad {
 
     @Override
     public void dibujar(Batch batch, float delta) {
+        float offsetX = (TAMAÑO_REAL - hitbox.getWidth()) / 2f;
+        float offsetY = (TAMAÑO_REAL - hitbox.getHeight()) / 2f;
         if (seEstaMoviendo) {
             TextureRegion frame = this.getFrameCaminar(delta);
 
@@ -73,9 +73,9 @@ public abstract class Jugador extends Entidad {
                     frame.flip(true, false);
                 }
             }
-            batch.draw(frame, this.getPosicionX(), this.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
+            batch.draw(frame, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL);
         } else {
-            batch.draw(this.getTexturaIdle(), this.getPosicionX(), this.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
+            batch.draw(this.getTexturaIdle(), this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL);
         }
     }
 

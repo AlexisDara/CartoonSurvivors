@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.ALTO_ENEMIGO;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.ANCHO_ENEMIGO;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
 public class EnemigoBasico extends Enemigo {
 
@@ -16,9 +17,7 @@ public class EnemigoBasico extends Enemigo {
     private float tiempoAnimacion;
 
     public EnemigoBasico(int vida, float velocidad, int danio, float posicionX, float posicionY, Texture spriteSheet) {
-        super(vida, velocidad, danio, posicionX, posicionY, 80, 48);
-        // Ajustar el tamaño del sprite para centrar la hitbox
-        setSpriteSize(ANCHO_ENEMIGO, ALTO_ENEMIGO);
+        super(vida, velocidad, danio, posicionX, posicionY, ALTO_ENEMIGO/1.5f, ANCHO_ENEMIGO/1.5f);
         this.spriteSheet = spriteSheet;
         this.frames = TextureRegion.split(spriteSheet, 48, 80)[0];
         this.animacionCaminar = new Animation<>(0.1f, frames);
@@ -35,6 +34,8 @@ public class EnemigoBasico extends Enemigo {
 
     @Override
     public void dibujar(Batch batch, float delta) {
+        float offsetX = (ANCHO_ENEMIGO - hitbox.getWidth()) / 2f;
+        float offsetY = (ALTO_ENEMIGO - hitbox.getHeight()) / 2f;
             if(this.isMirandoIzquierda()) {
                 if (!this.getFrameCaminar(delta).isFlipX()) {
                     this.getFrameCaminar(delta).flip(true, false);
@@ -44,7 +45,7 @@ public class EnemigoBasico extends Enemigo {
                     this.getFrameCaminar(delta).flip(true, false);
                 }
             }
-            batch.draw(this.getFrameCaminar(delta), this.getPosicionX(), this.getPosicionY(), ANCHO_ENEMIGO, ALTO_ENEMIGO);
+            batch.draw(this.getFrameCaminar(delta), this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, ANCHO_ENEMIGO, ALTO_ENEMIGO);
 
     }
 }

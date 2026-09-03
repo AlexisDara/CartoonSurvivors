@@ -1,4 +1,4 @@
-package com.cartoonsurvivors.game.entidades.armas;
+package com.cartoonsurvivors.game.armas;
 
 public abstract class Arma {
 

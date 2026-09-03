@@ -99,19 +99,15 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.end();
 
-        // Dibujar hitboxes (debug), centradas en el sprite
+        // Dibujar hitboxes (debug)
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
         Rectangle r = jugador.getHitbox();
-        float jugadorHx = jugador.getPosicionX() + (TAMAÑO_REAL - r.width) / 2f;
-        float jugadorHy = jugador.getPosicionY() + (TAMAÑO_REAL - r.height) / 2f;
-        shapeRenderer.rect(jugadorHx, jugadorHy, r.width, r.height);
+        shapeRenderer.rect(r.x, r.y, r.width, r.height);
         for (EnemigoBasico enemigo : enemigos) {
             Rectangle re = enemigo.getHitbox();
-            float enemigoHx = enemigo.getPosicionX() + (ANCHO_ENEMIGO - re.width) / 2f;
-            float enemigoHy = enemigo.getPosicionY() + (ALTO_ENEMIGO - re.height) / 2f;
-            shapeRenderer.rect(enemigoHx, enemigoHy, re.width, re.height);
+            shapeRenderer.rect(re.x, re.y, re.width, re.height);
         }
         shapeRenderer.end();
     }

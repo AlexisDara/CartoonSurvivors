@@ -5,7 +5,9 @@ import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 
 public abstract class Enemigo extends Entidad {
+
     private boolean mirandoIzquierda = false;
+
     protected Enemigo(int vida, float velocidad, int danio,float posicionX, float posicionY, float altura, float ancho) {
         super(vida,velocidad,danio, posicionX, posicionY, altura, ancho);
     }
