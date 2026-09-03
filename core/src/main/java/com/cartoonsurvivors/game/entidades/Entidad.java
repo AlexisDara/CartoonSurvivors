@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Entidad {
+public abstract class Entidad {
     private int vida;
     private float velocidad;
     private int danio;
@@ -59,6 +59,8 @@ public class Entidad {
     public boolean colisionaCon(Entidad entidad) {
         return hitbox.overlaps(entidad.hitbox);
     }
+
+    public abstract void dibujar(Batch batch, float delta);
 
 
 

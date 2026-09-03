@@ -2,9 +2,12 @@ package com.cartoonsurvivors.game.entidades.jugadores;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.utilidades.Constantes;
+
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
 public abstract class Jugador extends Entidad {
 
@@ -15,7 +18,7 @@ public abstract class Jugador extends Entidad {
     private boolean seEstaMoviendo = false;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
-        super(Constantes.Jugador.VIDA_INICIAL, 0, 0, Constantes.Jugador.VELOCIDAD_INICIAL,0);
+        super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 0, 0, 0);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
     }
@@ -52,6 +55,26 @@ public abstract class Jugador extends Entidad {
 
     public boolean estaMirandoDerecha() {
         return mirandoDerecha;
+    }
+
+    @Override
+    public void dibujar(Batch batch, float delta) {
+        if (seEstaMoviendo) {
+            TextureRegion frame = this.getFrameCaminar(delta);
+
+            if (this.estaMirandoDerecha()) {
+                if (!frame.isFlipX()) {
+                    frame.flip(true, false);
+                }
+            } else {
+                if (frame.isFlipX()) {
+                    frame.flip(true, false);
+                }
+            }
+            batch.draw(frame, this.getPosicionX(), this.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
+        } else {
+            batch.draw(this.getTexturaIdle(), this.getPosicionX(), this.getPosicionY(), TAMAÑO_REAL, TAMAÑO_REAL);
+        }
     }
 
 

@@ -10,6 +10,21 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [0.1.17] 2026-09-03
+
+### Agregado
+
+* Se agregó la clase arma y espada por ahora sin utilidad real y solo una base.
+* Se agregó un rectángulo en las entidades para usarlo como hitbox y que se pueda detectar colisiones entre entidades.
+
+### Modificado
+
+* Se modificó la clase del jugador y enemigo para poder dibujarse a sí mismo.
+* Se modificó la clase de spawner para que este tenga la responsabilidad de manejar los enemigos y su aparición en el juego.
+* Ambas funcionalidades se sacaron de juego pantalla para reducir su responsabilidad.
+
+---
+
 ## [0.1.16] 2026-09-01
 
 ### Modificado
