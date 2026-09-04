@@ -46,24 +46,33 @@ public class MenuPantalla extends ScreenAdapter {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
+        audioManager.reproducirMusicaMenu();
+
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = font;
         buttonStyle.fontColor = Color.WHITE;
         buttonStyle.overFontColor = Color.YELLOW;
         buttonStyle.downFontColor = Color.ORANGE;
 
-        audioManager.reproducirMusicaMenu();
 
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
 
         TextButton btnJugar = new TextButton("JUGAR", buttonStyle);
+        TextButton btnOpciones = new TextButton("OPCIONES", buttonStyle);
         TextButton btnSalir = new TextButton("SALIR", buttonStyle);
         btnJugar.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new ControlesPantalla(game));
+            }
+        });
+
+        btnOpciones.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new OpcionesPantalla(game));
             }
         });
 
@@ -75,6 +84,8 @@ public class MenuPantalla extends ScreenAdapter {
         });
 
         table.add(btnJugar).width(300).height(70).padBottom(40);
+        table.row();
+        table.add(btnOpciones).width(300).height(70).padBottom(40);
         table.row();
         table.add(btnSalir).width(300).height(70);
     }
