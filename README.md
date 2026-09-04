@@ -9,8 +9,8 @@
 ## Descripción
 
 Los jugadores deberán enfrentarse a oleadas continuas de enemigos e intentar sobrevivir durante un tiempo determinado. Una vez alcanzado ese límite, los jugadores serán eliminados por un enemigo invencible que marcará el fin de la partida. Esto no significa que pierdan, sino que lograron pasar el escenario, desbloqueando así el siguiente.
-A medida que avance la partida, la dificultad aumentará progresivamente mediante la mejora de las estadísticas enemigas y el incremento de la cantidad de apariciones, obligando a los jugadores a adaptar constantemente sus estrategias para mantenerse con vida. Para lograr sobrevivir los jugadores contaran con armas y objetos pasivos que deberan de subir de nivel mediante la obtención de oro y experiencia.
 
+A medida que avance la partida, la dificultad aumentará progresivamente mediante la mejora de las estadísticas enemigas y el incremento de la cantidad de apariciones, obligando a los jugadores a adaptar constantemente sus estrategias para mantenerse con vida. Para lograr sobrevivir los jugadores contarán con armas y objetos pasivos que deberán subir de nivel mediante la obtención de oro y experiencia.
 
 ## Tecnologías Principales
 
@@ -22,29 +22,62 @@ A medida que avance la partida, la dificultad aumentará progresivamente mediant
 
 ## Estado actual del proyecto
 
-Actualmente el proyecto se encuentra en una **etapa inicial de desarrollo**.
+Actualmente el proyecto cuenta con un **prototipo jugable**, en el cual ya se encuentran implementadas las mecánicas principales de movimiento, enemigos, combate, HUD y condiciones de victoria y derrota.
 
 ### Implementado
 
 - Estructura base del proyecto con LibGDX.
 - Sistema de pantallas.
+- Menú principal.
+- Pantalla de controles.
+- Pantalla de pausa.
 - Fondo visual del menú principal.
 - Integración de una fuente personalizada para la interfaz.
+- Mapa creado con Tiled.
+- Cámara que sigue al jugador.
+- Viewport independiente para el mundo y el HUD.
+- Personaje jugable Mordecai.
+- Movimiento del jugador mediante teclado.
+- Animación de movimiento mediante spritesheet.
+- Sistema de enemigos.
+- Spawner de enemigos.
+- Enemigos que persiguen al jugador.
+- Sistema de vida y daño.
+- Sistema de combate cuerpo a cuerpo.
+- Arma espada.
+- Detección de impactos mediante hitboxes.
+- Eliminación de enemigos al perder toda su vida.
+- Contador de enemigos eliminados.
+- HUD con vida, tiempo de supervivencia y enemigos eliminados.
+- Música para el menú y la partida.
+- Sistema de pausa y reanudación.
+- Reinicio de la partida.
+- Pantalla de derrota con estadísticas de la partida.
+- Pantalla de victoria al alcanzar el tiempo de supervivencia establecido.
 
 ### En desarrollo
 
-- Menú principal.
-- Movimiento del jugador.
-- Sistema de enemigos.
-- HUD.
-- Sistema de combate.
-- Sistema de experiencia y niveles.
+- Sistema de experiencia.
+- Sistema de niveles.
+- Barra de experiencia.
+- Sistema de recompensas al subir de nivel.
+- Mejoras de estadísticas del jugador.
+- Sistema de oro.
+- Objetos pasivos.
+- Incorporación de nuevas armas.
+- Incorporación de nuevos personajes jugables.
+- Nuevos tipos de enemigos.
+- Aumento progresivo de la dificultad.
+- Efectos de sonido.
+- Control de volumen y silencio.
+- Mejoras visuales y de interfaz.
+- Incorporación de nuevos escenarios y contenido.
 
 ## Wiki del Proyecto
 
 La documentación completa del proyecto, incluyendo la propuesta formal, los alcances, la planificación y el diseño general del juego, se encuentra disponible en la Wiki del repositorio.
 
-**<https://github.com/AlexisDara/CartoonSurvivors/wiki>**
+**https://github.com/AlexisDara/CartoonSurvivors/wiki**
 
 ## Trello del proyecto
 
@@ -65,30 +98,3 @@ Tablero dónde se podrá ir actualizando el progreso del proyecto.
 ```bash
 git clone https://github.com/AlexisDara/CartoonSurvivors.git
 cd CartoonSurvivors
-```
-
-### Ejecutar el proyecto (LWJGL3)
-
-En Windows:
-
-```bash
-gradlew.bat lwjgl3:run
-```
-
-En Linux/macOS:
-
-```bash
-./gradlew lwjgl3:run
-```
-
-### Compilar el proyecto
-
-```bash
-./gradlew build
-```
-
-o en Windows:
-
-```bash
-gradlew.bat build
-```
