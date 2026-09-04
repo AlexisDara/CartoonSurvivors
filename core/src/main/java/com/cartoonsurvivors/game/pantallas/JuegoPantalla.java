@@ -50,7 +50,8 @@ public class JuegoPantalla extends ScreenAdapter {
     private float tiempoSpawn;
     private float tiempoJuego;
     private Array<EnemigoBasico> enemigos = new Array<>();
-
+    private final Array<EnemigoBasico> enemigosGolpeados = new Array<>();
+    private int enemigosMatados = 0;
 
     private ShapeRenderer shapeRenderer;
 
@@ -124,16 +125,17 @@ public class JuegoPantalla extends ScreenAdapter {
                 renderizadorMapa.setView(camera);
                 renderizadorMapa.render();
                 chequeoColisiones(delta);
+                chequeoAtaque();
             }
             batch.setProjectionMatrix(camera.combined);
 
             dibujar(delta);
-            mostrarHitbox();
+            //mostrarHitbox();
 
             if (estadoJuego == EstadoJuego.PAUSADO) {
                 pantallaPausa.render(delta);
             }
-            if(tiempoJuego>=5) {
+            if(tiempoJuego>=120) {
                 estadoJuego = EstadoJuego.VICTORIA;
                 audioManager.detenerMusicaJuego();
                 mostrarPantallaVictoria();
@@ -149,6 +151,7 @@ public class JuegoPantalla extends ScreenAdapter {
         jugador.mover(direccionX, direccionY, delta);
         jugador.seMueve(direccionX, direccionY);
         jugador.calcularLadoMirada(direccionX);
+        jugador.actualizarArma(delta);
     }
 
     private void dibujar(float delta) {
@@ -166,7 +169,24 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.begin();
         font.draw(batch, "Vida: " + String.format("%.0f", jugador.getVida()), 10, ALTO_MUNDO - 10);
         font.draw(batch, "Tiempo: " + String.format("%.0f", tiempoJuego), (ANCHO_MUNDO /2) - 90f, ALTO_MUNDO - 10);
+        font.draw(batch, "Enemigos: " + enemigosMatados, 10, ALTO_MUNDO - 35
+        );
         batch.end();
+    }
+
+    private void chequeoAtaque() {
+        if (!jugador.getArma().estaAtacando()) {
+            return;
+        }
+        Rectangle areaAtaque = jugador.getArma().getAreaAtaque();
+        for (EnemigoBasico enemigo : enemigos) {
+            if (!enemigo.estaVivo()) {
+                continue;
+            }
+            if (areaAtaque.overlaps(enemigo.getHitbox())) {
+                enemigo.recibirDanio(jugador.getArma().getDanio());
+            }
+        }
     }
 
     private void mostrarHitbox() {
@@ -179,6 +199,18 @@ public class JuegoPantalla extends ScreenAdapter {
             Rectangle re = enemigo.getHitbox();
             shapeRenderer.rect(re.x, re.y, re.width, re.height);
         }
+        if (jugador.getArma().estaAtacando()) {
+            shapeRenderer.setColor(Color.GREEN);
+
+            Rectangle ataque = jugador.getArma().getAreaAtaque();
+
+            shapeRenderer.rect(
+                ataque.x,
+                ataque.y,
+                ataque.width,
+                ataque.height
+            );
+        }
         shapeRenderer.end();
     }
 
@@ -186,8 +218,10 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.setProjectionMatrix(HUDViewport.getCamera().combined);
         batch.begin();
         font.draw(batch, "GAME OVER", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
-        font.draw(batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 30);
-        font.draw(batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 60);
+        font.draw( batch, "Enemigos eliminados: " + enemigosMatados, ANCHO_MUNDO / 2f - 90, ALTO_MUNDO / 2f - 40 );
+        font.draw( batch, "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos", ANCHO_MUNDO / 2f - 100, ALTO_MUNDO / 2f - 70 );
+        font.draw( batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 110 );
+        font.draw( batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 140 );
         batch.end();
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
@@ -201,8 +235,10 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.setProjectionMatrix(HUDViewport.getCamera().combined);
         batch.begin();
         font.draw(batch, "VICTORIA", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
-        font.draw(batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 30);
-        font.draw(batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 60);
+        font.draw( batch, "Enemigos eliminados: " + enemigosMatados, ANCHO_MUNDO / 2f - 90, ALTO_MUNDO / 2f - 40 );
+        font.draw( batch, "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos", ANCHO_MUNDO / 2f - 100, ALTO_MUNDO / 2f - 70 );
+        font.draw( batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 110 );
+        font.draw( batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 140 );
         batch.end();
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
@@ -232,9 +268,18 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
     private void actualizarEnemigos(float delta) {
-        for (EnemigoBasico enemigo : enemigos) {
-            enemigo.seguirJugador(jugador.getPosicionX(), jugador.getPosicionY(), delta
-            );
+
+        for (int i = enemigos.size - 1; i >= 0; i--) {
+
+            EnemigoBasico enemigo = enemigos.get(i);
+
+            if (!enemigo.estaVivo()) {
+                enemigos.removeIndex(i);
+                enemigosMatados++;
+                continue;
+            }
+
+            enemigo.seguirJugador(jugador.getPosicionX(), jugador.getPosicionY(), delta);
         }
     }
 
@@ -247,6 +292,7 @@ public class JuegoPantalla extends ScreenAdapter {
         audioManager.reproducirMusicaJuego();
         tiempoSpawn = 0;
         tiempoJuego = 0;
+        enemigosMatados = 0;
     }
 
     @Override

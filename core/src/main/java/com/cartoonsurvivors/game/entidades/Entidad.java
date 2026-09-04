@@ -48,12 +48,11 @@ public abstract class Entidad {
     }
 
     public void recibirDanio(float danio) {
-        if(this.vida <= 0){
-            this.vida = 0;
-        } else if(this.vida > 0){
-            this.vida -= danio;
-        }
+        vida -= danio;
 
+        if (vida < 0) {
+            vida = 0;
+        }
     }
 
     public boolean estaVivo() {

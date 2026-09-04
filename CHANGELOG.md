@@ -10,6 +10,22 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.0.0] - 2026-09-03
+
+### Agregado
+
+* Se agregó la estructura del arma y las funciones de dibujarlas
+* Se agregó funciones para que el enemigo reciba daño y muera al quedarse sin vida
+* Se agregó un contador que muestra cuantos enemigos eliminados llevas
+
+### Modificado
+
+*  Se agregó datos de partida en las pantallas de victoria/derrota
+*  Se modificó como dibujar el personaje en idle para que este correctamente dibujado tomando su ultima dirección
+
+
+---
+
 ## [0.1.20] 2026-09-03
 
 ### Agregado

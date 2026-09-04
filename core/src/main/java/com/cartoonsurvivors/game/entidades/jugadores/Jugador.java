@@ -29,6 +29,10 @@ public abstract class Jugador extends Entidad {
         this.arma = new Espada();
     }
 
+    public Arma getArma() {
+        return arma;
+    }
+
     public Texture getTexturaIdle() {
         return texturaIdle;
     }
@@ -78,13 +82,11 @@ public abstract class Jugador extends Entidad {
 
 
 
-    @Override
-    public void dibujar(Batch batch, float delta) {
+    @Override public void dibujar(Batch batch, float delta) {
         float offsetX = (TAMAÑO_REAL - hitbox.getWidth()) / 2f;
         float offsetY = (TAMAÑO_REAL - hitbox.getHeight()) / 2f;
         if (seEstaMoviendo) {
             TextureRegion frame = this.getFrameCaminar(delta);
-
             if (this.estaMirandoDerecha()) {
                 if (!frame.isFlipX()) {
                     frame.flip(true, false);
@@ -94,10 +96,19 @@ public abstract class Jugador extends Entidad {
                     frame.flip(true, false);
                 }
             }
-            batch.draw(frame, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL);
+            batch.draw( frame, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL );
         } else {
-            batch.draw(this.getTexturaIdle(), this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL);
-        }
+            TextureRegion idle = new TextureRegion(this.getTexturaIdle());
+            if (this.estaMirandoDerecha()) {
+                idle.flip(true, false);
+    }
+
+    batch.draw( idle, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL );
+
+    }
+
+    // DIBUJAR EL ATAQUE
+      arma.dibujar(batch);
     }
 
 
