@@ -12,6 +12,10 @@ Los jugadores deberán enfrentarse a oleadas continuas de enemigos e intentar so
 
 A medida que avance la partida, la dificultad aumentará progresivamente mediante la mejora de las estadísticas enemigas y el incremento de la cantidad de apariciones, obligando a los jugadores a adaptar constantemente sus estrategias para mantenerse con vida. Para lograr sobrevivir los jugadores contarán con armas y objetos pasivos que deberán subir de nivel mediante la obtención de oro y experiencia.
 
+## Video demostrativo del juego funcional
+
+**https://www.youtube.com/watch?v=Gxeipl2EYlo**
+
 ## Tecnologías Principales
 
 - **Lenguaje:** Java 21.
