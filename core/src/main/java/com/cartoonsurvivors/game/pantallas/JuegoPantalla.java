@@ -5,6 +5,7 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.cartoonsurvivors.game.audio.AudioManager;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
@@ -26,6 +28,7 @@ import com.cartoonsurvivors.game.utilidades.Constantes;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.*;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.VIDA_INICIAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 import com.cartoonsurvivors.game.utilidades.EstadoJuego;
 
@@ -35,13 +38,17 @@ public class JuegoPantalla extends ScreenAdapter {
     private  AudioManager audioManager;
     private  EstadoJuego estadoJuego = EstadoJuego.JUGANDO;
     private final OrthographicCamera camera = new OrthographicCamera();
+    private final OrthographicCamera hudCamera = new OrthographicCamera();
     private TiledMap mapa;
+    private final BitmapFont font;
     private OrthogonalTiledMapRenderer renderizadorMapa;
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
+    private final ExtendViewport HUDViewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, hudCamera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private Jugador jugador = new Mordecai();
     private EnemigoSpawner enemigoSpawner;
     private float tiempoSpawn;
+    private float tiempoJuego;
     private Array<EnemigoBasico> enemigos = new Array<>();
 
 
@@ -51,6 +58,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
     public JuegoPantalla( CartoonSurvivors game) {
         this.game = game;
+        this.font = game.getFont();
         this.batch = game.getBatch();
         this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
@@ -68,7 +76,7 @@ public class JuegoPantalla extends ScreenAdapter {
         });
 
         pantallaPausa.setOnReiniciar(() -> {
-            reiniciarJuego();
+            reiniciarJuego(audioManager);
             estadoJuego = EstadoJuego.JUGANDO;
             Gdx.input.setInputProcessor(null);
             audioManager.reanudarMusicaJuego();
@@ -91,6 +99,7 @@ public class JuegoPantalla extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        HUDViewport.update(width, height, true);
     }
 
     @Override
@@ -98,37 +107,69 @@ public class JuegoPantalla extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
-        if (estadoJuego == EstadoJuego.JUGANDO) {
-        tiempoSpawn += delta;
-        float direccionX = controladorEntrada.obtenerDireccionX();
-        float direccionY = controladorEntrada.obtenerDireccionY();
-        estadoJuego = controladorEntrada.pausarPantalla(estadoJuego, pantallaPausa, audioManager);
+        if (jugador.estaVivo()) {
+            if (estadoJuego == EstadoJuego.JUGANDO) {
 
 
-        jugador.mover( direccionX, direccionY , delta);
+                tiempoSpawn += delta;
+                tiempoJuego += delta;
+                float direccionX = controladorEntrada.obtenerDireccionX();
+                float direccionY = controladorEntrada.obtenerDireccionY();
+                estadoJuego = controladorEntrada.pausarPantalla(estadoJuego, pantallaPausa, audioManager);
+
+                actualizarJugador(delta, direccionX, direccionY);
+                camaraSeguirJugador();
+                tiempoSpawn = enemigoSpawner.aparicionEnemigos(jugador, tiempoSpawn, enemigos);
+                actualizarEnemigos(delta);
+                renderizadorMapa.setView(camera);
+                renderizadorMapa.render();
+                chequeoColisiones(delta);
+            }
+            batch.setProjectionMatrix(camera.combined);
+
+            dibujar(delta);
+            mostrarHitbox();
+
+            if (estadoJuego == EstadoJuego.PAUSADO) {
+                pantallaPausa.render(delta);
+            }
+            if(tiempoJuego>=5) {
+                estadoJuego = EstadoJuego.VICTORIA;
+                audioManager.detenerMusicaJuego();
+                mostrarPantallaVictoria();
+            }
+        } else if(!jugador.estaVivo()) {
+            mostrarPantallaMuerte();
+        }
+
+
+    }
+
+    private void actualizarJugador(float delta, float direccionX, float direccionY) {
+        jugador.mover(direccionX, direccionY, delta);
         jugador.seMueve(direccionX, direccionY);
         jugador.calcularLadoMirada(direccionX);
+    }
 
-        camaraSeguirJugador();
-        tiempoSpawn = enemigoSpawner.aparicionEnemigos(jugador, tiempoSpawn, enemigos);
-
-        actualizarEnemigos(delta);
-        renderizadorMapa.setView(camera);
-        renderizadorMapa.render();
-
-        }
-        batch.setProjectionMatrix(camera.combined);
-
+    private void dibujar(float delta) {
         batch.begin();
 
-        jugador.dibujar(batch, delta);
         for (EnemigoBasico enemigo : enemigos) {
             enemigo.dibujar(batch, delta);
         }
+        jugador.dibujar(batch, delta);
 
         batch.end();
 
-        // Dibujar hitboxes (debug)
+        HUDViewport.apply();
+        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
+        batch.begin();
+        font.draw(batch, "Vida: " + String.format("%.0f", jugador.getVida()), 10, ALTO_MUNDO - 10);
+        font.draw(batch, "Tiempo: " + String.format("%.0f", tiempoJuego), (ANCHO_MUNDO /2) - 90f, ALTO_MUNDO - 10);
+        batch.end();
+    }
+
+    private void mostrarHitbox() {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
@@ -139,9 +180,49 @@ public class JuegoPantalla extends ScreenAdapter {
             shapeRenderer.rect(re.x, re.y, re.width, re.height);
         }
         shapeRenderer.end();
+    }
 
-        if (estadoJuego == EstadoJuego.PAUSADO) {
-            pantallaPausa.render(delta);
+    private void mostrarPantallaMuerte() {
+        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
+        batch.begin();
+        font.draw(batch, "GAME OVER", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
+        font.draw(batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 30);
+        font.draw(batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 60);
+        batch.end();
+        if(controladorEntrada.reiniciarJuego(audioManager)) {
+            reiniciarJuego(audioManager);
+        }
+        if (controladorEntrada.volverMenu(audioManager)) {
+            game.setScreen(new MenuPantalla(game));
+        }
+    }
+
+    private void mostrarPantallaVictoria() {
+        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
+        batch.begin();
+        font.draw(batch, "VICTORIA", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
+        font.draw(batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 30);
+        font.draw(batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 60);
+        batch.end();
+        if(controladorEntrada.reiniciarJuego(audioManager)) {
+            reiniciarJuego(audioManager);
+        }
+        if (controladorEntrada.volverMenu(audioManager)) {
+            game.setScreen(new MenuPantalla(game));
+        }
+    }
+
+
+
+    private void chequeoColisiones(float delta) {
+        int numeroHits = 0;
+        for (EnemigoBasico enemigo : enemigos) {
+            if (jugador.colisionaCon(enemigo)) {
+                numeroHits++;
+            }
+        }
+        if(numeroHits > 0) {
+            jugador.recibirDanio(numeroHits * DANIO_ENEMIGO * delta);
         }
     }
 
@@ -158,18 +239,25 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
 
-    private void reiniciarJuego() {
+    private void reiniciarJuego(AudioManager audioManager) {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
+        jugador.setVida(VIDA_INICIAL);
+        estadoJuego=EstadoJuego.JUGANDO;
         enemigos.clear();
+        audioManager.reproducirMusicaJuego();
         tiempoSpawn = 0;
+        tiempoJuego = 0;
     }
 
     @Override
     public void show() {
         jugador.setPosicion(calcularCentroX(), calcularCentroY());
+        estadoJuego=EstadoJuego.JUGANDO;
+        jugador.setVida(VIDA_INICIAL);
         audioManager.reproducirMusicaJuego();
-        enemigoSpawner = new EnemigoSpawner( 100, 50f, 10, new Texture("enemigos/minion.png"));
+        enemigoSpawner = new EnemigoSpawner( VIDA_ENEMIGO, VELOCIDAD_ENEMIGO, DANIO_ENEMIGO, new Texture("enemigos/minion.png"));
         estadoJuego = EstadoJuego.JUGANDO;
+        tiempoSpawn = 0;
         Gdx.input.setInputProcessor(null);
     }
 

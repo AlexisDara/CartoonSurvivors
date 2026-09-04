@@ -78,7 +78,7 @@ public class PantallaPausa {
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0f, 0f, 0f, 0.75f); // 75% opacidad
+        shapeRenderer.setColor(0f, 0f, 0f, 0.1f); // 10% opacidad
         shapeRenderer.rect(0, 0, Constantes.Mundo.ANCHO_INTERFAZ, Constantes.Mundo.ALTO_INTERFAZ);
         shapeRenderer.end();
 

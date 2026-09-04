@@ -10,20 +10,31 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
-## [0.1.19] 2026-09-04
+## [0.1.20] 2026-09-03
 
 ### Agregado
 
-* Se agrego la clase PantallaPausa con funciones de pausa, reanudación del juego y salida al menú principal.
-* Se agrego la funcion de pausa y play en la clase de AudioManager para poder pausar y reanudar la musica del juego.
-* Se agrego un enum con los estados del juego para poder controlar el flujo del mismo.
-* Se agrego una funcion para poder detectar el escape en controlador de entrada y pausar el juego.
+* Se agregó que el enemigo al colisionar le haga daño al jugador.
+* Se agregó un hud con vida y tiempo de juego.
+* Se agregó un sistema que detecta un tiempo, al llegar ese tiempo es victoria con una pantalla provisional.
+* Se agregó que al morir salte una pantalla en la que se pueda reiniciar el juego o volver al menu.
+
+---
+
+## [0.1.19] 2026-09-03
+
+### Agregado
+
+* Se agregó la clase PantallaPausa con funciones de pausa, reanudación del juego y salida al menú principal.
+* Se agregó la función de pausa y play en la clase de AudioManager para poder pausar y reanudar la musica del juego.
+* Se agregó un enum con los estados del juego para poder controlar el flujo del mismo.
+* Se agregó una función para poder detectar el escape en controlador de entrada y pausar el juego.
 
 ## [0.1.18] 2026-09-03
 
 ### Agregado
 
-* Se agregó la logica para atacar.
+* Se agregó la lógica para atacar.
 * Se agregó un objeto arma al jugador.
 
 ---

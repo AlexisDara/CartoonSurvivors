@@ -53,6 +53,22 @@ public class ControladorEntrada {
             return estadoJuego;
         }
 
+        public boolean reiniciarJuego(AudioManager audioManager) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+                audioManager.detenerMusicaJuego();
+                return true;
+            }
+            return false;
+        }
+
+        public boolean volverMenu(AudioManager audioManager) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+                audioManager.detenerMusicaJuego();
+                return true;
+            }
+            return false;
+        }
+
         public boolean pasarPantalla() {
             return Gdx.input.isKeyPressed(Input.Keys.SPACE);
         }

@@ -76,6 +76,8 @@ public abstract class Jugador extends Entidad {
         }
     }
 
+
+
     @Override
     public void dibujar(Batch batch, float delta) {
         float offsetX = (TAMAÑO_REAL - hitbox.getWidth()) / 2f;
