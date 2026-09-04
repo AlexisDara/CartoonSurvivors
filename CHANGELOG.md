@@ -10,7 +10,11 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
-## [1.0.0,5] - 2026-09-04
+## [1.0.1] - 2026-09-04
+
+### Agregado
+* Se implemento el menu de opciones para la pantalla de menu
+* Se agrego la opcion de ajustar el volumen de la musica desde el menu de opciones.
 
 ### modificado
 
