@@ -54,6 +54,7 @@ Actualmente el proyecto cuenta con un **prototipo jugable**, en el cual ya se en
 - Reinicio de la partida.
 - Pantalla de derrota con estadísticas de la partida.
 - Pantalla de victoria al alcanzar el tiempo de supervivencia establecido.
+- Control de volumen y silencio.
 
 ### En desarrollo
 
@@ -69,7 +70,6 @@ Actualmente el proyecto cuenta con un **prototipo jugable**, en el cual ya se en
 - Nuevos tipos de enemigos.
 - Aumento progresivo de la dificultad.
 - Efectos de sonido.
-- Control de volumen y silencio.
 - Mejoras visuales y de interfaz.
 - Incorporación de nuevos escenarios y contenido.
 
@@ -98,3 +98,31 @@ Tablero dónde se podrá ir actualizando el progreso del proyecto.
 ```bash
 git clone https://github.com/AlexisDara/CartoonSurvivors.git
 cd CartoonSurvivors
+
+```
+
+### Ejecutar el proyecto (LWJGL3)
+
+En Windows:
+
+```bash
+gradlew.bat lwjgl3:run
+```
+
+En Linux/macOS:
+
+```bash
+./gradlew lwjgl3:run
+```
+
+### Compilar el proyecto
+
+```bash
+./gradlew build
+```
+
+o en Windows:
+
+```bash
+gradlew.bat build
+``
