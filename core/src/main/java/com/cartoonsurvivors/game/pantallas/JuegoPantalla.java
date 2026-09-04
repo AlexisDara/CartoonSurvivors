@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -31,6 +32,8 @@ import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_RE
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.VIDA_INICIAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 import com.cartoonsurvivors.game.utilidades.EstadoJuego;
+
+import java.awt.*;
 
 public class JuegoPantalla extends ScreenAdapter {
     private CartoonSurvivors game;
@@ -109,6 +112,7 @@ public class JuegoPantalla extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
         if (jugador.estaVivo()) {
+
             if (estadoJuego == EstadoJuego.JUGANDO) {
 
 
@@ -126,19 +130,23 @@ public class JuegoPantalla extends ScreenAdapter {
                 renderizadorMapa.render();
                 chequeoColisiones(delta);
                 chequeoAtaque();
-            }
+
             batch.setProjectionMatrix(camera.combined);
 
             dibujar(delta);
+            }
             //mostrarHitbox();
 
             if (estadoJuego == EstadoJuego.PAUSADO) {
                 pantallaPausa.render(delta);
             }
-            if(tiempoJuego>=120) {
-                estadoJuego = EstadoJuego.VICTORIA;
+            if(estadoJuego == EstadoJuego.VICTORIA ) {
                 audioManager.detenerMusicaJuego();
                 mostrarPantallaVictoria();
+            }
+            if(tiempoJuego>=200) {
+                estadoJuego = EstadoJuego.VICTORIA;
+
             }
         } else if(!jugador.estaVivo()) {
             mostrarPantallaMuerte();
@@ -215,14 +223,8 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
     private void mostrarPantallaMuerte() {
-        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
-        batch.begin();
-        font.draw(batch, "GAME OVER", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
-        font.draw( batch, "Enemigos eliminados: " + enemigosMatados, ANCHO_MUNDO / 2f - 90, ALTO_MUNDO / 2f - 40 );
-        font.draw( batch, "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos", ANCHO_MUNDO / 2f - 100, ALTO_MUNDO / 2f - 70 );
-        font.draw( batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 110 );
-        font.draw( batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 140 );
-        batch.end();
+
+        dibujarPantallaVictoriaDerrota(Color.RED, "DERROTA");
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
         }
@@ -230,16 +232,12 @@ public class JuegoPantalla extends ScreenAdapter {
             game.setScreen(new MenuPantalla(game));
         }
     }
+
+
 
     private void mostrarPantallaVictoria() {
-        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
-        batch.begin();
-        font.draw(batch, "VICTORIA", ANCHO_MUNDO / 2f - 50, ALTO_MUNDO / 2f);
-        font.draw( batch, "Enemigos eliminados: " + enemigosMatados, ANCHO_MUNDO / 2f - 90, ALTO_MUNDO / 2f - 40 );
-        font.draw( batch, "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos", ANCHO_MUNDO / 2f - 100, ALTO_MUNDO / 2f - 70 );
-        font.draw( batch, "Toca R para reiniciar", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 110 );
-        font.draw( batch, "Toca M para volver al menú", ANCHO_MUNDO / 2f - 75, ALTO_MUNDO / 2f - 140 );
-        batch.end();
+
+        dibujarPantallaVictoriaDerrota(Color.GREEN, "VICTORIA");
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
         }
@@ -248,7 +246,29 @@ public class JuegoPantalla extends ScreenAdapter {
         }
     }
 
-
+    private void dibujarPantallaVictoriaDerrota(Color color, String texto) {
+        GlyphLayout layout = new GlyphLayout();
+        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
+        batch.begin();
+        font.setColor(color);
+        String titulo = texto;
+        layout.setText(font, titulo);
+        font.draw(batch, titulo, ANCHO_MUNDO / 2f - layout.width / 2f, 500);
+        font.setColor(1, 1, 1, 1);
+        String enemigos = "Enemigos eliminados: " + enemigosMatados;
+        layout.setText(font, enemigos);
+        font.draw(batch, enemigos, ANCHO_MUNDO / 2f - layout.width / 2f, 430);
+        String tiempo = "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos";
+        layout.setText(font, tiempo);
+        font.draw(batch, tiempo, ANCHO_MUNDO / 2f - layout.width / 2f, 370);
+        String reiniciar = "Toca R para reiniciar";
+        layout.setText(font, reiniciar);
+        font.draw(batch, reiniciar, ANCHO_MUNDO / 2f - layout.width / 2f, 270);
+        String menu = "Toca M para volver al menú";
+        layout.setText(font, menu);
+        font.draw(batch, menu, ANCHO_MUNDO / 2f - layout.width / 2f, 210);
+        batch.end();
+    }
 
     private void chequeoColisiones(float delta) {
         int numeroHits = 0;

@@ -12,6 +12,7 @@ public class AudioManager {
         musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("audio/musica/musicaMenu.wav"));
         musicaJuego = Gdx.audio.newMusic(Gdx.files.internal("audio/musica/musicaJuego.wav"));
     }
+    
 
     public void reproducirMusicaMenu() {
         if (!musicaMenu.isPlaying()) {

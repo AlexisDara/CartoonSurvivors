@@ -10,7 +10,16 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
-## [1.0.0] - 2026-09-03
+## [1.0.0,5] - 2026-09-04
+
+### modificado
+
+* Se modificó la pantalla de victoria para que este centrado el texto.
+* Se modificó la pantalla de derrota para que este centrado el texto.
+
+---
+
+## [1.0.0] - 2026-09-04
 
 ### Agregado
 
