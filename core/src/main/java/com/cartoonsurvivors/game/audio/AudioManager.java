@@ -39,12 +39,25 @@ public class AudioManager {
         volumenMusica = prefs.getFloat("volumenMusica", volumenMusica);
         volumenSonidoEfecto = prefs.getFloat("volumenSonidoEfecto", volumenSonidoEfecto);
     }
+    
 
     public void reproducirMusicaMenu() {
         if (!musicaMenu.isPlaying()) {
             musicaMenu.setLooping(true);
             musicaMenu.setVolume(volumenMusica);
             musicaMenu.play();
+        }
+    }
+
+    public void pausarMusicaJuego() {
+        if (musicaJuego != null && musicaJuego.isPlaying()) {
+            musicaJuego.pause();
+        }
+    }
+
+    public void reanudarMusicaJuego() {
+        if (musicaJuego != null && !musicaJuego.isPlaying()) {
+            musicaJuego.play();
         }
     }
 

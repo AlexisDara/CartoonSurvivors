@@ -41,9 +41,11 @@ public class MenuPantalla extends ScreenAdapter {
 
     @Override
     public void show() {
-        fondo = new Texture("menuprincipal.png");
+        if (fondo == null) {
+            fondo = new Texture("menuprincipal.png");
+        }
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(viewport,batch);
         Gdx.input.setInputProcessor(stage);
 
         audioManager.reproducirMusicaMenu();
@@ -93,7 +95,6 @@ public class MenuPantalla extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        stage.getViewport().update(width, height, true);
     }
 
     @Override

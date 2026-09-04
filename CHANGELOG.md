@@ -10,6 +10,60 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.0.0,5] - 2026-09-04
+
+### modificado
+
+* Se modificó la pantalla de victoria para que este centrado el texto.
+* Se modificó la pantalla de derrota para que este centrado el texto.
+
+---
+
+## [1.0.0] - 2026-09-04
+
+### Agregado
+
+* Se agregó la estructura del arma y las funciones de dibujarlas
+* Se agregó funciones para que el enemigo reciba daño y muera al quedarse sin vida
+* Se agregó un contador que muestra cuantos enemigos eliminados llevas
+
+### Modificado
+
+*  Se agregó datos de partida en las pantallas de victoria/derrota
+*  Se modificó como dibujar el personaje en idle para que este correctamente dibujado tomando su ultima dirección
+
+
+---
+
+## [0.1.20] 2026-09-03
+
+### Agregado
+
+* Se agregó que el enemigo al colisionar le haga daño al jugador.
+* Se agregó un hud con vida y tiempo de juego.
+* Se agregó un sistema que detecta un tiempo, al llegar ese tiempo es victoria con una pantalla provisional.
+* Se agregó que al morir salte una pantalla en la que se pueda reiniciar el juego o volver al menu.
+
+---
+
+## [0.1.19] 2026-09-03
+
+### Agregado
+
+* Se agregó la clase PantallaPausa con funciones de pausa, reanudación del juego y salida al menú principal.
+* Se agregó la función de pausa y play en la clase de AudioManager para poder pausar y reanudar la musica del juego.
+* Se agregó un enum con los estados del juego para poder controlar el flujo del mismo.
+* Se agregó una función para poder detectar el escape en controlador de entrada y pausar el juego.
+
+## [0.1.18] 2026-09-03
+
+### Agregado
+
+* Se agregó la lógica para atacar.
+* Se agregó un objeto arma al jugador.
+
+---
+
 ## [0.1.17] 2026-09-03
 
 ### Agregado
