@@ -12,7 +12,25 @@ public class AudioManager {
     private float volumenMusica = 0.1f;
     private float volumenSonidoEfecto = 0.1f;
 
+    private int volumenMuscaporcentaje = 50;
+
     private Preferences prefs = Gdx.app.getPreferences("configuracion");
+
+
+    public void setVolumenMusica(float volumenMusica) {
+
+        this.volumenMusica = Math.max(0f, Math.min(1f, volumenMusica));
+        prefs.putFloat("volumenMusica",this.volumenMusica);
+        prefs.flush();
+
+        if (musicaMenu != null) {
+            musicaMenu.setVolume(this.volumenMusica);
+        }
+        if (musicaJuego != null) {
+            musicaJuego.setVolume(this.volumenMusica);
+        }
+
+    }
 
     public void cargarAudio() {
         musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("audio/musica/musicaMenu.wav"));
@@ -50,19 +68,13 @@ public class AudioManager {
         }
     }
 
-    public void setVolumenMusica(float volumenMusica) {
-        this.volumenMusica = volumenMusica;
-        prefs.putFloat("volumenMusica", volumenMusica);
-        prefs.flush();
-    }
-
     public float getVolumenMusica() {
-        return volumenMusica;
+        return Math.max(0f, Math.min(1f, prefs.getFloat("volumenMusica", 0.1f)));
     }
 
     public void setVolumenSonidoEfecto(float volumenSonidoEfecto) {
-        this.volumenSonidoEfecto = volumenSonidoEfecto;
-        prefs.putFloat("volumenSonidoEfecto", volumenSonidoEfecto);
+        this.volumenSonidoEfecto = Math.max(0f, Math.min(1f, volumenSonidoEfecto));
+        prefs.putFloat("volumenSonidoEfecto", this.volumenSonidoEfecto);
         prefs.flush();
     }
 

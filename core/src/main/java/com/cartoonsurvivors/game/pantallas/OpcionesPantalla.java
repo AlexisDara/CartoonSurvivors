@@ -28,8 +28,15 @@ public class OpcionesPantalla extends ScreenAdapter {
     private float volumenMusica;
     private float volumenSonidoEfecto;
 
+    private int volumenMusicaPorcentaje = 50;
+
+    public int porcentajeVolumen(float valor){
+        return Math.round(Math.max(0f, Math.min(1f, valor)) * 100f);
+    }
+
     public OpcionesPantalla(CartoonSurvivors game) {
         this.game = game;
+        this.volumenMusicaPorcentaje = Math.max(0, Math.min(100, Math.round(game.getAudioManager().getVolumenMusica() * 100f)));
         this.volumenMusica = game.getAudioManager().getVolumenMusica();
         this.volumenSonidoEfecto = game.getAudioManager().getVolumenSonidoEfecto();
     }
@@ -58,7 +65,7 @@ public class OpcionesPantalla extends ScreenAdapter {
         Label tituloLabel = new Label("Opciones", labelStyle);
         table.add(tituloLabel).padBottom(20).row();
 
-        Label volumenMusicaLabel = new Label("Volumen Música: " + (int)(volumenMusica * 100) + "%", labelStyle);
+        Label volumenMusicaLabel = new Label("Volumen Música: " + volumenMusicaPorcentaje + "%", labelStyle);
         TextButton musicaMenos = new TextButton("-", buttonStyle);
         TextButton musicaMas = new TextButton("+", buttonStyle);
 
@@ -67,17 +74,17 @@ public class OpcionesPantalla extends ScreenAdapter {
         musicaMenos.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                volumenMusica = Math.max(0, volumenMusica - 0.1f);
-                game.getAudioManager().setVolumenMusica(volumenMusica);
-                volumenMusicaLabel.setText("Volumen Música: " + (int)(volumenMusica * 100) + "%");
-            }
+                volumenMusicaPorcentaje = Math.max(0, volumenMusicaPorcentaje - 10);
+                game.getAudioManager().setVolumenMusica(volumenMusicaPorcentaje / 100f);
+                volumenMusicaLabel.setText("Volumen Música: " + volumenMusicaPorcentaje + "%");}
         });
+
         musicaMas.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                volumenMusica = Math.min(1, volumenMusica + 0.1f);
-                game.getAudioManager().setVolumenMusica(volumenMusica);
-                volumenMusicaLabel.setText("Volumen Música: " + (int)(volumenMusica * 100) + "%");
+                volumenMusicaPorcentaje = Math.min(100, volumenMusicaPorcentaje + 10);
+                game.getAudioManager().setVolumenMusica(volumenMusicaPorcentaje / 100f);
+                volumenMusicaLabel.setText("Volumen Música: " + volumenMusicaPorcentaje + "%");
             }
         });
 
