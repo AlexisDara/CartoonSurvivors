@@ -10,7 +10,19 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
-## [1.0.3]
+## [1.0.4] - 2026-10-27
+
+### Agregado
+
+* Se agregó la clase HUDJuego.
+
+### modificado
+
+* Se delegaron las funciones de pantallas victoria/derrota, y el hud de la clase JuegoPantalla a HUDJuego
+
+---
+
+## [1.0.3] - 2026-10-27
 
 ### Agregado
 
@@ -19,7 +31,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### modificado 
 
-* Se delegaron las funciones de la aparicion y gestion de lkos enemigos de la clase JuegoPantalla a GestorEnemigos
+* Se delegaron las funciones de la aparicion y gestion de los enemigos de la clase JuegoPantalla a GestorEnemigos
 * Se delegaron las funciones de las colisiones entre armas, enemigos y jugador de la clase JuegoPantalla a SistemaColisiones
 
 ---

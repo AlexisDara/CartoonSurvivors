@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
@@ -49,7 +48,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private final SistemaColisiones sistemaColisiones = new SistemaColisiones();
     private ShapeRenderer shapeRenderer;
     private PantallaPausa pantallaPausa;
-
+    private final HUDJuego hudJuego;
     private GestorEnemigos gestorEnemigos;
 
 
@@ -58,6 +57,7 @@ public class JuegoPantalla extends ScreenAdapter {
         this.game = game;
         this.font = game.getFont();
         this.batch = game.getBatch();
+        this.hudJuego = new HUDJuego(batch, font, HUDViewport);
         this.audioManager = game.getAudioManager();
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
@@ -164,14 +164,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.end();
 
-        HUDViewport.apply();
-        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
-        batch.begin();
-        font.draw(batch, "Vida: " + String.format("%.0f", jugador.getVida()), 10, ALTO_MUNDO - 10);
-        font.draw(batch, "Tiempo: " + String.format("%.0f", tiempoJuego), (ANCHO_MUNDO /2) - 90f, ALTO_MUNDO - 10);
-        font.draw(batch, "Enemigos: " + gestorEnemigos.getEnemigosMatados(), 10, ALTO_MUNDO - 35
-        );
-        batch.end();
+        hudJuego.dibujarHUD(jugador, tiempoJuego, gestorEnemigos.getEnemigosMatados());
     }
 
     private void mostrarHitbox() {
@@ -201,7 +194,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
     private void mostrarPantallaMuerte() {
 
-        dibujarPantallaVictoriaDerrota(Color.RED, "DERROTA");
+        hudJuego.dibujarPantallaVictoriaDerrota(Color.RED, "DERROTA", gestorEnemigos.getEnemigosMatados(), tiempoJuego);
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
         }
@@ -214,37 +207,13 @@ public class JuegoPantalla extends ScreenAdapter {
 
     private void mostrarPantallaVictoria() {
 
-        dibujarPantallaVictoriaDerrota(Color.GREEN, "VICTORIA");
+        hudJuego.dibujarPantallaVictoriaDerrota(Color.GREEN, "VICTORIA", gestorEnemigos.getEnemigosMatados(), tiempoJuego);
         if(controladorEntrada.reiniciarJuego(audioManager)) {
             reiniciarJuego(audioManager);
         }
         if (controladorEntrada.volverMenu(audioManager)) {
             game.setScreen(new MenuPantalla(game));
         }
-    }
-
-    private void dibujarPantallaVictoriaDerrota(Color color, String texto) {
-        GlyphLayout layout = new GlyphLayout();
-        batch.setProjectionMatrix(HUDViewport.getCamera().combined);
-        batch.begin();
-        font.setColor(color);
-        String titulo = texto;
-        layout.setText(font, titulo);
-        font.draw(batch, titulo, ANCHO_MUNDO / 2f - layout.width / 2f, 500);
-        font.setColor(1, 1, 1, 1);
-        String enemigos = "Enemigos eliminados: " + gestorEnemigos.getEnemigosMatados();
-        layout.setText(font, enemigos);
-        font.draw(batch, enemigos, ANCHO_MUNDO / 2f - layout.width / 2f, 430);
-        String tiempo = "Tiempo sobrevivido: " + String.format("%.0f", tiempoJuego) + " segundos";
-        layout.setText(font, tiempo);
-        font.draw(batch, tiempo, ANCHO_MUNDO / 2f - layout.width / 2f, 370);
-        String reiniciar = "Toca R para reiniciar";
-        layout.setText(font, reiniciar);
-        font.draw(batch, reiniciar, ANCHO_MUNDO / 2f - layout.width / 2f, 270);
-        String menu = "Toca M para volver al menú";
-        layout.setText(font, menu);
-        font.draw(batch, menu, ANCHO_MUNDO / 2f - layout.width / 2f, 210);
-        batch.end();
     }
 
     private void camaraSeguirJugador() {
