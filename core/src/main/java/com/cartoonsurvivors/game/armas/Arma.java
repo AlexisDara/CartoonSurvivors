@@ -3,30 +3,27 @@ package com.cartoonsurvivors.game.armas;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.cartoonsurvivors.game.entidades.Entidad;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class Arma {
 
     private int danio;
     private float tiempoEntreAtaques;
     private float tiempoDesdeUltimoAtaque;
-
+    private final Set<Entidad> entidadesGolpeadas = new HashSet<>();
     private float tiempoAtaque;
     private float duracionAtaque;
     private boolean estaAtacando;
 
     private final Rectangle areaAtaque = new Rectangle();
 
-    protected Arma(
-        int danio,
-        float tiempoEntreAtaques,
-        float anchoAtaque,
-        float altoAtaque,
-        float duracionAtaque
-    ) {
+    protected Arma(int danio, float tiempoEntreAtaques, float anchoAtaque, float altoAtaque, float duracionAtaque) {
         this.danio = danio;
         this.tiempoEntreAtaques = tiempoEntreAtaques;
         this.tiempoDesdeUltimoAtaque = tiempoEntreAtaques;
-
         this.duracionAtaque = duracionAtaque;
         this.tiempoAtaque = 0;
         this.estaAtacando = false;
@@ -54,14 +51,37 @@ public abstract class Arma {
     protected void iniciarAtaque() {
         estaAtacando = true;
         tiempoAtaque = 0;
+        entidadesGolpeadas.clear();
         reiniciarAtaque();
+    }
+
+    public boolean registrarGolpe(Entidad entidad) {
+        if (!estaAtacando || entidad == null) {
+            return false;
+        }
+
+        return entidadesGolpeadas.add(entidad);
+    }
+
+    public void comprobarGolpe(Entidad entidad) {
+        if (!estaAtacando || entidad == null || !entidad.estaVivo()) {
+            return;
+        }
+
+        Rectangle areaAtaque = getAreaAtaque();
+
+        if (areaAtaque.overlaps(entidad.getHitbox())) {
+            if (registrarGolpe(entidad)) {
+                entidad.recibirDanio(getDanio());
+            }
+        }
     }
 
     public boolean estaAtacando() {
         return estaAtacando;
     }
 
-    public void reiniciarAtaque() {
+    private void reiniciarAtaque() {
         tiempoDesdeUltimoAtaque = 0;
     }
 
@@ -69,11 +89,11 @@ public abstract class Arma {
         return danio;
     }
 
-    public float getTiempoEntreAtaques() {
+    protected float getTiempoEntreAtaques() {
         return tiempoEntreAtaques;
     }
 
-    public Rectangle getAreaAtaque() {
+    protected Rectangle getAreaAtaque() {
         return areaAtaque;
     }
 

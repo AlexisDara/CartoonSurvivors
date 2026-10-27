@@ -5,12 +5,14 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+
 public class Espada extends Arma {
 
     private final ShapeRenderer shapeRenderer;
     private final Vector2 direccionAtaque = new Vector2();
+
     public Espada() {
-        super(25, 1.0f, 40f, 20f, 0.2f);
+        super(24, 1.0f, 40f, 20f, 0.2f);
 
         shapeRenderer = new ShapeRenderer();
     }

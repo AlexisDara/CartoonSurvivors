@@ -10,6 +10,15 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.0.1] - 2026-10-27
+
+### modificado
+
+* Se modificó el ataque del jugador para que ejecute una vez por ataque su daño
+* Se delegaron responsabilidades de juego pantalla a arma.
+
+---
+
 ## [1.0.1] - 2026-09-04
 
 ### Agregado

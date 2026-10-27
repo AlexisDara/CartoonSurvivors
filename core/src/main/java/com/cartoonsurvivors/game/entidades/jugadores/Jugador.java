@@ -106,8 +106,7 @@ public abstract class Jugador extends Entidad {
     batch.draw( idle, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL );
 
     }
-
-    // DIBUJAR EL ATAQUE
+        
       arma.dibujar(batch);
     }
 

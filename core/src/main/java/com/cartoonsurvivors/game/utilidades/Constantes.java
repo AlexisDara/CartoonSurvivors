@@ -31,7 +31,7 @@ public final class Constantes {
         public static final float MARGEN_APARICION = 2f;
         public static final float ANCHO_ENEMIGO = 36f; // Ancho del sprite del enemigo
         public static final float ALTO_ENEMIGO = 60f; // Alto del sprite del enemigo
-        public static final int VIDA_ENEMIGO = 20;
+        public static final int VIDA_ENEMIGO = 25;
         public static final int DANIO_ENEMIGO = 15;
     }
 

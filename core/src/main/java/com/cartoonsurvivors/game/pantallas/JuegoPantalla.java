@@ -53,7 +53,6 @@ public class JuegoPantalla extends ScreenAdapter {
     private float tiempoSpawn;
     private float tiempoJuego;
     private Array<EnemigoBasico> enemigos = new Array<>();
-    private final Array<EnemigoBasico> enemigosGolpeados = new Array<>();
     private int enemigosMatados = 0;
 
     private ShapeRenderer shapeRenderer;
@@ -186,14 +185,9 @@ public class JuegoPantalla extends ScreenAdapter {
         if (!jugador.getArma().estaAtacando()) {
             return;
         }
-        Rectangle areaAtaque = jugador.getArma().getAreaAtaque();
+
         for (EnemigoBasico enemigo : enemigos) {
-            if (!enemigo.estaVivo()) {
-                continue;
-            }
-            if (areaAtaque.overlaps(enemigo.getHitbox())) {
-                enemigo.recibirDanio(jugador.getArma().getDanio());
-            }
+            jugador.getArma().comprobarGolpe(enemigo);
         }
     }
 
