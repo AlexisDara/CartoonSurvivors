@@ -106,8 +106,27 @@ public abstract class Jugador extends Entidad {
     batch.draw( idle, this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, TAMAÑO_REAL, TAMAÑO_REAL );
 
     }
-        
+
       arma.dibujar(batch);
+    }
+
+    @Override
+    public void dispose() {
+        if (texturaIdle != null) {
+            texturaIdle.dispose();
+        }
+
+        if (animacionCaminar != null) {
+            TextureRegion[] frames = animacionCaminar.getKeyFrames();
+
+            if (frames.length > 0 && frames[0] != null) {
+                frames[0].getTexture().dispose();
+            }
+        }
+
+        if (arma != null) {
+            arma.dispose();
+        }
     }
 
 

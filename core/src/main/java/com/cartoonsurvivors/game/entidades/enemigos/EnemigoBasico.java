@@ -48,4 +48,7 @@ public class EnemigoBasico extends Enemigo {
             batch.draw(this.getFrameCaminar(delta), this.getPosicionX() - offsetX, this.getPosicionY() - offsetY, ANCHO_ENEMIGO, ALTO_ENEMIGO);
 
     }
+
+    @Override
+    public void dispose() {}
 }

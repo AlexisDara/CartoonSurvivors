@@ -18,6 +18,11 @@ public class Espada extends Arma {
     }
 
     @Override
+    public void dispose() {
+        shapeRenderer.dispose();
+    }
+
+    @Override
     public void atacar(
         Rectangle hitboxJugador,
         Vector2 direccionMirada

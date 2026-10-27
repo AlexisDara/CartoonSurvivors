@@ -96,11 +96,9 @@ public abstract class Arma {
     public Rectangle getAreaAtaque() {
         return areaAtaque;
     }
+    public void dispose(){}
 
-    public void actualizarAreaAtaque(
-        Rectangle hitboxJugador,
-        Vector2 direccionMirada
-    ) {
+    public void actualizarAreaAtaque(Rectangle hitboxJugador, Vector2 direccionMirada) {
         float centroX = hitboxJugador.x + hitboxJugador.width / 2f;
         float centroY = hitboxJugador.y + hitboxJugador.height / 2f;
 
@@ -120,10 +118,9 @@ public abstract class Arma {
         );
     }
 
-    public abstract void atacar(
-        Rectangle hitboxJugador,
-        Vector2 direccionMirada
-    );
+    public abstract void atacar(Rectangle hitboxJugador, Vector2 direccionMirada);
+
+
 
     public abstract void dibujar(Batch batch);
 }

@@ -10,6 +10,18 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.0.5] - 2026-10
+
+### Agregado
+
+* Se añaden metodos de dispose para liberar recursos.
+
+### modificado
+
+* Se modifico el metodo SetScreen de LibGDX para hacer haga dispose al cambiar la pantalla
+
+---
+
 ## [1.0.4] - 2026-10-27
 
 ### Agregado

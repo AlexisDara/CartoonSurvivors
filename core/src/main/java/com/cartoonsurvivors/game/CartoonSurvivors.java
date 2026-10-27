@@ -2,6 +2,7 @@ package com.cartoonsurvivors.game;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -11,10 +12,22 @@ import com.cartoonsurvivors.game.pantallas.MenuPantalla;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
 import com.cartoonsurvivors.game.audio.AudioManager;
 
+
 public class CartoonSurvivors extends Game {
     private SpriteBatch batch;
     private BitmapFont font;
     private AudioManager audioManager;
+
+    @Override
+    public void setScreen(Screen nuevaPantalla) {
+        Screen pantallaAnterior = getScreen();
+
+        super.setScreen(nuevaPantalla);
+
+        if (pantallaAnterior != null && pantallaAnterior != nuevaPantalla) {
+            pantallaAnterior.dispose();
+        }
+    }
 
     @Override
     public void create() {

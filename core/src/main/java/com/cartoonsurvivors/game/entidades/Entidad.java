@@ -73,4 +73,5 @@ public abstract class Entidad {
         return hitbox;
     }
 
+    public abstract void dispose();
 }

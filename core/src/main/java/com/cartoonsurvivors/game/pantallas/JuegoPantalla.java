@@ -50,6 +50,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private PantallaPausa pantallaPausa;
     private final HUDJuego hudJuego;
     private GestorEnemigos gestorEnemigos;
+    private Texture texturaEnemigos;
 
 
 
@@ -241,14 +242,20 @@ public class JuegoPantalla extends ScreenAdapter {
         estadoJuego = EstadoJuego.JUGANDO;
 
         Gdx.input.setInputProcessor(null);
-        EnemigoSpawner enemigoSpawner = new EnemigoSpawner(VIDA_ENEMIGO, VELOCIDAD_ENEMIGO, DANIO_ENEMIGO, new Texture("enemigos/minion.png"));
+        texturaEnemigos = new Texture("enemigos/minion.png");
+        EnemigoSpawner enemigoSpawner = new EnemigoSpawner(VIDA_ENEMIGO, VELOCIDAD_ENEMIGO, DANIO_ENEMIGO, texturaEnemigos);
         gestorEnemigos = new GestorEnemigos(enemigoSpawner);
     }
 
     @Override
     public void dispose() {
+
         if (pantallaPausa != null) pantallaPausa.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
+        if (renderizadorMapa != null) renderizadorMapa.dispose();
+        if (mapa != null) mapa.dispose();
+        if (jugador != null) jugador.dispose();
+        if (texturaEnemigos != null) texturaEnemigos.dispose();
     }
 
 }
