@@ -10,7 +10,21 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
-## [1.0.1] - 2026-10-27
+## [1.0.3]
+
+### Agregado
+
+* Se agregó la clase GestorEnemigos.
+* Se agregó la clase SistemaColisiones.
+
+### modificado 
+
+* Se delegaron las funciones de la aparicion y gestion de lkos enemigos de la clase JuegoPantalla a GestorEnemigos
+* Se delegaron las funciones de las colisiones entre armas, enemigos y jugador de la clase JuegoPantalla a SistemaColisiones
+
+---
+
+## [1.0.2] - 2026-10-27
 
 ### modificado
 
@@ -23,7 +37,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 * Se implemento el menu de opciones para la pantalla de menu
-* Se agrego la opcion de ajustar el volumen de la musica desde el menu de opciones.
+* Se agregó la opcion de ajustar el volumen de la música desde el menu de opciones.
 
 ### modificado
 
@@ -43,7 +57,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 ### Modificado
 
 *  Se agregó datos de partida en las pantallas de victoria/derrota
-*  Se modificó como dibujar el personaje en idle para que este correctamente dibujado tomando su ultima dirección
+*  Se modificó como dibujar el personaje en ídle para que esté correctamente dibujado tomando su última dirección
 
 
 ---
@@ -64,7 +78,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 ### Agregado
 
 * Se agregó la clase PantallaPausa con funciones de pausa, reanudación del juego y salida al menú principal.
-* Se agregó la función de pausa y play en la clase de AudioManager para poder pausar y reanudar la musica del juego.
+* Se agregó la función de pausa y play en la clase de AudioManager para poder pausar y reanudar la música del juego.
 * Se agregó un enum con los estados del juego para poder controlar el flujo del mismo.
 * Se agregó una función para poder detectar el escape en controlador de entrada y pausar el juego.
 
@@ -122,7 +136,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
-* Se agrego la musica al menu.
+* Se agregó la música al menu.
 * Se agregó la música al juego.
 
 ---
@@ -137,8 +151,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 ### Agregado
 
 * Se agrego la animacion del personaje del jugador.
-* Agregado de los archivos de audio para la musica del menu y e juego.
-* Se agrego la clase de AudioManager.
+* Agregado de los archivos de audio para la música del menu y del juego.
+* Se agregó la clase de AudioManager.
 
 
 ---
@@ -270,7 +284,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Inicialización del proyecto con LibGDX mediante gdx-liftoff.
 * Configuración inicial del proyecto con Gradle.
 * Creación de la estructura base del juego.
-* Configuración del archivo .gitignore.
+* Configuración del archivo gitignore.
 * Creación del archivo README.md.
 * Creación del archivo CHANGELOG.md.
 * Publicación de la propuesta formal del proyecto en la Wiki del repositorio.

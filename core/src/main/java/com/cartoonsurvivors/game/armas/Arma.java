@@ -93,7 +93,7 @@ public abstract class Arma {
         return tiempoEntreAtaques;
     }
 
-    protected Rectangle getAreaAtaque() {
+    public Rectangle getAreaAtaque() {
         return areaAtaque;
     }
 
