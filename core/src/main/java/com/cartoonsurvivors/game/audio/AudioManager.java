@@ -9,7 +9,7 @@ public class AudioManager {
     private Music musicaMenu;
     private Music musicaJuego;
 
-    private float volumenMusica = 0.1f;
+    private float volumenMusica = 0f;
     private float volumenSonidoEfecto = 0.1f;
 
     private int volumenMuscaporcentaje = 50;
@@ -39,7 +39,7 @@ public class AudioManager {
         volumenMusica = prefs.getFloat("volumenMusica", volumenMusica);
         volumenSonidoEfecto = prefs.getFloat("volumenSonidoEfecto", volumenSonidoEfecto);
     }
-    
+
 
     public void reproducirMusicaMenu() {
         if (!musicaMenu.isPlaying()) {

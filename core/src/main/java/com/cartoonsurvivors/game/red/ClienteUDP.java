@@ -265,21 +265,27 @@ public class ClienteUDP {
 
     public void desconectar() {
 
-        if (!ejecutando) {
-            return;
+        if (ejecutando) {
+            enviarMensaje("DESCONECTAR");
         }
-
-        enviarMensaje("DESCONECTAR");
 
         detenerKeepAlive();
 
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;
+        partidaFinalizada = false;
 
-        if (socket != null) {
+        idJugador = 0;
+        ultimaBusqueda = 0;
+
+        direccionServidor = null;
+
+        if (socket != null && !socket.isClosed()) {
             socket.close();
         }
+
+        socket = null;
 
         Gdx.app.log("ClienteUDP", "Cliente desconectado");
     }

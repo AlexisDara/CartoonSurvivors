@@ -18,6 +18,13 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.1.1]
+
+### modificado
+
+* se modifico la lobby para que ahora tenga su estado de lobby y al iniciar pase a la pantalla de juego(desincronizada)
+
+---
 ## [1.1.0]
 
 ### Agregado
