@@ -10,6 +10,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.1.0]
+
+### Agregado
+
+* Se añade la funcionalidad de poder conectarse en red al server.
+
+---
+
 ## [1.0.5] - 2026-10
 
 ### Agregado

@@ -11,13 +11,13 @@ import com.cartoonsurvivors.game.pantallas.JuegoPantalla;
 import com.cartoonsurvivors.game.pantallas.MenuPantalla;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Recursos.*;
 import com.cartoonsurvivors.game.audio.AudioManager;
-
+import com.cartoonsurvivors.game.red.ClienteUDP;
 
 public class CartoonSurvivors extends Game {
     private SpriteBatch batch;
     private BitmapFont font;
     private AudioManager audioManager;
-
+    private ClienteUDP clienteUDP;
     @Override
     public void setScreen(Screen nuevaPantalla) {
         Screen pantallaAnterior = getScreen();
@@ -53,13 +53,17 @@ public class CartoonSurvivors extends Game {
         font = generator.generateFont(parametrosLetra);
         generator.dispose();
 
-
+        clienteUDP = new ClienteUDP();
+        clienteUDP.conectar();
         setScreen(new MenuPantalla(this));
     }
 
     @Override
     public void render() {
         super.render();
+        if (clienteUDP != null) {
+            clienteUDP.actualizar();
+        }
     }
 
     @Override
@@ -68,6 +72,9 @@ public class CartoonSurvivors extends Game {
         batch.dispose();
         font.dispose();
         audioManager.dispose();
+        if (clienteUDP != null) {
+            clienteUDP.desconectar();
+        }
     }
 
     public SpriteBatch getBatch() {
