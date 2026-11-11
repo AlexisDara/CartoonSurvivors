@@ -46,7 +46,7 @@ public class ControlesPantalla extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (controladorEntrada.pasarPantalla()) {
-            game.setScreen(new JuegoPantalla(game));
+            game.setScreen(new MenuPantalla(game));
             audioManager.detenerMusicaMenu();
         }
 

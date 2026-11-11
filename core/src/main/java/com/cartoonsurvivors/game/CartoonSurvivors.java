@@ -54,8 +54,12 @@ public class CartoonSurvivors extends Game {
         generator.dispose();
 
         clienteUDP = new ClienteUDP();
-        clienteUDP.conectar();
+
         setScreen(new MenuPantalla(this));
+    }
+
+    public ClienteUDP getClienteUDP() {
+        return clienteUDP;
     }
 
     @Override

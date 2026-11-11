@@ -10,6 +10,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.1.1]
+
+### Agregado
+
+* se agrega la pantalla SalaMultijugador para albergar la lobby.
+
+---
+
 ## [1.1.0]
 
 ### Agregado

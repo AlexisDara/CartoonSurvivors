@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 import com.cartoonsurvivors.game.audio.AudioManager;
 import com.cartoonsurvivors.game.utilidades.Constantes;
+import org.w3c.dom.css.RGBColor;
 
 public class MenuPantalla extends ScreenAdapter {
     private final CartoonSurvivors game;
@@ -45,7 +46,7 @@ public class MenuPantalla extends ScreenAdapter {
             fondo = new Texture("menuprincipal.png");
         }
 
-        stage = new Stage(viewport,batch);
+        stage = new Stage(viewport, batch);
         Gdx.input.setInputProcessor(stage);
 
         audioManager.reproducirMusicaMenu();
@@ -53,8 +54,8 @@ public class MenuPantalla extends ScreenAdapter {
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = font;
         buttonStyle.fontColor = Color.WHITE;
-        buttonStyle.overFontColor = Color.YELLOW;
-        buttonStyle.downFontColor = Color.ORANGE;
+        buttonStyle.overFontColor = new Color(161f / 255f, 251f / 255f, 255f, 1.0f);
+        buttonStyle.downFontColor = new Color(206f / 255f, 38f / 255f, 90f / 255f, 1.0f);
 
 
         Table table = new Table();
@@ -63,11 +64,12 @@ public class MenuPantalla extends ScreenAdapter {
 
         TextButton btnJugar = new TextButton("JUGAR", buttonStyle);
         TextButton btnOpciones = new TextButton("OPCIONES", buttonStyle);
+        TextButton btnControles = new TextButton("CONTROLES", buttonStyle);
         TextButton btnSalir = new TextButton("SALIR", buttonStyle);
         btnJugar.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new ControlesPantalla(game));
+                game.setScreen(new SalaMultijugador(game));
             }
         });
 
@@ -78,6 +80,13 @@ public class MenuPantalla extends ScreenAdapter {
             }
         });
 
+        btnControles.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new ControlesPantalla(game));
+            }
+        });
+
         btnSalir.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -85,11 +94,13 @@ public class MenuPantalla extends ScreenAdapter {
             }
         });
 
-        table.add(btnJugar).width(300).height(70).padBottom(40);
+        table.add(btnJugar).width(280).height(50).padBottom(40);
         table.row();
-        table.add(btnOpciones).width(300).height(70).padBottom(40);
+        table.add(btnOpciones).width(280).height(40).padBottom(40);
         table.row();
-        table.add(btnSalir).width(300).height(70);
+        table.add(btnControles).width(280).height(40).padBottom(40);
+        table.row();
+        table.add(btnSalir).width(280).height(70);
     }
 
     @Override
