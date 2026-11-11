@@ -16,9 +16,11 @@ import java.util.concurrent.TimeUnit;
 public class ClienteUDP {
 
     private static final int PUERTO_SERVIDOR = 7777;
+    private static final int TIEMPO_ESPERA_SOCKET = 500;
+    private static final long INTERVALO_BUSQUEDA = 3000;
 
     private DatagramSocket socket;
-    private InetAddress direccionServidor;
+    private volatile InetAddress direccionServidor;
 
     private Thread hiloReceptor;
     private ScheduledExecutorService hiloKeepAlive;
@@ -27,12 +29,14 @@ public class ClienteUDP {
     private volatile boolean conectado = false;
     private volatile boolean partidaIniciada = false;
     private volatile boolean partidaFinalizada = false;
+    private volatile boolean sesionFinalizada = false;
+    private volatile boolean servidorLleno = false;
 
     private volatile int idJugador = 0;
 
     private long ultimaBusqueda = 0;
 
-    public void conectar() {
+    public synchronized void conectar() {
 
         if (ejecutando) {
             return;
@@ -41,26 +45,35 @@ public class ClienteUDP {
         try {
             socket = new DatagramSocket();
             socket.setBroadcast(true);
-            socket.setSoTimeout(500);
+            socket.setSoTimeout(TIEMPO_ESPERA_SOCKET);
+
             ejecutando = true;
+
             hiloReceptor = new HiloReceptor();
             hiloReceptor.start();
+
             buscarServidor();
 
         } catch (IOException e) {
             ejecutando = false;
+
             if (socket != null) {
                 socket.close();
+                socket = null;
             }
+
             Gdx.app.error("ClienteUDP", "Error al iniciar cliente", e);
         }
     }
 
     private void buscarServidor() {
 
-        try {
+        if (!ejecutando || socket == null || socket.isClosed()) {
+            return;
+        }
 
-            byte[] datos = "BUSCAR_SERVIDOR".getBytes(StandardCharsets.UTF_8);
+        try {
+            byte[] datos = ProtocoloRed.BUSCAR_SERVIDOR.getBytes(StandardCharsets.UTF_8);
 
             InetAddress broadcast = InetAddress.getByName("255.255.255.255");
 
@@ -71,7 +84,6 @@ public class ClienteUDP {
             Gdx.app.log("ClienteUDP", "Buscando servidor en la red local...");
 
         } catch (IOException e) {
-
             Gdx.app.error("ClienteUDP", "Error buscando servidor", e);
         }
     }
@@ -88,10 +100,9 @@ public class ClienteUDP {
 
         byte[] buffer = new byte[1024];
 
-        while (ejecutando && !socket.isClosed()) {
+        while (ejecutando && socket != null && !socket.isClosed()) {
 
             try {
-
                 DatagramPacket paquete = new DatagramPacket(buffer, buffer.length);
 
                 socket.receive(paquete);
@@ -105,7 +116,7 @@ public class ClienteUDP {
                 procesarMensaje(mensaje, paquete.getAddress());
 
             } catch (SocketTimeoutException e) {
-
+                // Es normal: permite revisar periódicamente si seguimos ejecutando.
 
             } catch (SocketException e) {
 
@@ -117,16 +128,18 @@ public class ClienteUDP {
 
             } catch (IOException e) {
 
-                Gdx.app.error("ClienteUDP", "Error recibiendo mensaje", e);
+                if (ejecutando) {
+                    Gdx.app.error("ClienteUDP", "Error recibiendo mensaje", e);
+                }
             }
         }
     }
 
     private void procesarMensaje(String mensaje, InetAddress ipOrigen) {
 
-        if (mensaje.equals("SERVIDOR_ENCONTRADO")) {
+        if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
 
-            if (direccionServidor != null) {
+            if (direccionServidor != null || servidorLleno) {
                 return;
             }
 
@@ -134,7 +147,16 @@ public class ClienteUDP {
 
             Gdx.app.log("ClienteUDP", "Servidor encontrado: " + direccionServidor.getHostAddress());
 
-            enviarMensaje("CONECTAR");
+            enviarMensaje(ProtocoloRed.CONECTAR);
+
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.SERVIDOR_LLENO) || mensaje.equals("LLENO")) {
+
+            servidorLleno = true;
+
+            Gdx.app.log("ClienteUDP", "El servidor está lleno");
 
             return;
         }
@@ -143,82 +165,106 @@ public class ClienteUDP {
             return;
         }
 
-        switch (mensaje) {
+        if (mensaje.equals(ProtocoloRed.OK_JUGADOR_1)) {
 
-            case "OK-1":
+            idJugador = 1;
+            conectado = true;
 
-                idJugador = 1;
-                conectado = true;
+            iniciarKeepAlive();
 
-                iniciarKeepAlive();
+            Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
 
-                Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
+        } else if (mensaje.equals(ProtocoloRed.OK_JUGADOR_2)) {
 
-                break;
+            idJugador = 2;
+            conectado = true;
 
-            case "OK-2":
+            iniciarKeepAlive();
 
-                idJugador = 2;
-                conectado = true;
+            Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
 
-                iniciarKeepAlive();
+        } else if (mensaje.equals(ProtocoloRed.JUGADOR_CONECTADO)) {
 
-                Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
+            Gdx.app.log("ClienteUDP", "El otro jugador se conectó");
 
-                break;
+        } else if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
 
-            case "EMPIEZA":
+            partidaIniciada = true;
+            partidaFinalizada = false;
 
-                partidaIniciada = true;
+            Gdx.app.log("ClienteUDP", "Empieza la partida");
 
-                Gdx.app.log("ClienteUDP", "Empieza la partida");
+        } else if (mensaje.equals(ProtocoloRed.PARTIDA_FINALIZADA)) {
 
-                break;
+            partidaIniciada = false;
+            partidaFinalizada = true;
 
-            case "LLENO":
+            Gdx.app.log("ClienteUDP", "La partida finalizó");
 
-                Gdx.app.log("ClienteUDP", "Servidor lleno");
+        } else if (mensaje.equals(ProtocoloRed.SESION_FINALIZADA) || mensaje.startsWith(ProtocoloRed.SESION_FINALIZADA + "|")) {
 
-                break;
+            procesarSesionFinalizada(mensaje);
 
-            case "OTRO_JUGADOR_DESCONECTADO":
+        } else if (mensaje.equals(ProtocoloRed.DESCONEXION_INESPERADA) || mensaje.equals("OTRO_JUGADOR_DESCONECTADO")) {
 
-                partidaFinalizada = true;
-                partidaIniciada = false;
+            procesarDesconexionInesperada();
 
-                Gdx.app.log("ClienteUDP", "El otro jugador se desconectó");
+        } else if (mensaje.startsWith(ProtocoloRed.JUGADOR_LISTO)) {
 
-                break;
+            Gdx.app.log("ClienteUDP", "Un jugador está listo: " + mensaje);
 
-            case "PARTIDA_FINALIZADA":
+        } else {
 
-                Gdx.app.log("ClienteUDP", "La partida anterior ya finalizó");
-
-                break;
-
-            default:
-                Gdx.app.log("ClienteUDP", "Mensaje recibido: " + mensaje);
-                break;
+            Gdx.app.log("ClienteUDP", "Mensaje recibido: " + mensaje);
         }
     }
 
-    private void iniciarKeepAlive() {
+    private void procesarSesionFinalizada(String mensaje) {
+
+        sesionFinalizada = true;
+        partidaIniciada = false;
+        conectado = false;
+
+        detenerKeepAlive();
+
+        Gdx.app.log("ClienteUDP", "La sesión finalizó. Motivo: " + mensaje);
+    }
+
+    private void procesarDesconexionInesperada() {
+
+        sesionFinalizada = true;
+        partidaIniciada = false;
+        conectado = false;
+
+        detenerKeepAlive();
+
+        Gdx.app.log("ClienteUDP", "El otro jugador se desconectó inesperadamente");
+    }
+
+    private synchronized void iniciarKeepAlive() {
 
         if (hiloKeepAlive != null && !hiloKeepAlive.isShutdown()) {
             return;
         }
 
-        hiloKeepAlive = Executors.newSingleThreadScheduledExecutor();
+        hiloKeepAlive = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread hilo = new Thread(runnable, "ClienteUDP-KeepAlive");
+            hilo.setDaemon(true);
+            return hilo;
+        });
 
-        hiloKeepAlive.scheduleAtFixedRate(() -> enviarMensaje("KEEP_ALIVE"), 0, 2, TimeUnit.SECONDS);
+        hiloKeepAlive.scheduleAtFixedRate(() -> {
+            if (ejecutando && conectado) {
+                enviarMensaje(ProtocoloRed.KEEP_ALIVE);
+            }
+        }, 0, 2, TimeUnit.SECONDS);
 
         Gdx.app.log("ClienteUDP", "KeepAlive iniciado");
     }
 
-    private void detenerKeepAlive() {
+    private synchronized void detenerKeepAlive() {
 
         if (hiloKeepAlive != null) {
-
             hiloKeepAlive.shutdownNow();
             hiloKeepAlive = null;
         }
@@ -231,7 +277,6 @@ public class ClienteUDP {
         }
 
         try {
-
             byte[] datos = mensaje.getBytes(StandardCharsets.UTF_8);
 
             DatagramPacket paquete = new DatagramPacket(datos, datos.length, direccionServidor, PUERTO_SERVIDOR);
@@ -240,13 +285,15 @@ public class ClienteUDP {
 
         } catch (IOException e) {
 
-            Gdx.app.error("ClienteUDP", "Error enviando mensaje", e);
+            if (ejecutando) {
+                Gdx.app.error("ClienteUDP", "Error enviando mensaje: " + mensaje, e);
+            }
         }
     }
 
     public void actualizar() {
 
-        if (!ejecutando) {
+        if (!ejecutando || conectado || servidorLleno) {
             return;
         }
 
@@ -254,7 +301,7 @@ public class ClienteUDP {
 
             long tiempoActual = System.currentTimeMillis();
 
-            if (tiempoActual - ultimaBusqueda >= 3000) {
+            if (tiempoActual - ultimaBusqueda >= INTERVALO_BUSQUEDA) {
 
                 buscarServidor();
 
@@ -263,18 +310,30 @@ public class ClienteUDP {
         }
     }
 
-    public void desconectar() {
+    /**
+     * Se llama cuando el jugador presiona "Volver al menú".
+     * Envía un único aviso al servidor y cierra el socket local.
+     */
+    public synchronized void volverAlMenu() {
 
-        if (ejecutando) {
-            enviarMensaje("DESCONECTAR");
+        if (ejecutando && conectado) {
+            enviarMensaje(ProtocoloRed.VOLVER_AL_MENU);
         }
+
+        cerrarConexionLocal();
+    }
+
+    /**
+     * Cierra el cliente sin enviar otro mensaje al servidor.
+     * Usar cuando el servidor ya notificó que la sesión terminó.
+     */
+    public synchronized void cerrarConexionLocal() {
 
         detenerKeepAlive();
 
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;
-        partidaFinalizada = false;
 
         idJugador = 0;
         ultimaBusqueda = 0;
@@ -287,7 +346,15 @@ public class ClienteUDP {
 
         socket = null;
 
-        Gdx.app.log("ClienteUDP", "Cliente desconectado");
+        Gdx.app.log("ClienteUDP", "Conexión local cerrada");
+    }
+
+    /**
+     * Mantiene compatibilidad con llamadas anteriores a desconectar().
+     * Ahora equivale a volver al menú.
+     */
+    public void desconectar() {
+        volverAlMenu();
     }
 
     public boolean estaConectado() {
@@ -300,6 +367,14 @@ public class ClienteUDP {
 
     public boolean estaPartidaFinalizada() {
         return partidaFinalizada;
+    }
+
+    public boolean estaSesionFinalizada() {
+        return sesionFinalizada;
+    }
+
+    public boolean estaServidorLleno() {
+        return servidorLleno;
     }
 
     public int getIdJugador() {
