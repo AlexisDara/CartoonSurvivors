@@ -35,6 +35,7 @@ public class ClienteUDP {
     private static final long TIEMPO_MAXIMO_SERVIDOR = 8000;
     private long ultimaRespuestaServidor = 0;
     private boolean servidorDesconectado = false;
+    private String ultimoEstadoRecibido;
 
     private int idJugador = 0;
 
@@ -45,6 +46,8 @@ public class ClienteUDP {
         if (ejecutando) {
             return;
         }
+
+        guardarEstado(null);
 
         try {
             socket = new DatagramSocket();
@@ -242,6 +245,24 @@ public class ClienteUDP {
         }
     }
 
+
+    public void enviarMovimiento(
+        float direccionX,
+        float direccionY) {
+
+        if (!estaConectado() || !estaPartidaIniciada()) {
+            return;
+        }
+
+        String mensaje =
+            ProtocoloRed.MOVER
+                + "|" + direccionX
+                + "|" + direccionY;
+
+        enviarMensaje(mensaje);
+    }
+
+
     private void procesarSesionFinalizada(String mensaje) {
 
         sesionFinalizada = true;
@@ -282,6 +303,22 @@ public class ClienteUDP {
             detenerKeepAlive();
         }
     }
+
+
+    private synchronized void guardarEstado(String mensaje) {
+
+        ultimoEstadoRecibido = mensaje;
+    }
+
+    public synchronized String consumirUltimoEstado() {
+
+        String mensaje = ultimoEstadoRecibido;
+
+        ultimoEstadoRecibido = null;
+
+        return mensaje;
+    }
+
 
 
     private synchronized void registrarRespuestaServidor() {
@@ -415,7 +452,7 @@ public class ClienteUDP {
     public synchronized void cerrarConexionLocal() {
 
         detenerKeepAlive();
-
+        guardarEstado(null);
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;
