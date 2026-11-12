@@ -333,6 +333,23 @@ public class SalaMultijugador extends ScreenAdapter {
 
     private void actualizarEstado() {
 
+        if (clienteUDP.estaServidorDesconectado()) {
+
+            estadoConexion.setText(
+                "SE PERDIO LA CONEXION CON EL SERVIDOR"
+            );
+
+            estadoConexion.setColor(Color.RED);
+
+            numeroJugador.setText(
+                "Servidor desconectado"
+            );
+
+            botonListo.setDisabled(true);
+
+            return;
+        }
+
         if (!clienteUDP.estaConectado()) {
 
             estadoConexion.setText("Buscando servidor...");

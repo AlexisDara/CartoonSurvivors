@@ -10,6 +10,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.1.3]
+
+### Agregado
+
+* Se agregaron verificaciones de desconexion del servidor.
+
+---
+
 ## [1.1.2]
 
 ### Agregado

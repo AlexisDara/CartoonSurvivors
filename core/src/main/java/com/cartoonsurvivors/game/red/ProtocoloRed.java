@@ -12,6 +12,7 @@ public class ProtocoloRed {
     public static final String OK_JUGADOR_1 = "OK-1";
     public static final String OK_JUGADOR_2 = "OK-2";
     public static final String KEEP_ALIVE = "KEEP_ALIVE";
+    public static final String KEEP_ALIVE_OK = "KEEP_ALIVE_OK";
 
     // Lobby
     public static final String JUGADOR_CONECTADO = "JUGADOR_CONECTADO";

@@ -21,19 +21,22 @@ public class ClienteUDP {
     private static final long INTERVALO_BUSQUEDA = 3000;
 
     private DatagramSocket socket;
-    private volatile InetAddress direccionServidor;
+    private InetAddress direccionServidor;
 
     private Thread hiloReceptor;
     private ScheduledExecutorService hiloKeepAlive;
 
-    private volatile boolean ejecutando = false;
-    private volatile boolean conectado = false;
-    private volatile boolean partidaIniciada = false;
-    private volatile boolean partidaFinalizada = false;
-    private volatile boolean sesionFinalizada = false;
-    private volatile boolean servidorLleno = false;
+    private boolean ejecutando = false;
+    private boolean conectado = false;
+    private boolean partidaIniciada = false;
+    private boolean partidaFinalizada = false;
+    private boolean sesionFinalizada = false;
+    private boolean servidorLleno = false;
+    private static final long TIEMPO_MAXIMO_SERVIDOR = 8000;
+    private long ultimaRespuestaServidor = 0;
+    private boolean servidorDesconectado = false;
 
-    private volatile int idJugador = 0;
+    private int idJugador = 0;
 
     private long ultimaBusqueda = 0;
 
@@ -57,6 +60,16 @@ public class ClienteUDP {
 
         } catch (IOException e) {
             ejecutando = false;
+            servidorDesconectado = false;
+            sesionFinalizada = false;
+            partidaFinalizada = false;
+            partidaIniciada = false;
+            conectado = false;
+            servidorLleno = false;
+
+            ultimaRespuestaServidor = 0;
+            direccionServidor = null;
+            idJugador = 0;
 
             if (socket != null) {
                 socket.close();
@@ -166,10 +179,18 @@ public class ClienteUDP {
             return;
         }
 
+        if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
+
+            registrarRespuestaServidor();
+
+            return;
+        }
+
         if (mensaje.equals(ProtocoloRed.OK_JUGADOR_1)) {
 
             idJugador = 1;
             conectado = true;
+            registrarRespuestaServidor();
 
             iniciarKeepAlive();
 
@@ -179,6 +200,7 @@ public class ClienteUDP {
 
             idJugador = 2;
             conectado = true;
+            registrarRespuestaServidor();
 
             iniciarKeepAlive();
 
@@ -231,6 +253,43 @@ public class ClienteUDP {
         Gdx.app.log("ClienteUDP", "La sesión finalizó. Motivo: " + mensaje);
     }
 
+
+    private synchronized void comprobarServidor() {
+
+        if (!ejecutando || !conectado || servidorDesconectado) {
+            return;
+        }
+
+        long tiempoActual = System.currentTimeMillis();
+
+        long tiempoSinRespuesta =
+            tiempoActual - ultimaRespuestaServidor;
+
+        if (tiempoSinRespuesta > TIEMPO_MAXIMO_SERVIDOR) {
+
+            servidorDesconectado = true;
+
+            conectado = false;
+            partidaIniciada = false;
+            partidaFinalizada = false;
+            sesionFinalizada = true;
+
+            Gdx.app.log(
+                "ClienteUDP",
+                "Se perdió la conexión con el servidor"
+            );
+
+            detenerKeepAlive();
+        }
+    }
+
+
+    private synchronized void registrarRespuestaServidor() {
+
+        ultimaRespuestaServidor =
+            System.currentTimeMillis();
+    }
+
     private void procesarDesconexionInesperada() {
 
         sesionFinalizada = true;
@@ -255,9 +314,14 @@ public class ClienteUDP {
         });
 
         hiloKeepAlive.scheduleAtFixedRate(() -> {
+
+            comprobarServidor();
+
             if (ejecutando && conectado) {
+
                 enviarMensaje(ProtocoloRed.KEEP_ALIVE);
             }
+
         }, 0, 2, TimeUnit.SECONDS);
 
         Gdx.app.log("ClienteUDP", "KeepAlive iniciado");
@@ -355,6 +419,11 @@ public class ClienteUDP {
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;
+        ultimaRespuestaServidor = 0;
+        servidorDesconectado = false;
+        sesionFinalizada = false;
+        partidaFinalizada = false;
+        servidorLleno = false;
 
         idJugador = 0;
         ultimaBusqueda = 0;
@@ -400,6 +469,10 @@ public class ClienteUDP {
 
     public int getIdJugador() {
         return idJugador;
+    }
+
+    public synchronized boolean estaServidorDesconectado() {
+        return servidorDesconectado;
     }
 
     public String getIpServidor() {
