@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 public class ClienteUDP {
 
@@ -290,6 +291,26 @@ public class ClienteUDP {
             }
         }
     }
+
+
+    public void enviarSeleccionPersonaje(TipoPersonaje personaje) {
+
+        if (!conectado || personaje == null) {
+            return;
+        }
+
+        String mensaje =
+            ProtocoloRed.SELECCIONAR_PERSONAJE
+                + "|" + personaje.name();
+
+        enviarMensaje(mensaje);
+
+        Gdx.app.log(
+            "ClienteUDP",
+            "Seleccion enviada: " + mensaje
+        );
+    }
+
 
     public void actualizar() {
 

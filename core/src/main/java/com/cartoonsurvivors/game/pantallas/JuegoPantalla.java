@@ -43,7 +43,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private final ExtendViewport viewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, camera);
     private final ExtendViewport HUDViewport = new ExtendViewport(ANCHO_MUNDO, ALTO_MUNDO, hudCamera);
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
-    private Jugador jugador = new Mordecai();
+    private Jugador jugador;
     private float tiempoJuego;
     private final SistemaColisiones sistemaColisiones = new SistemaColisiones();
     private ShapeRenderer shapeRenderer;
@@ -54,8 +54,9 @@ public class JuegoPantalla extends ScreenAdapter {
 
 
 
-    public JuegoPantalla( CartoonSurvivors game) {
+    public JuegoPantalla( CartoonSurvivors game, Jugador jugador) {
         this.game = game;
+        this.jugador = jugador;
         this.font = game.getFont();
         this.batch = game.getBatch();
         this.hudJuego = new HUDJuego(batch, font, HUDViewport);
@@ -238,9 +239,7 @@ public class JuegoPantalla extends ScreenAdapter {
         estadoJuego=EstadoJuego.JUGANDO;
         jugador.setVida(VIDA_INICIAL);
         audioManager.reproducirMusicaJuego();
-
         estadoJuego = EstadoJuego.JUGANDO;
-
         Gdx.input.setInputProcessor(null);
         texturaEnemigos = new Texture("enemigos/minion.png");
         EnemigoSpawner enemigoSpawner = new EnemigoSpawner(VIDA_ENEMIGO, VELOCIDAD_ENEMIGO, DANIO_ENEMIGO, texturaEnemigos);
@@ -249,7 +248,6 @@ public class JuegoPantalla extends ScreenAdapter {
 
     @Override
     public void dispose() {
-
         if (pantallaPausa != null) pantallaPausa.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (renderizadorMapa != null) renderizadorMapa.dispose();

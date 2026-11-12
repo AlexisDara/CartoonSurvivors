@@ -4,20 +4,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 import com.cartoonsurvivors.game.CartoonSurvivors;
+import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
+import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.red.ClienteUDP;
+import com.cartoonsurvivors.game.red.ProtocoloRed;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
 public class SalaMultijugador extends ScreenAdapter {
@@ -29,15 +33,27 @@ public class SalaMultijugador extends ScreenAdapter {
 
     private Label estadoConexion;
     private Label numeroJugador;
+    private Label nombrePersonaje;
+
+    private TextButton botonListo;
+    private TextButton botonAnterior;
+    private TextButton botonSiguiente;
+
     private Texture texturaRoja;
     private Texture texturaRojaPresionada;
     private Texture texturaVerde;
     private Texture texturaVerdePresionada;
+    private Texture texturaPersonaje;
+    private boolean seleccionEnviada = false;
+    private Image imagenPersonaje;
 
     private TextButton.TextButtonStyle estiloNoListo;
     private TextButton.TextButtonStyle estiloListo;
 
-    private TextButton botonListo;
+    // Personajes disponibles
+    private final TipoPersonaje[] personajes = TipoPersonaje.values();
+
+    private int indicePersonaje = 0;
 
     private boolean listo = false;
     private boolean cambiandoPantalla = false;
@@ -69,9 +85,8 @@ public class SalaMultijugador extends ScreenAdapter {
 
         estiloBoton.font = game.getFont();
         estiloBoton.fontColor = Color.WHITE;
-        estiloBoton.overFontColor = new Color(161f / 255f, 251f / 255f, 255f, 1.0f);
-        estiloBoton.downFontColor = new Color(206f / 255f, 38f / 255f, 90f / 255f, 1.0f);
-
+        estiloBoton.overFontColor = Color.CYAN;
+        estiloBoton.downFontColor = Color.PINK;
 
         Label titulo = new Label("SALA MULTIJUGADOR", estiloTitulo);
 
@@ -79,65 +94,78 @@ public class SalaMultijugador extends ScreenAdapter {
 
         numeroJugador = new Label("Esperando conexion...", estiloTexto);
 
+        // SELECCION DE PERSONAJE
 
+        Label tituloSeleccion = new Label("Seleccionar personaje", estiloTexto);
 
-        texturaRoja = crearTexturaColor(
-            new Color(0.80f, 0.12f, 0.16f, 1f)
-        );
+        nombrePersonaje = new Label(getPersonajeSeleccionado().getNombre(), estiloTexto);
 
-        texturaRojaPresionada = crearTexturaColor(
-            new Color(0.55f, 0.08f, 0.12f, 1f)
-        );
+        // Imagen del personaje disponible
+        texturaPersonaje = new Texture("jugador/mordecai-idle.png");
 
-        texturaVerde = crearTexturaColor(
-            new Color(0.12f, 0.65f, 0.25f, 1f)
-        );
+        imagenPersonaje = new Image(texturaPersonaje);
 
-        texturaVerdePresionada = crearTexturaColor(
-            new Color(0.08f, 0.45f, 0.18f, 1f)
-        );
+        botonAnterior = new TextButton("<", estiloBoton);
 
-// ESTILO ROJO
+        botonSiguiente = new TextButton(">", estiloBoton);
+
+        botonAnterior.addListener(new ClickListener() {
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                cambiarPersonaje(-1);
+            }
+        });
+
+        botonSiguiente.addListener(new ClickListener() {
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                cambiarPersonaje(1);
+            }
+        });
+
+        // TEXTURAS DEL BOTON LISTO
+
+        texturaRoja = crearTexturaColor(new Color(0.80f, 0.12f, 0.16f, 1f));
+
+        texturaRojaPresionada = crearTexturaColor(new Color(0.55f, 0.08f, 0.12f, 1f));
+
+        texturaVerde = crearTexturaColor(new Color(0.12f, 0.65f, 0.25f, 1f));
+
+        texturaVerdePresionada = crearTexturaColor(new Color(0.08f, 0.45f, 0.18f, 1f));
+
+        // ESTILO NO LISTO
+
         estiloNoListo = new TextButton.TextButtonStyle();
 
         estiloNoListo.font = game.getFont();
         estiloNoListo.fontColor = Color.WHITE;
 
-        estiloNoListo.up = new TextureRegionDrawable(
-            new TextureRegion(texturaRoja)
-        );
+        estiloNoListo.up = new TextureRegionDrawable(new TextureRegion(texturaRoja));
 
-        estiloNoListo.down = new TextureRegionDrawable(
-            new TextureRegion(texturaRojaPresionada)
-        );
+        estiloNoListo.down = new TextureRegionDrawable(new TextureRegion(texturaRojaPresionada));
 
         estiloNoListo.over = estiloNoListo.up;
-
-// Deshabilitado, pero se sigue viendo rojo
         estiloNoListo.disabled = estiloNoListo.up;
 
-// ESTILO VERDE
+        // ESTILO LISTO
+
         estiloListo = new TextButton.TextButtonStyle();
 
         estiloListo.font = game.getFont();
         estiloListo.fontColor = Color.WHITE;
 
-        estiloListo.up = new TextureRegionDrawable(
-            new TextureRegion(texturaVerde)
-        );
+        estiloListo.up = new TextureRegionDrawable(new TextureRegion(texturaVerde));
 
-        estiloListo.down = new TextureRegionDrawable(
-            new TextureRegion(texturaVerdePresionada)
-        );
+        estiloListo.down = new TextureRegionDrawable(new TextureRegion(texturaVerdePresionada));
 
         estiloListo.over = estiloListo.up;
-
         estiloListo.disabled = estiloListo.up;
 
-        botonListo = new TextButton(
-            "NO LISTO",
-            estiloNoListo
-        );
+        // BOTON LISTO
+
+        botonListo = new TextButton("NO LISTO", estiloNoListo);
 
         botonListo.setDisabled(true);
 
@@ -146,15 +174,15 @@ public class SalaMultijugador extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
 
-                if (!clienteUDP.estaConectado()
-                    || botonListo.isDisabled()
-                    || cambiandoPantalla) {
+                if (!clienteUDP.estaConectado() || botonListo.isDisabled() || cambiandoPantalla) {
                     return;
                 }
 
                 cambiarEstadoListo();
             }
         });
+
+        // BOTON VOLVER
 
         TextButton botonVolver = new TextButton("VOLVER", estiloBoton);
 
@@ -173,33 +201,94 @@ public class SalaMultijugador extends ScreenAdapter {
             }
         });
 
+        // DISTRIBUCION DE LA SALA
+
         Table tabla = new Table();
         tabla.setFillParent(true);
+
         stage.addActor(tabla);
 
-        tabla.add(titulo).padBottom(40);
+        tabla.add(titulo).padBottom(20);
         tabla.row();
 
-        tabla.add(estadoConexion).padBottom(20);
+        tabla.add(estadoConexion).padBottom(10);
         tabla.row();
 
-        tabla.add(numeroJugador).padBottom(30);
+        tabla.add(numeroJugador).padBottom(20);
         tabla.row();
 
+        tabla.add(tituloSeleccion).padBottom(10);
+        tabla.row();
 
-        tabla.add(botonListo).width(300).height(65).padBottom(25);
+        tabla.add(imagenPersonaje).width(110).height(130).padBottom(10);
+
+        tabla.row();
+
+        Table selector = new Table();
+
+        selector.add(botonAnterior).width(70).height(60).padRight(25);
+
+        selector.add(nombrePersonaje).minWidth(260).center();
+
+        selector.add(botonSiguiente).width(70).height(60).padLeft(25);
+
+        tabla.add(selector).padBottom(25);
+        tabla.row();
+
+        tabla.add(botonListo).width(300).height(65).padBottom(20);
 
         tabla.row();
 
         tabla.add(botonVolver).width(300).height(65);
+
+        actualizarBotonesSeleccion();
     }
+
+    // DEVUELVE EL TIPO SELECCIONADO
+
+    private TipoPersonaje getPersonajeSeleccionado() {
+        return personajes[indicePersonaje];
+    }
+
+    // CAMBIA ENTRE PERSONAJES
+
+    private void cambiarPersonaje(int direccion) {
+
+        if (listo || cambiandoPantalla || personajes.length <= 1) {
+            return;
+        }
+
+        indicePersonaje += direccion;
+
+        if (indicePersonaje < 0) {
+            indicePersonaje = personajes.length - 1;
+        }
+
+        if (indicePersonaje >= personajes.length) {
+            indicePersonaje = 0;
+        }
+
+        nombrePersonaje.setText(getPersonajeSeleccionado().getNombre());
+
+        // Cuando agreguemos más personajes,
+        // también cambiaremos la imagen aquí.
+
+        Gdx.app.log("SalaMultijugador", "Personaje seleccionado: " + getPersonajeSeleccionado().name());
+    }
+
+    private void actualizarBotonesSeleccion() {
+
+        boolean deshabilitar = listo || cambiandoPantalla || personajes.length <= 1;
+
+        botonAnterior.setDisabled(deshabilitar);
+        botonSiguiente.setDisabled(deshabilitar);
+    }
+
+    // CREAR TEXTURA DE COLOR
 
     private Texture crearTexturaColor(Color color) {
 
-        Pixmap pixmap = new Pixmap(
-            1, 1,
-            Pixmap.Format.RGBA8888
-        );
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
 
         pixmap.setColor(color);
         pixmap.fill();
@@ -211,16 +300,22 @@ public class SalaMultijugador extends ScreenAdapter {
         return textura;
     }
 
+    // CAMBIAR ESTADO LISTO
+
     private void cambiarEstadoListo() {
 
         listo = !listo;
 
         if (listo) {
 
+            clienteUDP.enviarSeleccionPersonaje(
+                getPersonajeSeleccionado()
+            );
+
             botonListo.setText("LISTO");
             botonListo.setStyle(estiloListo);
 
-            clienteUDP.enviarMensaje("LISTO");
+            clienteUDP.enviarMensaje(ProtocoloRed.LISTO);
 
         } else {
 
@@ -229,17 +324,22 @@ public class SalaMultijugador extends ScreenAdapter {
 
             clienteUDP.enviarMensaje("NO_LISTO");
         }
+
+        actualizarBotonesSeleccion();
     }
+
+    // ACTUALIZAR ESTADO DE CONEXION
+
 
     private void actualizarEstado() {
 
         if (!clienteUDP.estaConectado()) {
 
             estadoConexion.setText("Buscando servidor...");
-
             numeroJugador.setText("Esperando conexion...");
 
             botonListo.setDisabled(true);
+            seleccionEnviada = false;
 
             return;
         }
@@ -248,10 +348,21 @@ public class SalaMultijugador extends ScreenAdapter {
 
         int id = clienteUDP.getIdJugador();
 
-        numeroJugador.setText("jugador " + id);
-
+        numeroJugador.setText("Jugador " + id);
         estadoConexion.setText("Conectado al servidor");
+
+        if (!seleccionEnviada) {
+
+            clienteUDP.enviarSeleccionPersonaje(
+                getPersonajeSeleccionado()
+            );
+
+            seleccionEnviada = true;
+        }
     }
+
+
+    // INICIAR PARTIDA
 
     private void comprobarInicioPartida() {
 
@@ -265,20 +376,20 @@ public class SalaMultijugador extends ScreenAdapter {
 
         cambiandoPantalla = true;
 
-        Gdx.app.log("SalaMultijugador", "EMPIEZA recibido. Entrando al juego...");
+        TipoPersonaje tipo = getPersonajeSeleccionado();
 
-        game.setScreen(new JuegoPantalla(game));
+        Jugador jugador = tipo.crearPersonaje();
+
+        Gdx.app.log("SalaMultijugador", "Iniciando partida con " + tipo.getNombre());
+
+        game.setScreen(new JuegoPantalla(game, jugador));
     }
 
     @Override
     public void render(float delta) {
 
-        // Primero comprobamos si el servidor
-        // autorizó el inicio de la partida.
         comprobarInicioPartida();
 
-        // Si cambiamos de pantalla, no seguimos
-        // dibujando la sala anterior.
         if (cambiandoPantalla) {
             return;
         }
@@ -290,6 +401,8 @@ public class SalaMultijugador extends ScreenAdapter {
         actualizarEstado();
 
         stage.act(delta);
+
+        game.getBatch().setColor(Color.WHITE);
         stage.draw();
     }
 
@@ -315,9 +428,20 @@ public class SalaMultijugador extends ScreenAdapter {
             texturaRoja.dispose();
         }
 
+        if (texturaRojaPresionada != null) {
+            texturaRojaPresionada.dispose();
+        }
+
         if (texturaVerde != null) {
             texturaVerde.dispose();
         }
 
+        if (texturaVerdePresionada != null) {
+            texturaVerdePresionada.dispose();
+        }
+
+        if (texturaPersonaje != null) {
+            texturaPersonaje.dispose();
+        }
     }
 }

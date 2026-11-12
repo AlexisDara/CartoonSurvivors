@@ -10,6 +10,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ---
 
+## [1.1.2]
+
+### Agregado
+
+* Se agrego la seleccion de personaje en la sala multijugador.
+
+---
+
 ## [1.1.1]
 
 ### Agregado
