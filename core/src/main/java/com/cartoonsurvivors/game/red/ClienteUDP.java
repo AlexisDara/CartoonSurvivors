@@ -182,6 +182,15 @@ public class ClienteUDP {
             return;
         }
 
+
+        if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
+
+            guardarEstado(mensaje);
+
+            return;
+        }
+
+
         if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
 
             registrarRespuestaServidor();
