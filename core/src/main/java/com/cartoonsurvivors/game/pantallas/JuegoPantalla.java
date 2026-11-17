@@ -234,34 +234,36 @@ public class JuegoPantalla extends ScreenAdapter {
         }
     }
 
+
     private void actualizarJugador(Jugador jugador, String datos) {
 
-        // Formato: ID:X:Y:DIRECCION_X:DIRECCION_Y
-        String[] partes = datos.split(":");
+        // ID:X:Y:DIRECCION_X:DIRECCION_Y:VIDA
 
-        if (partes.length != 5) {
+        String[] partes = datos.split(":", -1);
+
+        if (partes.length != 6) {
             return;
         }
 
-        float x = Float.parseFloat(partes[1]);
-        float y = Float.parseFloat(partes[2]);
+        try {
+            float x = Float.parseFloat(partes[1]);
+            float y = Float.parseFloat(partes[2]);
+            float direccionX = Float.parseFloat(partes[3]);
+            float direccionY = Float.parseFloat(partes[4]);
+            float vida = Float.parseFloat(partes[5]);
 
-        float direccionX = Float.parseFloat(partes[3]);
-        float direccionY = Float.parseFloat(partes[4]);
+            jugador.setPosicion(x, y);
+            jugador.setVida(vida);
 
-        if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(direccionX) || !Float.isFinite(direccionY)) {
-            return;
+            jugador.seMueve(direccionX, direccionY);
+            jugador.calcularLadoMirada(direccionX);
+
+        } catch (NumberFormatException e) {
+
+            Gdx.app.error("JuegoPantalla", "Datos de jugador invalidos: " + datos);
         }
-
-        // La posicion viene del servidor.
-        jugador.setPosicion(x, y);
-
-        // Actualizar animacion de movimiento.
-        jugador.seMueve(direccionX, direccionY);
-
-        // Actualizar hacia donde mira.
-        jugador.calcularLadoMirada(direccionX);
     }
+
 
     private void camaraSeguirJugador() {
 
@@ -269,6 +271,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         camera.update();
     }
+
 
     private void dibujarInformacion() {
 
@@ -280,16 +283,22 @@ public class JuegoPantalla extends ScreenAdapter {
 
         font.setColor(Color.WHITE);
 
+        // Identificador del jugador.
         font.draw(batch, "JUGADOR " + idJugadorLocal, 20, ALTO_MUNDO - 20);
+
+        // Vida del jugador local.
+        font.draw(batch, "MI VIDA: " + (int) Math.ceil(jugadorLocal.getVida()), 20, ALTO_MUNDO - 60);
+
+        // Vida del otro jugador.
+        font.draw(batch, "VIDA COMPAÑERO: " + (int) Math.ceil(jugadorRemoto.getVida()), 20, ALTO_MUNDO - 100);
 
         if (!estadoRecibido) {
 
-            font.draw(batch, "Esperando posiciones del servidor...", 20, ALTO_MUNDO - 75);
+            font.draw(batch, "Esperando posiciones del servidor...", 20, ALTO_MUNDO - 150);
         }
 
         batch.end();
     }
-
 
 
     private void recibirEstadoEnemigos() {
@@ -334,12 +343,7 @@ public class JuegoPantalla extends ScreenAdapter {
                 float y = Float.parseFloat(datos[3]);
                 int vida = Integer.parseInt(datos[4]);
 
-                if (id <= 0
-                    || !tipo.equals("BASICO")
-                    || !Float.isFinite(x)
-                    || !Float.isFinite(y)
-                    || vida < 0
-                    || !idsRecibidos.add(id)) {
+                if (id <= 0 || !tipo.equals("BASICO") || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
                     return;
                 }
             }
@@ -358,14 +362,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
                 if (enemigo == null) {
 
-                    enemigo = new EnemigoBasico(
-                        25,
-                        80f,
-                        15,
-                        x,
-                        y,
-                        texturaEnemigos
-                    );
+                    enemigo = new EnemigoBasico(25, 80f, 15, x, y, texturaEnemigos);
 
                     enemigos.put(id, enemigo);
                 }
@@ -375,8 +372,7 @@ public class JuegoPantalla extends ScreenAdapter {
             }
 
             // Eliminar enemigos que ya no están en el servidor.
-            List<Integer> idsActuales =
-                new ArrayList<>(enemigos.keySet());
+            List<Integer> idsActuales = new ArrayList<>(enemigos.keySet());
 
             for (int i = idsActuales.size() - 1; i >= 0; i--) {
 
@@ -396,13 +392,9 @@ public class JuegoPantalla extends ScreenAdapter {
 
         } catch (NumberFormatException e) {
 
-            Gdx.app.error(
-                "JuegoPantalla",
-                "Estado de enemigos invalido: " + mensaje
-            );
+            Gdx.app.error("JuegoPantalla", "Estado de enemigos invalido: " + mensaje);
         }
     }
-
 
 
     private void mostrarSesionFinalizada() {
