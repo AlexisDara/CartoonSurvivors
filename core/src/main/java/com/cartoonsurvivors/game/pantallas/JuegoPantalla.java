@@ -18,6 +18,8 @@ import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.red.ClienteUDP;
+import com.badlogic.gdx.graphics.Texture;
+import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
@@ -46,6 +48,10 @@ public class JuegoPantalla extends ScreenAdapter {
 
     private final Jugador jugadorLocal;
     private final Jugador jugadorRemoto;
+    private Texture texturaEnemigos;
+    private EnemigoBasico enemigo;
+    private long ultimaSecuenciaEnemigos = -1;
+    private boolean enemigoRecibido = false;
 
     private final int idJugadorLocal;
 
@@ -73,6 +79,9 @@ public class JuegoPantalla extends ScreenAdapter {
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
 
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
+        texturaEnemigos = new Texture("enemigos/minion.png");
+
+        enemigo = new EnemigoBasico(25, 80f, 15, 6400, 6650, texturaEnemigos);
     }
 
     @Override
@@ -124,6 +133,14 @@ public class JuegoPantalla extends ScreenAdapter {
         // La cámara sigue solamente al jugador local.
         camaraSeguirJugador();
 
+        enviarMovimiento(delta);
+
+        recibirEstadoServidor();
+
+        recibirEstadoEnemigos();
+
+        camaraSeguirJugador();
+
         // Dibujar el mundo.
         viewport.apply();
 
@@ -137,6 +154,11 @@ public class JuegoPantalla extends ScreenAdapter {
 
         jugadorLocal.dibujar(batch, delta);
         jugadorRemoto.dibujar(batch, delta);
+
+        if (enemigoRecibido && enemigo.estaVivo()) {
+
+            enemigo.dibujar(batch, delta);
+        }
 
         batch.end();
 
@@ -267,6 +289,64 @@ public class JuegoPantalla extends ScreenAdapter {
         batch.end();
     }
 
+
+    private void recibirEstadoEnemigos() {
+
+        String mensaje = clienteUDP.consumirEstadoEnemigos();
+
+        if (mensaje == null) {
+            return;
+        }
+
+        // Formato:
+        // ENEMIGOS|secuencia|ID:X:Y:VIDA
+
+        String[] partes = mensaje.split("\\|");
+
+        if (partes.length != 3) {
+            return;
+        }
+
+        try {
+
+            long secuencia = Long.parseLong(partes[1]);
+
+            // Ignorar paquetes antiguos.
+            if (secuencia <= ultimaSecuenciaEnemigos) {
+                return;
+            }
+
+            String[] datos = partes[2].split(":");
+
+            if (datos.length != 4) {
+                return;
+            }
+
+            int id = Integer.parseInt(datos[0]);
+
+            float posicionX = Float.parseFloat(datos[1]);
+            float posicionY = Float.parseFloat(datos[2]);
+
+            int vida = Integer.parseInt(datos[3]);
+
+            if (id != 1 || !Float.isFinite(posicionX) || !Float.isFinite(posicionY)) {
+                return;
+            }
+
+            // Actualizar con los datos del servidor.
+            enemigo.setPosicion(posicionX, posicionY);
+            enemigo.setVida(vida);
+
+            ultimaSecuenciaEnemigos = secuencia;
+            enemigoRecibido = true;
+
+        } catch (NumberFormatException e) {
+
+            Gdx.app.error("JuegoPantalla", "Estado de enemigo invalido: " + mensaje);
+        }
+    }
+
+
     private void mostrarSesionFinalizada() {
 
         hudViewport.apply();
@@ -308,11 +388,15 @@ public class JuegoPantalla extends ScreenAdapter {
         hudViewport.update(width, height, true);
     }
 
+
     @Override
     public void dispose() {
 
         jugadorLocal.dispose();
         jugadorRemoto.dispose();
+
+        enemigo.dispose();
+        texturaEnemigos.dispose();
 
         renderizadorMapa.dispose();
         mapa.dispose();

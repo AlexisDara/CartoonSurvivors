@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 public class ClienteUDP {
@@ -36,6 +37,7 @@ public class ClienteUDP {
     private long ultimaRespuestaServidor = 0;
     private boolean servidorDesconectado = false;
     private String ultimoEstadoRecibido;
+    private String ultimoEstadoEnemigos;
 
     private int idJugador = 0;
 
@@ -152,6 +154,7 @@ public class ClienteUDP {
         }
     }
 
+
     private void procesarMensaje(String mensaje, InetAddress ipOrigen) {
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
@@ -173,7 +176,7 @@ public class ClienteUDP {
 
             servidorLleno = true;
 
-            Gdx.app.log("ClienteUDP", "El servidor está lleno");
+            Gdx.app.log("ClienteUDP", "El servidor esta lleno");
 
             return;
         }
@@ -182,7 +185,6 @@ public class ClienteUDP {
             return;
         }
 
-
         if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
 
             guardarEstado(mensaje);
@@ -190,6 +192,12 @@ public class ClienteUDP {
             return;
         }
 
+        if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
+
+            guardarEstadoEnemigos(mensaje);
+
+            return;
+        }
 
         if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
 
@@ -202,8 +210,8 @@ public class ClienteUDP {
 
             idJugador = 1;
             conectado = true;
-            registrarRespuestaServidor();
 
+            registrarRespuestaServidor();
             iniciarKeepAlive();
 
             Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
@@ -212,15 +220,15 @@ public class ClienteUDP {
 
             idJugador = 2;
             conectado = true;
-            registrarRespuestaServidor();
 
+            registrarRespuestaServidor();
             iniciarKeepAlive();
 
             Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
 
         } else if (mensaje.equals(ProtocoloRed.JUGADOR_CONECTADO)) {
 
-            Gdx.app.log("ClienteUDP", "El otro jugador se conectó");
+            Gdx.app.log("ClienteUDP", "El otro jugador se conecto");
 
         } else if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
 
@@ -234,7 +242,7 @@ public class ClienteUDP {
             partidaIniciada = false;
             partidaFinalizada = true;
 
-            Gdx.app.log("ClienteUDP", "La partida finalizó");
+            Gdx.app.log("ClienteUDP", "La partida finalizo");
 
         } else if (mensaje.equals(ProtocoloRed.SESION_FINALIZADA) || mensaje.startsWith(ProtocoloRed.SESION_FINALIZADA + "|")) {
 
@@ -246,7 +254,7 @@ public class ClienteUDP {
 
         } else if (mensaje.startsWith(ProtocoloRed.JUGADOR_LISTO)) {
 
-            Gdx.app.log("ClienteUDP", "Un jugador está listo: " + mensaje);
+            Gdx.app.log("ClienteUDP", "Un jugador esta listo: " + mensaje);
 
         } else {
 
@@ -255,18 +263,13 @@ public class ClienteUDP {
     }
 
 
-    public void enviarMovimiento(
-        float direccionX,
-        float direccionY) {
+    public void enviarMovimiento(float direccionX, float direccionY) {
 
         if (!estaConectado() || !estaPartidaIniciada()) {
             return;
         }
 
-        String mensaje =
-            ProtocoloRed.MOVER
-                + "|" + direccionX
-                + "|" + direccionY;
+        String mensaje = ProtocoloRed.MOVER + "|" + direccionX + "|" + direccionY;
 
         enviarMensaje(mensaje);
     }
@@ -292,8 +295,7 @@ public class ClienteUDP {
 
         long tiempoActual = System.currentTimeMillis();
 
-        long tiempoSinRespuesta =
-            tiempoActual - ultimaRespuestaServidor;
+        long tiempoSinRespuesta = tiempoActual - ultimaRespuestaServidor;
 
         if (tiempoSinRespuesta > TIEMPO_MAXIMO_SERVIDOR) {
 
@@ -304,10 +306,7 @@ public class ClienteUDP {
             partidaFinalizada = false;
             sesionFinalizada = true;
 
-            Gdx.app.log(
-                "ClienteUDP",
-                "Se perdió la conexión con el servidor"
-            );
+            Gdx.app.log("ClienteUDP", "Se perdió la conexión con el servidor");
 
             detenerKeepAlive();
         }
@@ -329,11 +328,9 @@ public class ClienteUDP {
     }
 
 
-
     private synchronized void registrarRespuestaServidor() {
 
-        ultimaRespuestaServidor =
-            System.currentTimeMillis();
+        ultimaRespuestaServidor = System.currentTimeMillis();
     }
 
     private void procesarDesconexionInesperada() {
@@ -409,16 +406,26 @@ public class ClienteUDP {
             return;
         }
 
-        String mensaje =
-            ProtocoloRed.SELECCIONAR_PERSONAJE
-                + "|" + personaje.name();
+        String mensaje = ProtocoloRed.SELECCIONAR_PERSONAJE + "|" + personaje.name();
 
         enviarMensaje(mensaje);
 
-        Gdx.app.log(
-            "ClienteUDP",
-            "Seleccion enviada: " + mensaje
-        );
+        Gdx.app.log("ClienteUDP", "Seleccion enviada: " + mensaje);
+    }
+
+
+    private synchronized void guardarEstadoEnemigos(String mensaje) {
+
+        ultimoEstadoEnemigos = mensaje;
+    }
+
+    public synchronized String consumirEstadoEnemigos() {
+
+        String mensaje = ultimoEstadoEnemigos;
+
+        ultimoEstadoEnemigos = null;
+
+        return mensaje;
     }
 
 
@@ -440,6 +447,7 @@ public class ClienteUDP {
             }
         }
     }
+
 
     /**
      * Se llama cuando el jugador presiona "Volver al menú".
