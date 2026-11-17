@@ -21,6 +21,8 @@ import com.cartoonsurvivors.game.red.ClienteUDP;
 import com.badlogic.gdx.graphics.Texture;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 
+import java.util.*;
+
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
 public class JuegoPantalla extends ScreenAdapter {
@@ -48,10 +50,9 @@ public class JuegoPantalla extends ScreenAdapter {
 
     private final Jugador jugadorLocal;
     private final Jugador jugadorRemoto;
+    private final Map<Integer, EnemigoBasico> enemigos = new HashMap<>();
     private Texture texturaEnemigos;
-    private EnemigoBasico enemigo;
     private long ultimaSecuenciaEnemigos = -1;
-    private boolean enemigoRecibido = false;
 
     private final int idJugadorLocal;
 
@@ -80,8 +81,6 @@ public class JuegoPantalla extends ScreenAdapter {
 
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
         texturaEnemigos = new Texture("enemigos/minion.png");
-
-        enemigo = new EnemigoBasico(25, 80f, 15, 6400, 6650, texturaEnemigos);
     }
 
     @Override
@@ -136,7 +135,6 @@ public class JuegoPantalla extends ScreenAdapter {
         enviarMovimiento(delta);
 
         recibirEstadoServidor();
-
         recibirEstadoEnemigos();
 
         camaraSeguirJugador();
@@ -147,7 +145,7 @@ public class JuegoPantalla extends ScreenAdapter {
         renderizadorMapa.setView(camera);
         renderizadorMapa.render();
 
-        // Dibujar ambos jugadores.
+        batch.setProjectionMatrix(camera.combined);
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
@@ -155,9 +153,12 @@ public class JuegoPantalla extends ScreenAdapter {
         jugadorLocal.dibujar(batch, delta);
         jugadorRemoto.dibujar(batch, delta);
 
-        if (enemigoRecibido && enemigo.estaVivo()) {
+// Dibujar todos los enemigos recibidos.
+        for (EnemigoBasico enemigo : enemigos.values()) {
 
-            enemigo.dibujar(batch, delta);
+            if (enemigo.estaVivo()) {
+                enemigo.dibujar(batch, delta);
+            }
         }
 
         batch.end();
@@ -290,6 +291,7 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
 
+
     private void recibirEstadoEnemigos() {
 
         String mensaje = clienteUDP.consumirEstadoEnemigos();
@@ -298,12 +300,11 @@ public class JuegoPantalla extends ScreenAdapter {
             return;
         }
 
-        // Formato:
-        // ENEMIGOS|secuencia|ID:X:Y:VIDA
+        // ENEMIGOS|secuencia|ID:TIPO:X:Y:VIDA|...
 
-        String[] partes = mensaje.split("\\|");
+        String[] partes = mensaje.split("\\|", -1);
 
-        if (partes.length != 3) {
+        if (partes.length < 2) {
             return;
         }
 
@@ -311,40 +312,97 @@ public class JuegoPantalla extends ScreenAdapter {
 
             long secuencia = Long.parseLong(partes[1]);
 
-            // Ignorar paquetes antiguos.
             if (secuencia <= ultimaSecuenciaEnemigos) {
                 return;
             }
 
-            String[] datos = partes[2].split(":");
+            Set<Integer> idsRecibidos = new HashSet<>();
 
-            if (datos.length != 4) {
-                return;
+            // Validar enemigos recibidos.
+            for (int i = 2; i < partes.length; i++) {
+
+                String[] datos = partes[i].split(":", -1);
+
+                if (datos.length != 5) {
+                    return;
+                }
+
+                int id = Integer.parseInt(datos[0]);
+                String tipo = datos[1];
+
+                float x = Float.parseFloat(datos[2]);
+                float y = Float.parseFloat(datos[3]);
+                int vida = Integer.parseInt(datos[4]);
+
+                if (id <= 0
+                    || !tipo.equals("BASICO")
+                    || !Float.isFinite(x)
+                    || !Float.isFinite(y)
+                    || vida < 0
+                    || !idsRecibidos.add(id)) {
+                    return;
+                }
             }
 
-            int id = Integer.parseInt(datos[0]);
+            // Crear o actualizar enemigos.
+            for (int i = 2; i < partes.length; i++) {
 
-            float posicionX = Float.parseFloat(datos[1]);
-            float posicionY = Float.parseFloat(datos[2]);
+                String[] datos = partes[i].split(":", -1);
 
-            int vida = Integer.parseInt(datos[3]);
+                int id = Integer.parseInt(datos[0]);
+                float x = Float.parseFloat(datos[2]);
+                float y = Float.parseFloat(datos[3]);
+                int vida = Integer.parseInt(datos[4]);
 
-            if (id != 1 || !Float.isFinite(posicionX) || !Float.isFinite(posicionY)) {
-                return;
+                EnemigoBasico enemigo = enemigos.get(id);
+
+                if (enemigo == null) {
+
+                    enemigo = new EnemigoBasico(
+                        25,
+                        80f,
+                        15,
+                        x,
+                        y,
+                        texturaEnemigos
+                    );
+
+                    enemigos.put(id, enemigo);
+                }
+
+                enemigo.setPosicion(x, y);
+                enemigo.setVida(vida);
             }
 
-            // Actualizar con los datos del servidor.
-            enemigo.setPosicion(posicionX, posicionY);
-            enemigo.setVida(vida);
+            // Eliminar enemigos que ya no están en el servidor.
+            List<Integer> idsActuales =
+                new ArrayList<>(enemigos.keySet());
+
+            for (int i = idsActuales.size() - 1; i >= 0; i--) {
+
+                int id = idsActuales.get(i);
+
+                if (!idsRecibidos.contains(id)) {
+
+                    EnemigoBasico eliminado = enemigos.remove(id);
+
+                    if (eliminado != null) {
+                        eliminado.dispose();
+                    }
+                }
+            }
 
             ultimaSecuenciaEnemigos = secuencia;
-            enemigoRecibido = true;
 
         } catch (NumberFormatException e) {
 
-            Gdx.app.error("JuegoPantalla", "Estado de enemigo invalido: " + mensaje);
+            Gdx.app.error(
+                "JuegoPantalla",
+                "Estado de enemigos invalido: " + mensaje
+            );
         }
     }
+
 
 
     private void mostrarSesionFinalizada() {
@@ -395,8 +453,15 @@ public class JuegoPantalla extends ScreenAdapter {
         jugadorLocal.dispose();
         jugadorRemoto.dispose();
 
-        enemigo.dispose();
-        texturaEnemigos.dispose();
+        for (EnemigoBasico enemigo : enemigos.values()) {
+            enemigo.dispose();
+        }
+
+        enemigos.clear();
+
+        if (texturaEnemigos != null) {
+            texturaEnemigos.dispose();
+        }
 
         renderizadorMapa.dispose();
         mapa.dispose();
