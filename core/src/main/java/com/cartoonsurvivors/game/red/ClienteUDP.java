@@ -12,6 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 public class ClienteUDP {
@@ -35,6 +40,14 @@ public class ClienteUDP {
     private static final long TIEMPO_MAXIMO_SERVIDOR = 8000;
     private long ultimaRespuestaServidor = 0;
     private boolean servidorDesconectado = false;
+    private String ultimoEstadoRecibido;
+    private String ultimoEstadoEnemigos;
+    private final Map<Long, EstadoEnemigosPendiente> estadosEnemigosPendientes = new HashMap<>();
+
+    private long ultimaSecuenciaEnemigosCompleta = -1;
+
+    private static final int MAX_BLOQUES_ENEMIGOS = 128;
+    private static final int MAX_ESTADOS_PENDIENTES = 8;
 
     private int idJugador = 0;
 
@@ -45,6 +58,11 @@ public class ClienteUDP {
         if (ejecutando) {
             return;
         }
+
+        guardarEstado(null);
+        ultimoEstadoEnemigos = null;
+        estadosEnemigosPendientes.clear();
+        ultimaSecuenciaEnemigosCompleta = -1;
 
         try {
             socket = new DatagramSocket();
@@ -149,6 +167,7 @@ public class ClienteUDP {
         }
     }
 
+
     private void procesarMensaje(String mensaje, InetAddress ipOrigen) {
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
@@ -170,12 +189,26 @@ public class ClienteUDP {
 
             servidorLleno = true;
 
-            Gdx.app.log("ClienteUDP", "El servidor está lleno");
+            Gdx.app.log("ClienteUDP", "El servidor esta lleno");
 
             return;
         }
 
         if (direccionServidor == null || !direccionServidor.equals(ipOrigen)) {
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
+
+            guardarEstado(mensaje);
+
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
+
+            guardarBloqueEnemigos(mensaje);
+
             return;
         }
 
@@ -190,8 +223,8 @@ public class ClienteUDP {
 
             idJugador = 1;
             conectado = true;
-            registrarRespuestaServidor();
 
+            registrarRespuestaServidor();
             iniciarKeepAlive();
 
             Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
@@ -200,15 +233,15 @@ public class ClienteUDP {
 
             idJugador = 2;
             conectado = true;
-            registrarRespuestaServidor();
 
+            registrarRespuestaServidor();
             iniciarKeepAlive();
 
             Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
 
         } else if (mensaje.equals(ProtocoloRed.JUGADOR_CONECTADO)) {
 
-            Gdx.app.log("ClienteUDP", "El otro jugador se conectó");
+            Gdx.app.log("ClienteUDP", "El otro jugador se conecto");
 
         } else if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
 
@@ -222,7 +255,7 @@ public class ClienteUDP {
             partidaIniciada = false;
             partidaFinalizada = true;
 
-            Gdx.app.log("ClienteUDP", "La partida finalizó");
+            Gdx.app.log("ClienteUDP", "La partida finalizo");
 
         } else if (mensaje.equals(ProtocoloRed.SESION_FINALIZADA) || mensaje.startsWith(ProtocoloRed.SESION_FINALIZADA + "|")) {
 
@@ -234,13 +267,26 @@ public class ClienteUDP {
 
         } else if (mensaje.startsWith(ProtocoloRed.JUGADOR_LISTO)) {
 
-            Gdx.app.log("ClienteUDP", "Un jugador está listo: " + mensaje);
+            Gdx.app.log("ClienteUDP", "Un jugador esta listo: " + mensaje);
 
         } else {
 
             Gdx.app.log("ClienteUDP", "Mensaje recibido: " + mensaje);
         }
     }
+
+
+    public void enviarMovimiento(float direccionX, float direccionY) {
+
+        if (!estaConectado() || !estaPartidaIniciada()) {
+            return;
+        }
+
+        String mensaje = ProtocoloRed.MOVER + "|" + direccionX + "|" + direccionY;
+
+        enviarMensaje(mensaje);
+    }
+
 
     private void procesarSesionFinalizada(String mensaje) {
 
@@ -262,8 +308,7 @@ public class ClienteUDP {
 
         long tiempoActual = System.currentTimeMillis();
 
-        long tiempoSinRespuesta =
-            tiempoActual - ultimaRespuestaServidor;
+        long tiempoSinRespuesta = tiempoActual - ultimaRespuestaServidor;
 
         if (tiempoSinRespuesta > TIEMPO_MAXIMO_SERVIDOR) {
 
@@ -274,20 +319,31 @@ public class ClienteUDP {
             partidaFinalizada = false;
             sesionFinalizada = true;
 
-            Gdx.app.log(
-                "ClienteUDP",
-                "Se perdió la conexión con el servidor"
-            );
+            Gdx.app.log("ClienteUDP", "Se perdió la conexión con el servidor");
 
             detenerKeepAlive();
         }
     }
 
 
+    private synchronized void guardarEstado(String mensaje) {
+
+        ultimoEstadoRecibido = mensaje;
+    }
+
+    public synchronized String consumirUltimoEstado() {
+
+        String mensaje = ultimoEstadoRecibido;
+
+        ultimoEstadoRecibido = null;
+
+        return mensaje;
+    }
+
+
     private synchronized void registrarRespuestaServidor() {
 
-        ultimaRespuestaServidor =
-            System.currentTimeMillis();
+        ultimaRespuestaServidor = System.currentTimeMillis();
     }
 
     private void procesarDesconexionInesperada() {
@@ -363,16 +419,155 @@ public class ClienteUDP {
             return;
         }
 
-        String mensaje =
-            ProtocoloRed.SELECCIONAR_PERSONAJE
-                + "|" + personaje.name();
+        String mensaje = ProtocoloRed.SELECCIONAR_PERSONAJE + "|" + personaje.name();
 
         enviarMensaje(mensaje);
 
-        Gdx.app.log(
-            "ClienteUDP",
-            "Seleccion enviada: " + mensaje
-        );
+        Gdx.app.log("ClienteUDP", "Seleccion enviada: " + mensaje);
+    }
+
+
+    private synchronized void guardarBloqueEnemigos(String mensaje) {
+
+        // ENEMIGOS|secuencia|indice|total|datos...
+
+        String[] partes = mensaje.split("\\|", 5);
+
+        if (partes.length < 4) {
+            return;
+        }
+
+        try {
+
+            long secuencia = Long.parseLong(partes[1]);
+            int indice = Integer.parseInt(partes[2]);
+            int total = Integer.parseInt(partes[3]);
+
+            // Ignorar estados anteriores a uno ya completo.
+            if (secuencia <= ultimaSecuenciaEnemigosCompleta) {
+                return;
+            }
+
+            if (secuencia < 0 || total <= 0 || total > MAX_BLOQUES_ENEMIGOS || indice < 0 || indice >= total) {
+                return;
+            }
+
+            EstadoEnemigosPendiente pendiente = estadosEnemigosPendientes.get(secuencia);
+
+            if (pendiente == null) {
+
+                pendiente = new EstadoEnemigosPendiente(total);
+
+                estadosEnemigosPendientes.put(secuencia, pendiente);
+            }
+
+            if (pendiente.getTotalBloques() != total) {
+                return;
+            }
+
+            // El bloque 0 siempre contiene el primer grupo
+            // de enemigos, pero los bloques pueden llegar
+            // desordenados por UDP.
+            String datos = "";
+
+            if (partes.length == 5) {
+                datos = "|" + partes[4];
+            }
+
+            pendiente.agregarBloque(indice, datos);
+
+            // Limitar estados incompletos en memoria.
+            while (estadosEnemigosPendientes.size() > MAX_ESTADOS_PENDIENTES) {
+
+                long masAntiguo = Long.MAX_VALUE;
+
+                for (long numero : estadosEnemigosPendientes.keySet()) {
+
+                    if (numero < masAntiguo) {
+                        masAntiguo = numero;
+                    }
+                }
+
+                estadosEnemigosPendientes.remove(masAntiguo);
+            }
+
+            // Si falta algún bloque, no actualizamos nada.
+            if (!pendiente.estaCompleto()) {
+                return;
+            }
+
+            // Tenemos una fotografía completa.
+            ultimoEstadoEnemigos = pendiente.reconstruir(secuencia);
+
+            ultimaSecuenciaEnemigosCompleta = secuencia;
+
+            // Descartar las fotografías viejas.
+            List<Long> secuencias = new ArrayList<>(estadosEnemigosPendientes.keySet());
+            for (long numero : secuencias) {
+                if (numero <= ultimaSecuenciaEnemigosCompleta) {
+                    estadosEnemigosPendientes.remove(numero);
+                }
+            }
+
+        } catch (NumberFormatException e) {
+
+            Gdx.app.error("ClienteUDP", "Bloque de enemigos invalido: " + mensaje);
+        }
+    }
+
+
+    public synchronized String consumirEstadoEnemigos() {
+
+        String mensaje = ultimoEstadoEnemigos;
+
+        ultimoEstadoEnemigos = null;
+
+        return mensaje;
+    }
+
+
+    private static class EstadoEnemigosPendiente {
+
+        private final String[] bloques;
+        private int cantidadRecibida;
+
+        public EstadoEnemigosPendiente(int totalBloques) {
+
+            bloques = new String[totalBloques];
+            cantidadRecibida = 0;
+        }
+
+        public void agregarBloque(int indice, String datos) {
+
+            if (bloques[indice] == null) {
+
+                bloques[indice] = datos;
+                cantidadRecibida++;
+            }
+        }
+
+        public boolean estaCompleto() {
+
+            return cantidadRecibida == bloques.length;
+        }
+
+        public int getTotalBloques() {
+
+            return bloques.length;
+        }
+
+        public String reconstruir(long secuencia) {
+
+            StringBuilder mensaje = new StringBuilder("ENEMIGOS");
+
+            mensaje.append("|").append(secuencia);
+
+            for (String bloque : bloques) {
+                mensaje.append(bloque);
+            }
+
+            return mensaje.toString();
+        }
     }
 
 
@@ -395,6 +590,7 @@ public class ClienteUDP {
         }
     }
 
+
     /**
      * Se llama cuando el jugador presiona "Volver al menú".
      * Envía un único aviso al servidor y cierra el socket local.
@@ -415,7 +611,10 @@ public class ClienteUDP {
     public synchronized void cerrarConexionLocal() {
 
         detenerKeepAlive();
-
+        guardarEstado(null);
+        ultimoEstadoEnemigos = null;
+        estadosEnemigosPendientes.clear();
+        ultimaSecuenciaEnemigosCompleta = -1;
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;
