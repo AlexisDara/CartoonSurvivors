@@ -12,6 +12,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
@@ -38,6 +42,12 @@ public class ClienteUDP {
     private boolean servidorDesconectado = false;
     private String ultimoEstadoRecibido;
     private String ultimoEstadoEnemigos;
+    private final Map<Long, EstadoEnemigosPendiente> estadosEnemigosPendientes = new HashMap<>();
+
+    private long ultimaSecuenciaEnemigosCompleta = -1;
+
+    private static final int MAX_BLOQUES_ENEMIGOS = 128;
+    private static final int MAX_ESTADOS_PENDIENTES = 8;
 
     private int idJugador = 0;
 
@@ -50,6 +60,9 @@ public class ClienteUDP {
         }
 
         guardarEstado(null);
+        ultimoEstadoEnemigos = null;
+        estadosEnemigosPendientes.clear();
+        ultimaSecuenciaEnemigosCompleta = -1;
 
         try {
             socket = new DatagramSocket();
@@ -194,7 +207,7 @@ public class ClienteUDP {
 
         if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
 
-            guardarEstadoEnemigos(mensaje);
+            guardarBloqueEnemigos(mensaje);
 
             return;
         }
@@ -414,10 +427,94 @@ public class ClienteUDP {
     }
 
 
-    private synchronized void guardarEstadoEnemigos(String mensaje) {
+    private synchronized void guardarBloqueEnemigos(String mensaje) {
 
-        ultimoEstadoEnemigos = mensaje;
+        // ENEMIGOS|secuencia|indice|total|datos...
+
+        String[] partes = mensaje.split("\\|", 5);
+
+        if (partes.length < 4) {
+            return;
+        }
+
+        try {
+
+            long secuencia = Long.parseLong(partes[1]);
+            int indice = Integer.parseInt(partes[2]);
+            int total = Integer.parseInt(partes[3]);
+
+            // Ignorar estados anteriores a uno ya completo.
+            if (secuencia <= ultimaSecuenciaEnemigosCompleta) {
+                return;
+            }
+
+            if (secuencia < 0 || total <= 0 || total > MAX_BLOQUES_ENEMIGOS || indice < 0 || indice >= total) {
+                return;
+            }
+
+            EstadoEnemigosPendiente pendiente = estadosEnemigosPendientes.get(secuencia);
+
+            if (pendiente == null) {
+
+                pendiente = new EstadoEnemigosPendiente(total);
+
+                estadosEnemigosPendientes.put(secuencia, pendiente);
+            }
+
+            if (pendiente.getTotalBloques() != total) {
+                return;
+            }
+
+            // El bloque 0 siempre contiene el primer grupo
+            // de enemigos, pero los bloques pueden llegar
+            // desordenados por UDP.
+            String datos = "";
+
+            if (partes.length == 5) {
+                datos = "|" + partes[4];
+            }
+
+            pendiente.agregarBloque(indice, datos);
+
+            // Limitar estados incompletos en memoria.
+            while (estadosEnemigosPendientes.size() > MAX_ESTADOS_PENDIENTES) {
+
+                long masAntiguo = Long.MAX_VALUE;
+
+                for (long numero : estadosEnemigosPendientes.keySet()) {
+
+                    if (numero < masAntiguo) {
+                        masAntiguo = numero;
+                    }
+                }
+
+                estadosEnemigosPendientes.remove(masAntiguo);
+            }
+
+            // Si falta algún bloque, no actualizamos nada.
+            if (!pendiente.estaCompleto()) {
+                return;
+            }
+
+            // Tenemos una fotografía completa.
+            ultimoEstadoEnemigos = pendiente.reconstruir(secuencia);
+
+            ultimaSecuenciaEnemigosCompleta = secuencia;
+
+            // Descartar las fotografías viejas.
+            List<Long> secuencias = new ArrayList<>(estadosEnemigosPendientes.keySet());
+            for (long numero : secuencias) {
+                if (numero <= ultimaSecuenciaEnemigosCompleta) {
+                    estadosEnemigosPendientes.remove(numero);
+                }
+            }
+
+        } catch (NumberFormatException e) {
+
+            Gdx.app.error("ClienteUDP", "Bloque de enemigos invalido: " + mensaje);
+        }
     }
+
 
     public synchronized String consumirEstadoEnemigos() {
 
@@ -426,6 +523,51 @@ public class ClienteUDP {
         ultimoEstadoEnemigos = null;
 
         return mensaje;
+    }
+
+
+    private static class EstadoEnemigosPendiente {
+
+        private final String[] bloques;
+        private int cantidadRecibida;
+
+        public EstadoEnemigosPendiente(int totalBloques) {
+
+            bloques = new String[totalBloques];
+            cantidadRecibida = 0;
+        }
+
+        public void agregarBloque(int indice, String datos) {
+
+            if (bloques[indice] == null) {
+
+                bloques[indice] = datos;
+                cantidadRecibida++;
+            }
+        }
+
+        public boolean estaCompleto() {
+
+            return cantidadRecibida == bloques.length;
+        }
+
+        public int getTotalBloques() {
+
+            return bloques.length;
+        }
+
+        public String reconstruir(long secuencia) {
+
+            StringBuilder mensaje = new StringBuilder("ENEMIGOS");
+
+            mensaje.append("|").append(secuencia);
+
+            for (String bloque : bloques) {
+                mensaje.append(bloque);
+            }
+
+            return mensaje.toString();
+        }
     }
 
 
@@ -470,6 +612,9 @@ public class ClienteUDP {
 
         detenerKeepAlive();
         guardarEstado(null);
+        ultimoEstadoEnemigos = null;
+        estadosEnemigosPendientes.clear();
+        ultimaSecuenciaEnemigosCompleta = -1;
         ejecutando = false;
         conectado = false;
         partidaIniciada = false;

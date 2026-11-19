@@ -33,12 +33,7 @@ public class ControlesPantalla extends ScreenAdapter {
         this.viewport = new ExtendViewport(Constantes.Mundo.ANCHO_INTERFAZ, Constantes.Mundo.ALTO_INTERFAZ, camera);
         this.audioManager = game.getAudioManager();
     }
-    @Override
-    public void show() {
 
-
-        font.getData().setScale(0.5f);
-    }
 
     @Override
     public void render(float delta) {

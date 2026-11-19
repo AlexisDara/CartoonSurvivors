@@ -123,15 +123,6 @@ public class JuegoPantalla extends ScreenAdapter {
             return;
         }
 
-        // Enviar las direcciones de nuestro teclado.
-        enviarMovimiento(delta);
-
-        // Obtener las posiciones calculadas por el servidor.
-        recibirEstadoServidor();
-
-        // La cámara sigue solamente al jugador local.
-        camaraSeguirJugador();
-
         enviarMovimiento(delta);
 
         recibirEstadoServidor();
@@ -145,7 +136,6 @@ public class JuegoPantalla extends ScreenAdapter {
         renderizadorMapa.setView(camera);
         renderizadorMapa.render();
 
-        batch.setProjectionMatrix(camera.combined);
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
