@@ -9,13 +9,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
@@ -27,31 +20,14 @@ public class ClienteUDP {
 
     private DatagramSocket socket;
     private InetAddress direccionServidor;
-
     private Thread hiloReceptor;
-    private ScheduledExecutorService hiloKeepAlive;
-
+    private final EstadoConexion estadoConexion = new EstadoConexion();
+    private final GestorEnemigos gestorEnemigos = new GestorEnemigos();
+    private final GestorConexion gestorConexion = new GestorConexion(this);
     private boolean ejecutando = false;
-    private boolean conectado = false;
-    private boolean partidaIniciada = false;
-    private boolean partidaFinalizada = false;
-    private boolean sesionFinalizada = false;
-    private boolean servidorLleno = false;
-    private static final long TIEMPO_MAXIMO_SERVIDOR = 8000;
-    private long ultimaRespuestaServidor = 0;
-    private boolean servidorDesconectado = false;
     private String ultimoEstadoRecibido;
-    private String ultimoEstadoEnemigos;
-    private final Map<Long, EstadoEnemigosPendiente> estadosEnemigosPendientes = new HashMap<>();
-
-    private long ultimaSecuenciaEnemigosCompleta = -1;
-
-    private static final int MAX_BLOQUES_ENEMIGOS = 128;
-    private static final int MAX_ESTADOS_PENDIENTES = 8;
-
-    private int idJugador = 0;
-
     private long ultimaBusqueda = 0;
+
 
     public synchronized void conectar() {
 
@@ -60,9 +36,7 @@ public class ClienteUDP {
         }
 
         guardarEstado(null);
-        ultimoEstadoEnemigos = null;
-        estadosEnemigosPendientes.clear();
-        ultimaSecuenciaEnemigosCompleta = -1;
+        gestorEnemigos.reiniciar();
 
         try {
             socket = new DatagramSocket();
@@ -78,16 +52,14 @@ public class ClienteUDP {
 
         } catch (IOException e) {
             ejecutando = false;
-            servidorDesconectado = false;
-            sesionFinalizada = false;
-            partidaFinalizada = false;
-            partidaIniciada = false;
-            conectado = false;
-            servidorLleno = false;
-
-            ultimaRespuestaServidor = 0;
+            gestorConexion.reiniciar();
+            estadoConexion.setSesionFinalizada(false);
+            estadoConexion.setPartidaFinalizada(false);
+            estadoConexion.setPartidaIniciada(false);
+            estadoConexion.setConectado(false);
+            estadoConexion.setServidorLleno(false);
             direccionServidor = null;
-            idJugador = 0;
+            estadoConexion.setIdJugador(0);
 
             if (socket != null) {
                 socket.close();
@@ -172,7 +144,7 @@ public class ClienteUDP {
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
 
-            if (direccionServidor != null || servidorLleno) {
+            if (direccionServidor != null || estaServidorLleno()) {
                 return;
             }
 
@@ -187,7 +159,7 @@ public class ClienteUDP {
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_LLENO) || mensaje.equals("LLENO")) {
 
-            servidorLleno = true;
+            estadoConexion.setServidorLleno(true);
 
             Gdx.app.log("ClienteUDP", "El servidor esta lleno");
 
@@ -207,35 +179,35 @@ public class ClienteUDP {
 
         if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
 
-            guardarBloqueEnemigos(mensaje);
+            gestorEnemigos.recibirBloque(mensaje);
 
             return;
         }
 
         if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
 
-            registrarRespuestaServidor();
-
+            gestorConexion.registrarRespuesta();
             return;
         }
 
         if (mensaje.equals(ProtocoloRed.OK_JUGADOR_1)) {
 
-            idJugador = 1;
-            conectado = true;
+            estadoConexion.setIdJugador(1);
+            estadoConexion.setConectado(true);
 
-            registrarRespuestaServidor();
-            iniciarKeepAlive();
+            gestorConexion.registrarRespuesta();
+            gestorConexion.iniciar();
+
 
             Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
 
         } else if (mensaje.equals(ProtocoloRed.OK_JUGADOR_2)) {
 
-            idJugador = 2;
-            conectado = true;
+            estadoConexion.setIdJugador(2);
+            estadoConexion.setConectado(true);
 
-            registrarRespuestaServidor();
-            iniciarKeepAlive();
+            gestorConexion.registrarRespuesta();
+            gestorConexion.iniciar();
 
             Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
 
@@ -245,15 +217,15 @@ public class ClienteUDP {
 
         } else if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
 
-            partidaIniciada = true;
-            partidaFinalizada = false;
+            estadoConexion.setPartidaIniciada(true);
+            estadoConexion.setPartidaFinalizada(false);
 
             Gdx.app.log("ClienteUDP", "Empieza la partida");
 
         } else if (mensaje.equals(ProtocoloRed.PARTIDA_FINALIZADA)) {
 
-            partidaIniciada = false;
-            partidaFinalizada = true;
+            estadoConexion.setPartidaIniciada(false);
+            estadoConexion.setPartidaFinalizada(true);
 
             Gdx.app.log("ClienteUDP", "La partida finalizo");
 
@@ -290,40 +262,15 @@ public class ClienteUDP {
 
     private void procesarSesionFinalizada(String mensaje) {
 
-        sesionFinalizada = true;
-        partidaIniciada = false;
-        conectado = false;
+        estadoConexion.setSesionFinalizada(true);
+        estadoConexion.setPartidaIniciada(false);
+        estadoConexion.setConectado(false);
 
-        detenerKeepAlive();
+        gestorConexion.detener();
 
         Gdx.app.log("ClienteUDP", "La sesión finalizó. Motivo: " + mensaje);
     }
 
-
-    private synchronized void comprobarServidor() {
-
-        if (!ejecutando || !conectado || servidorDesconectado) {
-            return;
-        }
-
-        long tiempoActual = System.currentTimeMillis();
-
-        long tiempoSinRespuesta = tiempoActual - ultimaRespuestaServidor;
-
-        if (tiempoSinRespuesta > TIEMPO_MAXIMO_SERVIDOR) {
-
-            servidorDesconectado = true;
-
-            conectado = false;
-            partidaIniciada = false;
-            partidaFinalizada = false;
-            sesionFinalizada = true;
-
-            Gdx.app.log("ClienteUDP", "Se perdió la conexión con el servidor");
-
-            detenerKeepAlive();
-        }
-    }
 
 
     private synchronized void guardarEstado(String mensaje) {
@@ -340,55 +287,15 @@ public class ClienteUDP {
         return mensaje;
     }
 
-
-    private synchronized void registrarRespuestaServidor() {
-
-        ultimaRespuestaServidor = System.currentTimeMillis();
-    }
-
     private void procesarDesconexionInesperada() {
 
-        sesionFinalizada = true;
-        partidaIniciada = false;
-        conectado = false;
+        estadoConexion.setSesionFinalizada(true);
+        estadoConexion.setPartidaIniciada(false);
+        estadoConexion.setConectado(false);
 
-        detenerKeepAlive();
+        gestorConexion.detener();
 
         Gdx.app.log("ClienteUDP", "El otro jugador se desconectó inesperadamente");
-    }
-
-    private synchronized void iniciarKeepAlive() {
-
-        if (hiloKeepAlive != null && !hiloKeepAlive.isShutdown()) {
-            return;
-        }
-
-        hiloKeepAlive = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            Thread hilo = new Thread(runnable, "ClienteUDP-KeepAlive");
-            hilo.setDaemon(true);
-            return hilo;
-        });
-
-        hiloKeepAlive.scheduleAtFixedRate(() -> {
-
-            comprobarServidor();
-
-            if (ejecutando && conectado) {
-
-                enviarMensaje(ProtocoloRed.KEEP_ALIVE);
-            }
-
-        }, 0, 2, TimeUnit.SECONDS);
-
-        Gdx.app.log("ClienteUDP", "KeepAlive iniciado");
-    }
-
-    private synchronized void detenerKeepAlive() {
-
-        if (hiloKeepAlive != null) {
-            hiloKeepAlive.shutdownNow();
-            hiloKeepAlive = null;
-        }
     }
 
     public synchronized void enviarMensaje(String mensaje) {
@@ -415,7 +322,7 @@ public class ClienteUDP {
 
     public void enviarSeleccionPersonaje(TipoPersonaje personaje) {
 
-        if (!conectado || personaje == null) {
+        if (!estaConectado() || personaje == null) {
             return;
         }
 
@@ -426,154 +333,32 @@ public class ClienteUDP {
         Gdx.app.log("ClienteUDP", "Seleccion enviada: " + mensaje);
     }
 
+    public synchronized void notificarServidorDesconectado() {
 
-    private synchronized void guardarBloqueEnemigos(String mensaje) {
-
-        // ENEMIGOS|secuencia|indice|total|datos...
-
-        String[] partes = mensaje.split("\\|", 5);
-
-        if (partes.length < 4) {
+        if (!ejecutando || !estaConectado()) {
             return;
         }
 
-        try {
+        estadoConexion.setConectado(false);
+        estadoConexion.setPartidaIniciada(false);
+        estadoConexion.setPartidaFinalizada(false);
+        estadoConexion.setSesionFinalizada(true);
 
-            long secuencia = Long.parseLong(partes[1]);
-            int indice = Integer.parseInt(partes[2]);
-            int total = Integer.parseInt(partes[3]);
+        Gdx.app.log("ClienteUDP",
+            "Se perdió la conexión con el servidor");
 
-            // Ignorar estados anteriores a uno ya completo.
-            if (secuencia <= ultimaSecuenciaEnemigosCompleta) {
-                return;
-            }
-
-            if (secuencia < 0 || total <= 0 || total > MAX_BLOQUES_ENEMIGOS || indice < 0 || indice >= total) {
-                return;
-            }
-
-            EstadoEnemigosPendiente pendiente = estadosEnemigosPendientes.get(secuencia);
-
-            if (pendiente == null) {
-
-                pendiente = new EstadoEnemigosPendiente(total);
-
-                estadosEnemigosPendientes.put(secuencia, pendiente);
-            }
-
-            if (pendiente.getTotalBloques() != total) {
-                return;
-            }
-
-            // El bloque 0 siempre contiene el primer grupo
-            // de enemigos, pero los bloques pueden llegar
-            // desordenados por UDP.
-            String datos = "";
-
-            if (partes.length == 5) {
-                datos = "|" + partes[4];
-            }
-
-            pendiente.agregarBloque(indice, datos);
-
-            // Limitar estados incompletos en memoria.
-            while (estadosEnemigosPendientes.size() > MAX_ESTADOS_PENDIENTES) {
-
-                long masAntiguo = Long.MAX_VALUE;
-
-                for (long numero : estadosEnemigosPendientes.keySet()) {
-
-                    if (numero < masAntiguo) {
-                        masAntiguo = numero;
-                    }
-                }
-
-                estadosEnemigosPendientes.remove(masAntiguo);
-            }
-
-            // Si falta algún bloque, no actualizamos nada.
-            if (!pendiente.estaCompleto()) {
-                return;
-            }
-
-            // Tenemos una fotografía completa.
-            ultimoEstadoEnemigos = pendiente.reconstruir(secuencia);
-
-            ultimaSecuenciaEnemigosCompleta = secuencia;
-
-            // Descartar las fotografías viejas.
-            List<Long> secuencias = new ArrayList<>(estadosEnemigosPendientes.keySet());
-            for (long numero : secuencias) {
-                if (numero <= ultimaSecuenciaEnemigosCompleta) {
-                    estadosEnemigosPendientes.remove(numero);
-                }
-            }
-
-        } catch (NumberFormatException e) {
-
-            Gdx.app.error("ClienteUDP", "Bloque de enemigos invalido: " + mensaje);
-        }
+        gestorConexion.detener();
     }
 
-
-    public synchronized String consumirEstadoEnemigos() {
-
-        String mensaje = ultimoEstadoEnemigos;
-
-        ultimoEstadoEnemigos = null;
-
-        return mensaje;
+    public String consumirEstadoEnemigos() {
+        return gestorEnemigos.consumirEstadoEnemigos();
     }
 
-
-    private static class EstadoEnemigosPendiente {
-
-        private final String[] bloques;
-        private int cantidadRecibida;
-
-        public EstadoEnemigosPendiente(int totalBloques) {
-
-            bloques = new String[totalBloques];
-            cantidadRecibida = 0;
-        }
-
-        public void agregarBloque(int indice, String datos) {
-
-            if (bloques[indice] == null) {
-
-                bloques[indice] = datos;
-                cantidadRecibida++;
-            }
-        }
-
-        public boolean estaCompleto() {
-
-            return cantidadRecibida == bloques.length;
-        }
-
-        public int getTotalBloques() {
-
-            return bloques.length;
-        }
-
-        public String reconstruir(long secuencia) {
-
-            StringBuilder mensaje = new StringBuilder("ENEMIGOS");
-
-            mensaje.append("|").append(secuencia);
-
-            for (String bloque : bloques) {
-                mensaje.append(bloque);
-            }
-
-            return mensaje.toString();
-        }
-    }
 
 
     public void actualizar() {
 
-        if (!ejecutando || conectado || servidorLleno) {
+        if (!ejecutando || estaConectado() || estaServidorLleno()) {
             return;
         }
 
@@ -597,7 +382,7 @@ public class ClienteUDP {
      */
     public synchronized void volverAlMenu() {
 
-        if (ejecutando && conectado) {
+        if (ejecutando && estaConectado()) {
             enviarMensaje(ProtocoloRed.VOLVER_AL_MENU);
         }
 
@@ -608,35 +393,25 @@ public class ClienteUDP {
      * Cierra el cliente sin enviar otro mensaje al servidor.
      * Usar cuando el servidor ya notificó que la sesión terminó.
      */
+
+
     public synchronized void cerrarConexionLocal() {
 
-        detenerKeepAlive();
+        gestorConexion.reiniciar();
         guardarEstado(null);
-        ultimoEstadoEnemigos = null;
-        estadosEnemigosPendientes.clear();
-        ultimaSecuenciaEnemigosCompleta = -1;
+        gestorEnemigos.reiniciar();
         ejecutando = false;
-        conectado = false;
-        partidaIniciada = false;
-        ultimaRespuestaServidor = 0;
-        servidorDesconectado = false;
-        sesionFinalizada = false;
-        partidaFinalizada = false;
-        servidorLleno = false;
-
-        idJugador = 0;
+        estadoConexion.reiniciar();
         ultimaBusqueda = 0;
-
         direccionServidor = null;
-
         if (socket != null && !socket.isClosed()) {
             socket.close();
         }
-
         socket = null;
-
         Gdx.app.log("ClienteUDP", "Conexión local cerrada");
     }
+
+
 
     /**
      * Mantiene compatibilidad con llamadas anteriores a desconectar().
@@ -647,31 +422,31 @@ public class ClienteUDP {
     }
 
     public boolean estaConectado() {
-        return conectado;
+        return estadoConexion.estaConectado();
     }
 
     public boolean estaPartidaIniciada() {
-        return partidaIniciada;
+        return estadoConexion.estaPartidaIniciada();
     }
 
     public boolean estaPartidaFinalizada() {
-        return partidaFinalizada;
+        return estadoConexion.estaPartidaFinalizada();
     }
 
     public boolean estaSesionFinalizada() {
-        return sesionFinalizada;
+        return estadoConexion.estaSesionFinalizada();
     }
 
     public boolean estaServidorLleno() {
-        return servidorLleno;
+        return estadoConexion.estaServidorLleno();
     }
 
     public int getIdJugador() {
-        return idJugador;
+        return estadoConexion.getIdJugador();
     }
 
-    public synchronized boolean estaServidorDesconectado() {
-        return servidorDesconectado;
+    public boolean estaServidorDesconectado() {
+        return gestorConexion.estaServidorDesconectado();
     }
 
     public String getIpServidor() {

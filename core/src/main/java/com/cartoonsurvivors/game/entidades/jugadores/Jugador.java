@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
 import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.Entidad;
@@ -19,7 +18,6 @@ public abstract class Jugador extends Entidad {
     private float tiempoAnimacion = 0;
     private boolean mirandoDerecha = false;
     private boolean seEstaMoviendo = false;
-    private final Vector2 direccionMirada = new Vector2(1, 0);
     private Arma arma;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
@@ -46,12 +44,7 @@ public abstract class Jugador extends Entidad {
     }
 
     public void seMueve(float direccionX, float direccionY) {
-        if (direccionX != 0 || direccionY != 0) {
-            this.seEstaMoviendo = true;
-            direccionMirada.set(direccionX, direccionY).nor();
-        } else {
-            this.seEstaMoviendo = false;
-        }
+        seEstaMoviendo = direccionX != 0 || direccionY != 0;
     }
 
     public void calcularLadoMirada(float direccionX) {
@@ -71,16 +64,6 @@ public abstract class Jugador extends Entidad {
     public boolean estaMirandoDerecha() {
         return mirandoDerecha;
     }
-
-    public void actualizarArma(float delta) {
-        arma.actualizar(delta);
-
-        if (arma.puedeAtacar()) {
-            arma.atacar(this.hitbox, this.direccionMirada);
-        }
-    }
-
-
 
     @Override public void dibujar(Batch batch, float delta) {
         float offsetX = (TAMAÑO_REAL - hitbox.getWidth()) / 2f;

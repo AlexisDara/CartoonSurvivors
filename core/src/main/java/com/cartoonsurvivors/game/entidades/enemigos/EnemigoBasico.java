@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.ALTO_ENEMIGO;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Enemigos.ANCHO_ENEMIGO;
-import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
 public class EnemigoBasico extends Enemigo {
 
