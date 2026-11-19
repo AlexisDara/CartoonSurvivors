@@ -12,7 +12,8 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-
+import com.cartoonsurvivors.game.armas.Espada;
+import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.CartoonSurvivors;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
@@ -53,6 +54,9 @@ public class JuegoPantalla extends ScreenAdapter {
     private final Map<Integer, EnemigoBasico> enemigos = new HashMap<>();
     private Texture texturaEnemigos;
     private long ultimaSecuenciaEnemigos = -1;
+
+    private final Map<Jugador, Map<Integer, Long>> ultimosAtaques = new IdentityHashMap<>();
+
 
     private final int idJugadorLocal;
 
@@ -127,6 +131,8 @@ public class JuegoPantalla extends ScreenAdapter {
 
         recibirEstadoServidor();
         recibirEstadoEnemigos();
+        jugadorLocal.getArma().actualizar(delta);
+        jugadorRemoto.getArma().actualizar(delta);
 
         camaraSeguirJugador();
 
@@ -227,19 +233,21 @@ public class JuegoPantalla extends ScreenAdapter {
 
     private void actualizarJugador(Jugador jugador, String datos) {
 
-        // ID:X:Y:DIRECCION_X:DIRECCION_Y:VIDA
-
+        // ID:X:Y:DX:DY:VIDA:ARMAS
         String[] partes = datos.split(":", -1);
 
-        if (partes.length != 6) {
+        if (partes.length != 7) {
             return;
         }
 
         try {
+
             float x = Float.parseFloat(partes[1]);
             float y = Float.parseFloat(partes[2]);
+
             float direccionX = Float.parseFloat(partes[3]);
             float direccionY = Float.parseFloat(partes[4]);
+
             float vida = Float.parseFloat(partes[5]);
 
             jugador.setPosicion(x, y);
@@ -248,9 +256,75 @@ public class JuegoPantalla extends ScreenAdapter {
             jugador.seMueve(direccionX, direccionY);
             jugador.calcularLadoMirada(direccionX);
 
+            // Procesar las armas sincronizadas.
+            actualizarArmasJugador(jugador, partes[6]);
+
         } catch (NumberFormatException e) {
 
             Gdx.app.error("JuegoPantalla", "Datos de jugador invalidos: " + datos);
+        }
+    }
+
+
+    private void actualizarArmasJugador(Jugador jugador, String datosArmas) {
+
+        if (datosArmas.isEmpty()) {
+            return;
+        }
+
+        Map<Integer, Long> ataquesJugador = ultimosAtaques.computeIfAbsent(jugador, j -> new HashMap<>());
+
+        String[] armasRecibidas = datosArmas.split(";");
+
+        for (String datosArma : armasRecibidas) {
+
+            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION
+            String[] partes = datosArma.split(",", -1);
+
+            if (partes.length != 4) {
+                continue;
+            }
+
+            try {
+
+                int slot = Integer.parseInt(partes[0]);
+                String tipo = partes[1];
+
+                long numeroAtaque = Long.parseLong(partes[2]);
+                int direccion = Integer.parseInt(partes[3]);
+
+                if (slot < 0 || numeroAtaque < 0) {
+                    continue;
+                }
+
+                if (numeroAtaque <= 0) {
+                    continue;
+                }
+
+                Long ultimoAtaque = ataquesJugador.get(slot);
+
+                // Ya recibimos este ataque o uno mas nuevo.
+                if (ultimoAtaque != null && numeroAtaque <= ultimoAtaque) {
+                    continue;
+                }
+
+                ataquesJugador.put(slot, numeroAtaque);
+
+                // Por ahora solo tenemos Espada.
+                if (tipo.equals("ESPADA") && slot == 0) {
+
+                    Arma arma = jugador.getArma();
+
+                    if (arma instanceof Espada espada) {
+
+                        espada.reproducirAtaque(jugador.getHitbox(), direccion);
+                    }
+                }
+
+            } catch (NumberFormatException e) {
+
+                Gdx.app.error("JuegoPantalla", "Datos de arma invalidos: " + datosArma);
+            }
         }
     }
 
