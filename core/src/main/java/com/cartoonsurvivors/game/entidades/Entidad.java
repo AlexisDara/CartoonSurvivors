@@ -8,14 +8,12 @@ import com.badlogic.gdx.math.Rectangle;
 public abstract class Entidad {
     private float vida;
     private float velocidad;
-    private int danio;
     protected Rectangle hitbox;
 
 
-    protected Entidad(float vida, float velocidad, int danio, float posicionX, float posicionY, float altura, float ancho) {
+    protected Entidad(float vida, float velocidad, float posicionX, float posicionY, float altura, float ancho) {
         this.vida = vida;
         this.velocidad = velocidad;
-        this.danio = danio;
         this.hitbox = new Rectangle(posicionX, posicionY, ancho, altura);
     }
 
@@ -43,17 +41,7 @@ public abstract class Entidad {
         return vida;
     }
 
-    public int getDanio() {
-        return danio;
-    }
 
-    public void recibirDanio(float danio) {
-        vida -= danio;
-
-        if (vida < 0) {
-            vida = 0;
-        }
-    }
 
     public boolean estaVivo() {
         return vida > 0;
@@ -61,10 +49,6 @@ public abstract class Entidad {
 
     public void setVida(float vida) {
         this.vida = vida;
-    }
-
-    public boolean colisionaCon(Entidad entidad) {
-        return hitbox.overlaps(entidad.hitbox);
     }
 
     public abstract void dibujar(Batch batch, float delta);

@@ -8,27 +8,11 @@ public abstract class Enemigo extends Entidad {
 
     private boolean mirandoIzquierda = false;
 
-    protected Enemigo(int vida, float velocidad, int danio,float posicionX, float posicionY, float altura, float ancho) {
-        super(vida,velocidad,danio, posicionX, posicionY, altura, ancho);
+    protected Enemigo(int vida, float velocidad,float posicionX, float posicionY, float altura, float ancho) {
+        super(vida,velocidad, posicionX, posicionY, altura, ancho);
     }
 
-    public void seguirJugador(float posicionX, float posicionY, float delta) {
-        float direccionX = posicionX - this.getPosicionX();
-        float direccionY = posicionY - this.getPosicionY();
-        // Usamos pitagoras para sacar la longitud de la distancia y normalizamos las direcciones.
-        float longitud = (float) Math.sqrt(direccionX * direccionX + direccionY * direccionY);
-        if (longitud != 0) {
-            direccionX /= longitud;
-            direccionY /= longitud;
-        }
-        if(direccionX < 0) {
-            mirandoIzquierda = true;
-        } else if(direccionX > 0) {
-            mirandoIzquierda = false;
-        }
-        this.mover(direccionX , direccionY ,delta);
 
-    }
     public boolean isMirandoIzquierda() {
         return mirandoIzquierda;
     }

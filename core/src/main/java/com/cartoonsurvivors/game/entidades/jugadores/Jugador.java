@@ -21,7 +21,7 @@ public abstract class Jugador extends Entidad {
     private Arma arma;
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
-        super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 0, 60f, 40f);
+        super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 60f, 40f);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
         this.arma = new Espada();
