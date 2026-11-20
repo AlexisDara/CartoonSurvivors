@@ -1,6 +1,7 @@
 package com.cartoonsurvivors.game.red;
 
 import com.badlogic.gdx.Gdx;
+import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -10,24 +11,28 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
-import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
-
 public class ClienteUDP {
 
     private static final int PUERTO_SERVIDOR = 7777;
     private static final int TIEMPO_ESPERA_SOCKET = 500;
     private static final long INTERVALO_BUSQUEDA = 3000;
 
-    private DatagramSocket socket;
-    private InetAddress direccionServidor;
-    private Thread hiloReceptor;
-    private final EstadoConexion estadoConexion = new EstadoConexion();
-    private final GestorEnemigos gestorEnemigos = new GestorEnemigos();
-    private final GestorConexion gestorConexion = new GestorConexion(this);
-    private boolean ejecutando = false;
-    private String ultimoEstadoRecibido;
-    private long ultimaBusqueda = 0;
+    private volatile DatagramSocket socket;
+    private volatile InetAddress direccionServidor;
+    private volatile boolean ejecutando;
 
+    private Thread hiloReceptor;
+    private long ultimaBusqueda;
+
+    private String ultimoEstadoRecibido;
+
+    private final EstadoConexion estadoConexion = new EstadoConexion();
+
+    private final GestorEnemigos gestorEnemigos = new GestorEnemigos();
+
+    private final GestorConexion gestorConexion = new GestorConexion(this);
+
+    private final ProcesadorMensajes procesadorMensajes = new ProcesadorMensajes(estadoConexion, gestorConexion, gestorEnemigos, this::registrarServidor, () -> direccionServidor, this::guardarEstado);
 
     public synchronized void conectar() {
 
@@ -35,35 +40,47 @@ public class ClienteUDP {
             return;
         }
 
-        guardarEstado(null);
+        estadoConexion.reiniciar();
+        gestorConexion.reiniciar();
         gestorEnemigos.reiniciar();
+        guardarEstado(null);
+
+        direccionServidor = null;
+        ultimaBusqueda = 0;
 
         try {
-            socket = new DatagramSocket();
-            socket.setBroadcast(true);
-            socket.setSoTimeout(TIEMPO_ESPERA_SOCKET);
+            DatagramSocket nuevoSocket = new DatagramSocket();
 
+            try {
+                nuevoSocket.setBroadcast(true);
+                nuevoSocket.setSoTimeout(TIEMPO_ESPERA_SOCKET);
+            } catch (IOException e) {
+                nuevoSocket.close();
+                throw e;
+            }
+
+            socket = nuevoSocket;
             ejecutando = true;
 
-            hiloReceptor = new HiloReceptor();
+            hiloReceptor = new Thread(() -> escucharMensajes(nuevoSocket), "ClienteUDP-Receptor");
+
+            hiloReceptor.setDaemon(true);
             hiloReceptor.start();
 
             buscarServidor();
 
         } catch (IOException e) {
-            ejecutando = false;
-            gestorConexion.reiniciar();
-            estadoConexion.setSesionFinalizada(false);
-            estadoConexion.setPartidaFinalizada(false);
-            estadoConexion.setPartidaIniciada(false);
-            estadoConexion.setConectado(false);
-            estadoConexion.setServidorLleno(false);
-            direccionServidor = null;
-            estadoConexion.setIdJugador(0);
 
-            if (socket != null) {
-                socket.close();
-                socket = null;
+            ejecutando = false;
+            estadoConexion.reiniciar();
+            gestorConexion.reiniciar();
+
+            DatagramSocket actual = socket;
+            socket = null;
+            direccionServidor = null;
+
+            if (actual != null) {
+                actual.close();
             }
 
             Gdx.app.error("ClienteUDP", "Error al iniciar cliente", e);
@@ -72,7 +89,9 @@ public class ClienteUDP {
 
     private void buscarServidor() {
 
-        if (!ejecutando || socket == null || socket.isClosed()) {
+        DatagramSocket actual = socket;
+
+        if (!ejecutando || actual == null || actual.isClosed()) {
             return;
         }
 
@@ -83,48 +102,47 @@ public class ClienteUDP {
 
             DatagramPacket paquete = new DatagramPacket(datos, datos.length, broadcast, PUERTO_SERVIDOR);
 
-            socket.send(paquete);
+            actual.send(paquete);
 
             Gdx.app.log("ClienteUDP", "Buscando servidor en la red local...");
 
         } catch (IOException e) {
-            Gdx.app.error("ClienteUDP", "Error buscando servidor", e);
+            if (ejecutando) {
+                Gdx.app.error("ClienteUDP", "Error buscando servidor", e);
+            }
         }
     }
 
-    private class HiloReceptor extends Thread {
-
-        @Override
-        public void run() {
-            escucharMensajes();
-        }
-    }
-
-    private void escucharMensajes() {
+    private void escucharMensajes(DatagramSocket socketActivo) {
 
         byte[] buffer = new byte[1024];
 
-        while (ejecutando && socket != null && !socket.isClosed()) {
+        while (ejecutando && !socketActivo.isClosed()) {
 
             try {
                 DatagramPacket paquete = new DatagramPacket(buffer, buffer.length);
 
-                socket.receive(paquete);
+                socketActivo.receive(paquete);
 
-                String mensaje = new String(paquete.getData(), paquete.getOffset(), paquete.getLength(), StandardCharsets.UTF_8).trim();
+                // Ignorar paquetes de una conexion anterior.
+                if (!ejecutando || socket != socketActivo) {
+                    break;
+                }
 
                 if (paquete.getPort() != PUERTO_SERVIDOR) {
                     continue;
                 }
 
-                procesarMensaje(mensaje, paquete.getAddress());
+                String mensaje = new String(paquete.getData(), paquete.getOffset(), paquete.getLength(), StandardCharsets.UTF_8).trim();
+
+                procesadorMensajes.procesar(mensaje, paquete.getAddress());
 
             } catch (SocketTimeoutException e) {
-                // Es normal: permite revisar periódicamente si seguimos ejecutando.
+                // Timeout normal de recepcion.
 
             } catch (SocketException e) {
 
-                if (ejecutando) {
+                if (ejecutando && socket == socketActivo) {
                     Gdx.app.error("ClienteUDP", "Error del socket", e);
                 }
 
@@ -132,121 +150,49 @@ public class ClienteUDP {
 
             } catch (IOException e) {
 
-                if (ejecutando) {
+                if (ejecutando && socket == socketActivo) {
                     Gdx.app.error("ClienteUDP", "Error recibiendo mensaje", e);
                 }
             }
         }
     }
 
+    private synchronized void registrarServidor(InetAddress ipServidor) {
 
-    private void procesarMensaje(String mensaje, InetAddress ipOrigen) {
-
-        if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
-
-            if (direccionServidor != null || estaServidorLleno()) {
-                return;
-            }
-
-            direccionServidor = ipOrigen;
-
-            Gdx.app.log("ClienteUDP", "Servidor encontrado: " + direccionServidor.getHostAddress());
-
-            enviarMensaje(ProtocoloRed.CONECTAR);
-
+        if (!ejecutando || direccionServidor != null || estaServidorLleno()) {
             return;
         }
 
-        if (mensaje.equals(ProtocoloRed.SERVIDOR_LLENO) || mensaje.equals("LLENO")) {
+        direccionServidor = ipServidor;
 
-            estadoConexion.setServidorLleno(true);
+        Gdx.app.log("ClienteUDP", "Servidor encontrado: " + ipServidor.getHostAddress());
 
-            Gdx.app.log("ClienteUDP", "El servidor esta lleno");
-
-            return;
-        }
-
-        if (direccionServidor == null || !direccionServidor.equals(ipOrigen)) {
-            return;
-        }
-
-        if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
-
-            guardarEstado(mensaje);
-
-            return;
-        }
-
-        if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
-
-            gestorEnemigos.recibirBloque(mensaje);
-
-            return;
-        }
-
-        if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
-
-            gestorConexion.registrarRespuesta();
-            return;
-        }
-
-        if (mensaje.equals(ProtocoloRed.OK_JUGADOR_1)) {
-
-            estadoConexion.setIdJugador(1);
-            estadoConexion.setConectado(true);
-
-            gestorConexion.registrarRespuesta();
-            gestorConexion.iniciar();
-
-
-            Gdx.app.log("ClienteUDP", "Jugador 1 conectado");
-
-        } else if (mensaje.equals(ProtocoloRed.OK_JUGADOR_2)) {
-
-            estadoConexion.setIdJugador(2);
-            estadoConexion.setConectado(true);
-
-            gestorConexion.registrarRespuesta();
-            gestorConexion.iniciar();
-
-            Gdx.app.log("ClienteUDP", "Jugador 2 conectado");
-
-        } else if (mensaje.equals(ProtocoloRed.JUGADOR_CONECTADO)) {
-
-            Gdx.app.log("ClienteUDP", "El otro jugador se conecto");
-
-        } else if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
-
-            estadoConexion.setPartidaIniciada(true);
-            estadoConexion.setPartidaFinalizada(false);
-
-            Gdx.app.log("ClienteUDP", "Empieza la partida");
-
-        } else if (mensaje.equals(ProtocoloRed.PARTIDA_FINALIZADA)) {
-
-            estadoConexion.setPartidaIniciada(false);
-            estadoConexion.setPartidaFinalizada(true);
-
-            Gdx.app.log("ClienteUDP", "La partida finalizo");
-
-        } else if (mensaje.equals(ProtocoloRed.SESION_FINALIZADA) || mensaje.startsWith(ProtocoloRed.SESION_FINALIZADA + "|")) {
-
-            procesarSesionFinalizada(mensaje);
-
-        } else if (mensaje.equals(ProtocoloRed.DESCONEXION_INESPERADA) || mensaje.equals("OTRO_JUGADOR_DESCONECTADO")) {
-
-            procesarDesconexionInesperada();
-
-        } else if (mensaje.startsWith(ProtocoloRed.JUGADOR_LISTO)) {
-
-            Gdx.app.log("ClienteUDP", "Un jugador esta listo: " + mensaje);
-
-        } else {
-
-            Gdx.app.log("ClienteUDP", "Mensaje recibido: " + mensaje);
-        }
+        enviarMensaje(ProtocoloRed.CONECTAR);
     }
 
+    public synchronized void enviarMensaje(String mensaje) {
+
+        DatagramSocket actual = socket;
+        InetAddress servidor = direccionServidor;
+
+        if (!ejecutando || actual == null || actual.isClosed() || servidor == null) {
+            return;
+        }
+
+        try {
+            byte[] datos = mensaje.getBytes(StandardCharsets.UTF_8);
+
+            DatagramPacket paquete = new DatagramPacket(datos, datos.length, servidor, PUERTO_SERVIDOR);
+
+            actual.send(paquete);
+
+        } catch (IOException e) {
+
+            if (ejecutando) {
+                Gdx.app.error("ClienteUDP", "Error enviando mensaje: " + mensaje, e);
+            }
+        }
+    }
 
     public void enviarMovimiento(float direccionX, float direccionY) {
 
@@ -258,67 +204,6 @@ public class ClienteUDP {
 
         enviarMensaje(mensaje);
     }
-
-
-    private void procesarSesionFinalizada(String mensaje) {
-
-        estadoConexion.setSesionFinalizada(true);
-        estadoConexion.setPartidaIniciada(false);
-        estadoConexion.setConectado(false);
-
-        gestorConexion.detener();
-
-        Gdx.app.log("ClienteUDP", "La sesión finalizó. Motivo: " + mensaje);
-    }
-
-
-
-    private synchronized void guardarEstado(String mensaje) {
-
-        ultimoEstadoRecibido = mensaje;
-    }
-
-    public synchronized String consumirUltimoEstado() {
-
-        String mensaje = ultimoEstadoRecibido;
-
-        ultimoEstadoRecibido = null;
-
-        return mensaje;
-    }
-
-    private void procesarDesconexionInesperada() {
-
-        estadoConexion.setSesionFinalizada(true);
-        estadoConexion.setPartidaIniciada(false);
-        estadoConexion.setConectado(false);
-
-        gestorConexion.detener();
-
-        Gdx.app.log("ClienteUDP", "El otro jugador se desconectó inesperadamente");
-    }
-
-    public synchronized void enviarMensaje(String mensaje) {
-
-        if (!ejecutando || socket == null || socket.isClosed() || direccionServidor == null) {
-            return;
-        }
-
-        try {
-            byte[] datos = mensaje.getBytes(StandardCharsets.UTF_8);
-
-            DatagramPacket paquete = new DatagramPacket(datos, datos.length, direccionServidor, PUERTO_SERVIDOR);
-
-            socket.send(paquete);
-
-        } catch (IOException e) {
-
-            if (ejecutando) {
-                Gdx.app.error("ClienteUDP", "Error enviando mensaje: " + mensaje, e);
-            }
-        }
-    }
-
 
     public void enviarSeleccionPersonaje(TipoPersonaje personaje) {
 
@@ -333,6 +218,22 @@ public class ClienteUDP {
         Gdx.app.log("ClienteUDP", "Seleccion enviada: " + mensaje);
     }
 
+    private synchronized void guardarEstado(String mensaje) {
+        ultimoEstadoRecibido = mensaje;
+    }
+
+    public synchronized String consumirUltimoEstado() {
+
+        String mensaje = ultimoEstadoRecibido;
+        ultimoEstadoRecibido = null;
+
+        return mensaje;
+    }
+
+    public String consumirEstadoEnemigos() {
+        return gestorEnemigos.consumirEstadoEnemigos();
+    }
+
     public synchronized void notificarServidorDesconectado() {
 
         if (!ejecutando || !estaConectado()) {
@@ -344,17 +245,10 @@ public class ClienteUDP {
         estadoConexion.setPartidaFinalizada(false);
         estadoConexion.setSesionFinalizada(true);
 
-        Gdx.app.log("ClienteUDP",
-            "Se perdió la conexión con el servidor");
+        Gdx.app.log("ClienteUDP", "Se perdio la conexion con el servidor");
 
         gestorConexion.detener();
     }
-
-    public String consumirEstadoEnemigos() {
-        return gestorEnemigos.consumirEstadoEnemigos();
-    }
-
-
 
     public void actualizar() {
 
@@ -364,22 +258,16 @@ public class ClienteUDP {
 
         if (direccionServidor == null) {
 
-            long tiempoActual = System.currentTimeMillis();
+            long ahora = System.currentTimeMillis();
 
-            if (tiempoActual - ultimaBusqueda >= INTERVALO_BUSQUEDA) {
+            if (ahora - ultimaBusqueda >= INTERVALO_BUSQUEDA) {
 
                 buscarServidor();
-
-                ultimaBusqueda = tiempoActual;
+                ultimaBusqueda = ahora;
             }
         }
     }
 
-
-    /**
-     * Se llama cuando el jugador presiona "Volver al menú".
-     * Envía un único aviso al servidor y cierra el socket local.
-     */
     public synchronized void volverAlMenu() {
 
         if (ejecutando && estaConectado()) {
@@ -389,34 +277,32 @@ public class ClienteUDP {
         cerrarConexionLocal();
     }
 
-    /**
-     * Cierra el cliente sin enviar otro mensaje al servidor.
-     * Usar cuando el servidor ya notificó que la sesión terminó.
-     */
-
-
     public synchronized void cerrarConexionLocal() {
 
-        gestorConexion.reiniciar();
-        guardarEstado(null);
-        gestorEnemigos.reiniciar();
+        // Marcar primero la conexion como inactiva.
         ejecutando = false;
+
+        gestorConexion.reiniciar();
         estadoConexion.reiniciar();
+        gestorEnemigos.reiniciar();
+
+        guardarEstado(null);
+
         ultimaBusqueda = 0;
         direccionServidor = null;
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
-        }
+
+        DatagramSocket actual = socket;
         socket = null;
-        Gdx.app.log("ClienteUDP", "Conexión local cerrada");
+
+        if (actual != null && !actual.isClosed()) {
+            actual.close();
+        }
+
+        hiloReceptor = null;
+
+        Gdx.app.log("ClienteUDP", "Conexion local cerrada");
     }
 
-
-
-    /**
-     * Mantiene compatibilidad con llamadas anteriores a desconectar().
-     * Ahora equivale a volver al menú.
-     */
     public void desconectar() {
         volverAlMenu();
     }
@@ -451,10 +337,8 @@ public class ClienteUDP {
 
     public String getIpServidor() {
 
-        if (direccionServidor == null) {
-            return "";
-        }
+        InetAddress servidor = direccionServidor;
 
-        return direccionServidor.getHostAddress();
+        return servidor == null ? "" : servidor.getHostAddress();
     }
 }

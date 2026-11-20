@@ -1,0 +1,148 @@
+package com.cartoonsurvivors.game.red;
+
+import com.badlogic.gdx.Gdx;
+
+import java.net.InetAddress;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+public class ProcesadorMensajes {
+
+    private final EstadoConexion estadoConexion;
+    private final GestorConexion gestorConexion;
+    private final GestorEnemigos gestorEnemigos;
+
+    private final Consumer<InetAddress> registrarServidor;
+    private final Supplier<InetAddress> obtenerServidor;
+    private final Consumer<String> guardarEstado;
+
+    public ProcesadorMensajes(EstadoConexion estadoConexion, GestorConexion gestorConexion, GestorEnemigos gestorEnemigos, Consumer<InetAddress> registrarServidor, Supplier<InetAddress> obtenerServidor, Consumer<String> guardarEstado) {
+
+        this.estadoConexion = estadoConexion;
+        this.gestorConexion = gestorConexion;
+        this.gestorEnemigos = gestorEnemigos;
+        this.registrarServidor = registrarServidor;
+        this.obtenerServidor = obtenerServidor;
+        this.guardarEstado = guardarEstado;
+    }
+
+    public void procesar(String mensaje, InetAddress ipOrigen) {
+
+        if (mensaje == null || ipOrigen == null) {
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
+            if (!estadoConexion.estaServidorLleno()) {
+                registrarServidor.accept(ipOrigen);
+            }
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.SERVIDOR_LLENO) || mensaje.equals("LLENO")) {
+
+            InetAddress servidor = obtenerServidor.get();
+
+            if (servidor != null && !servidor.equals(ipOrigen)) {
+                return;
+            }
+
+            estadoConexion.setServidorLleno(true);
+            Gdx.app.log("ProcesadorMensajes", "El servidor esta lleno");
+            return;
+        }
+
+        InetAddress servidor = obtenerServidor.get();
+
+        if (servidor == null || !servidor.equals(ipOrigen)) {
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
+            guardarEstado.accept(mensaje);
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.ENEMIGOS + "|")) {
+            gestorEnemigos.recibirBloque(mensaje);
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
+            gestorConexion.registrarRespuesta();
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.OK_JUGADOR_1)) {
+            conectarJugador(1);
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.OK_JUGADOR_2)) {
+            conectarJugador(2);
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.JUGADOR_CONECTADO)) {
+            Gdx.app.log("ProcesadorMensajes", "El otro jugador se conecto");
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
+            estadoConexion.setPartidaIniciada(true);
+            estadoConexion.setPartidaFinalizada(false);
+
+            Gdx.app.log("ProcesadorMensajes", "Empieza la partida");
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.PARTIDA_FINALIZADA)) {
+            estadoConexion.setPartidaIniciada(false);
+            estadoConexion.setPartidaFinalizada(true);
+
+            Gdx.app.log("ProcesadorMensajes", "La partida finalizo");
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.SESION_FINALIZADA) || mensaje.startsWith(ProtocoloRed.SESION_FINALIZADA + "|")) {
+
+            finalizarSesion(mensaje);
+            return;
+        }
+
+        if (mensaje.equals(ProtocoloRed.DESCONEXION_INESPERADA) || mensaje.equals("OTRO_JUGADOR_DESCONECTADO")) {
+
+            finalizarSesion(mensaje);
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.JUGADOR_LISTO)) {
+            Gdx.app.log("ProcesadorMensajes", "Un jugador esta listo: " + mensaje);
+            return;
+        }
+
+        Gdx.app.log("ProcesadorMensajes", "Mensaje recibido: " + mensaje);
+    }
+
+    private void conectarJugador(int idJugador) {
+
+        estadoConexion.setIdJugador(idJugador);
+        estadoConexion.setConectado(true);
+
+        gestorConexion.registrarRespuesta();
+        gestorConexion.iniciar();
+
+        Gdx.app.log("ProcesadorMensajes", "Jugador " + idJugador + " conectado");
+    }
+
+    private void finalizarSesion(String motivo) {
+
+        estadoConexion.setSesionFinalizada(true);
+        estadoConexion.setPartidaIniciada(false);
+        estadoConexion.setConectado(false);
+
+        gestorConexion.detener();
+
+        Gdx.app.log("ProcesadorMensajes", "La sesion finalizo. Motivo: " + motivo);
+    }
+}
