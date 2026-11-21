@@ -1,6 +1,5 @@
 package com.cartoonsurvivors.game.lwjgl3;
 
-import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.cartoonsurvivors.game.CartoonSurvivors;
@@ -28,8 +27,8 @@ public class Lwjgl3Launcher {
         //// refresh rates. The Vsync setting above should limit the actual FPS to match the monitor.
         configuration.setForegroundFPS(60);
 
-        Graphics.DisplayMode displayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
-        configuration.setFullscreenMode(displayMode);
+        configuration.setWindowedMode(1280, 720);
+        configuration.setMaximized(true);
 
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
