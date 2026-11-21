@@ -37,9 +37,9 @@ final class SeleccionMejora {
             }
         }
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            opcion = hud.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY());
+            opcion = hud.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY(), ronda.opciones().size());
         }
-        if (opcion >= 0 && opcion != seleccion) {
+        if (opcion >= 0 && opcion < ronda.opciones().size() && opcion != seleccion) {
             seleccion = opcion;
             revision++;
             tiempoReintento = 0f;

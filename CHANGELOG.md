@@ -13,6 +13,11 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Se agregaron mejoras para desbloquear la segunda arma, aumentar la vida máxima con curación y regenerar vida de forma pasiva.
 * Se agregaron espacios para las armas equipadas debajo del panel de vida y experiencia.
 
+### Cambiado
+
+* Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
+* Se renovó la pantalla de mejoras con un fondo ilustrado, iconos para cada opción y marcos distintos para indicar la selección.
+
 ---
 
 ## [1.1.3]
