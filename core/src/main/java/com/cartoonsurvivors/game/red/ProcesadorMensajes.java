@@ -15,8 +15,9 @@ public class ProcesadorMensajes {
     private final Consumer<InetAddress> registrarServidor;
     private final Supplier<InetAddress> obtenerServidor;
     private final Consumer<String> guardarEstado;
+    private final Consumer<String> guardarEstadoHud;
 
-    public ProcesadorMensajes(EstadoConexion estadoConexion, GestorConexion gestorConexion, GestorEnemigos gestorEnemigos, Consumer<InetAddress> registrarServidor, Supplier<InetAddress> obtenerServidor, Consumer<String> guardarEstado) {
+    public ProcesadorMensajes(EstadoConexion estadoConexion, GestorConexion gestorConexion, GestorEnemigos gestorEnemigos, Consumer<InetAddress> registrarServidor, Supplier<InetAddress> obtenerServidor, Consumer<String> guardarEstado, Consumer<String> guardarEstadoHud) {
 
         this.estadoConexion = estadoConexion;
         this.gestorConexion = gestorConexion;
@@ -24,6 +25,7 @@ public class ProcesadorMensajes {
         this.registrarServidor = registrarServidor;
         this.obtenerServidor = obtenerServidor;
         this.guardarEstado = guardarEstado;
+        this.guardarEstadoHud = guardarEstadoHud;
     }
 
     public void procesar(String mensaje, InetAddress ipOrigen) {
@@ -60,6 +62,11 @@ public class ProcesadorMensajes {
 
         if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
             guardarEstado.accept(mensaje);
+            return;
+        }
+
+        if (mensaje.startsWith(ProtocoloRed.HUD + "|")) {
+            guardarEstadoHud.accept(mensaje);
             return;
         }
 

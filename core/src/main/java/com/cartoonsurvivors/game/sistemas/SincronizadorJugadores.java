@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
+import com.cartoonsurvivors.game.red.ProtocoloRed;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -17,6 +18,8 @@ public class SincronizadorJugadores {
     private final Map<Jugador, Map<Integer, Long>> ultimosAtaques = new IdentityHashMap<>();
     private long ultimaSecuencia = -1;
     private boolean estadoRecibido = false;
+    private EstadisticasPartida estadisticasPartida;
+    private long ultimaSecuenciaHud = -1;
 
     public SincronizadorJugadores(Jugador jugadorLocal, Jugador jugadorRemoto, int idJugadorLocal) {
 
@@ -168,6 +171,37 @@ public class SincronizadorJugadores {
 
     public boolean hayEstadoRecibido() {
         return estadoRecibido;
+    }
+
+    public void procesarEstadoHud(String mensaje) {
+        if (mensaje == null) {
+            return;
+        }
+
+        // HUD|SECUENCIA|SEGUNDOS|KILLS
+        String[] partes = mensaje.split("\\|", -1);
+        if (partes.length != 4 || !ProtocoloRed.HUD.equals(partes[0])) {
+            return;
+        }
+
+        try {
+            long secuencia = Long.parseLong(partes[1]);
+            int segundos = Integer.parseInt(partes[2]);
+            int kills = Integer.parseInt(partes[3]);
+            if (secuencia > ultimaSecuenciaHud && segundos >= 0 && kills >= 0) {
+                ultimaSecuenciaHud = secuencia;
+                estadisticasPartida = new EstadisticasPartida(segundos, kills);
+            }
+        } catch (NumberFormatException e) {
+            Gdx.app.error("SincronizadorJugadores", "Estado HUD invalido: " + mensaje);
+        }
+    }
+
+    public EstadisticasPartida getEstadisticasPartida() {
+        return estadisticasPartida;
+    }
+
+    public record EstadisticasPartida(int segundos, int kills) {
     }
 
     private record DatosJugador(int id, float x, float y, float direccionX, float direccionY, float vida,

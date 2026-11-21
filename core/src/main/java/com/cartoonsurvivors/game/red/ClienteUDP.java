@@ -25,6 +25,7 @@ public class ClienteUDP {
     private long ultimaBusqueda;
 
     private String ultimoEstadoRecibido;
+    private String ultimoEstadoHud;
 
     private final EstadoConexion estadoConexion = new EstadoConexion();
 
@@ -32,7 +33,7 @@ public class ClienteUDP {
 
     private final GestorConexion gestorConexion = new GestorConexion(this);
 
-    private final ProcesadorMensajes procesadorMensajes = new ProcesadorMensajes(estadoConexion, gestorConexion, gestorEnemigos, this::registrarServidor, () -> direccionServidor, this::guardarEstado);
+    private final ProcesadorMensajes procesadorMensajes = new ProcesadorMensajes(estadoConexion, gestorConexion, gestorEnemigos, this::registrarServidor, () -> direccionServidor, this::guardarEstado, this::guardarEstadoHud);
 
     public synchronized void conectar() {
 
@@ -44,6 +45,7 @@ public class ClienteUDP {
         gestorConexion.reiniciar();
         gestorEnemigos.reiniciar();
         guardarEstado(null);
+        guardarEstadoHud(null);
 
         direccionServidor = null;
         ultimaBusqueda = 0;
@@ -222,6 +224,16 @@ public class ClienteUDP {
         ultimoEstadoRecibido = mensaje;
     }
 
+    private synchronized void guardarEstadoHud(String mensaje) {
+        ultimoEstadoHud = mensaje;
+    }
+
+    public synchronized String consumirEstadoHud() {
+        String mensaje = ultimoEstadoHud;
+        ultimoEstadoHud = null;
+        return mensaje;
+    }
+
     public synchronized String consumirUltimoEstado() {
 
         String mensaje = ultimoEstadoRecibido;
@@ -287,6 +299,7 @@ public class ClienteUDP {
         gestorEnemigos.reiniciar();
 
         guardarEstado(null);
+        guardarEstadoHud(null);
 
         ultimaBusqueda = 0;
         direccionServidor = null;
