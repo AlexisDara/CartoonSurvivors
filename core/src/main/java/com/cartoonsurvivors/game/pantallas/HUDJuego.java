@@ -182,8 +182,8 @@ public class HUDJuego {
 
     private String etiquetaMejora(String mejora) {
         return switch (mejora) {
-            case "DANIO" -> "Daño de espada +5";
-            case "ALCANCE" -> "Alcance de espada +15 %";
+            case "DANIO" -> "Daño del arma +5";
+            case "ALCANCE" -> "Alcance del arma +15 %";
             case "CADENCIA" -> "Intervalo de ataque -10 %";
             case "VELOCIDAD" -> "Velocidad de movimiento +20";
             default -> mejora;

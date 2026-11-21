@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.cartoonsurvivors.game.armas.Arma;
-import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
@@ -19,10 +18,10 @@ public abstract class Jugador extends Entidad {
     private float tiempoAnimacion = 0;
     private boolean mirandoDerecha = false;
     private boolean seEstaMoviendo = false;
-    private Arma arma;
+    private final Arma arma;
 
-    protected Jugador(String rutaIdle, String rutaCaminar) {
-        this(new Texture(rutaIdle), crearAnimacionCaminar(rutaCaminar));
+    protected Jugador(String rutaIdle, String rutaCaminar, Arma arma) {
+        this(new Texture(rutaIdle), crearAnimacionCaminar(rutaCaminar), arma);
     }
 
     private static Animation<TextureRegion> crearAnimacionCaminar(String ruta) {
@@ -31,11 +30,11 @@ public abstract class Jugador extends Entidad {
         return new Animation<>(0.1f, frames);
     }
 
-    public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
+    private Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar, Arma arma) {
         super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 60f, 40f);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
-        this.arma = new Espada();
+        this.arma = arma;
     }
 
     public Arma getArma() {

@@ -3,6 +3,7 @@ package com.cartoonsurvivors.game.sistemas;
 import com.badlogic.gdx.Gdx;
 import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
+import com.cartoonsurvivors.game.armas.Pistola;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.red.ProtocoloRed;
 
@@ -137,10 +138,10 @@ public class SincronizadorJugadores {
 
         for (String datosArma : armasRecibidas) {
 
-            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION,ALCANCE
+            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION[,ALCANCE[,ORIGEN_X,ORIGEN_Y]]
             String[] partes = datosArma.split(",", -1);
 
-            if (partes.length != 4 && partes.length != 5) {
+            if (partes.length != 4 && partes.length != 5 && partes.length != 7) {
                 continue;
             }
 
@@ -151,9 +152,10 @@ public class SincronizadorJugadores {
                 long numeroAtaque = Long.parseLong(partes[2]);
                 int direccion = Integer.parseInt(partes[3]);
 
-                float alcance = partes.length == 5 ? Float.parseFloat(partes[4]) : 1f;
+                float alcance = partes.length >= 5 ? Float.parseFloat(partes[4]) : 1f;
 
-                if (slot < 0 || numeroAtaque <= 0 || !Float.isFinite(alcance) || alcance < 1f) {
+                if (slot != 0 || numeroAtaque <= 0 || direccion < 0 || direccion >= 8
+                    || !Float.isFinite(alcance) || alcance < 1f) {
                     continue;
                 }
 
@@ -163,16 +165,20 @@ public class SincronizadorJugadores {
                     continue;
                 }
 
-                ataquesJugador.put(slot, numeroAtaque);
-
-                if (tipo.equals("ESPADA") && slot == 0) {
-
-                    Arma arma = jugador.getArma();
-
-                    if (arma instanceof Espada espada) {
-                        espada.reproducirAtaque(jugador.getHitbox(), direccion, alcance);
+                Arma arma = jugador.getArma();
+                if (tipo.equals("ESPADA") && arma instanceof Espada espada && partes.length <= 5) {
+                    espada.reproducirAtaque(jugador.getHitbox(), direccion, alcance);
+                } else if (tipo.equals("PISTOLA") && arma instanceof Pistola pistola && partes.length == 7) {
+                    float origenX = Float.parseFloat(partes[5]);
+                    float origenY = Float.parseFloat(partes[6]);
+                    if (!Float.isFinite(origenX) || !Float.isFinite(origenY)) {
+                        continue;
                     }
+                    pistola.reproducirAtaque(origenX, origenY, direccion, alcance);
+                } else {
+                    continue;
                 }
+                ataquesJugador.put(slot, numeroAtaque);
 
             } catch (NumberFormatException e) {
                 Gdx.app.error("SincronizadorJugadores", "Ataque invalido: " + datosArma);
