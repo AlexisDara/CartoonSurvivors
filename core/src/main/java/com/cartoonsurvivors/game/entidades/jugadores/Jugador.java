@@ -10,6 +10,7 @@ import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_SPRITE;
 
 public abstract class Jugador extends Entidad {
 
@@ -19,6 +20,16 @@ public abstract class Jugador extends Entidad {
     private boolean mirandoDerecha = false;
     private boolean seEstaMoviendo = false;
     private Arma arma;
+
+    protected Jugador(String rutaIdle, String rutaCaminar) {
+        this(new Texture(rutaIdle), crearAnimacionCaminar(rutaCaminar));
+    }
+
+    private static Animation<TextureRegion> crearAnimacionCaminar(String ruta) {
+        Texture spritesheet = new Texture(ruta);
+        TextureRegion[] frames = TextureRegion.split(spritesheet, TAMAÑO_SPRITE, TAMAÑO_SPRITE)[0];
+        return new Animation<>(0.1f, frames);
+    }
 
     public Jugador(Texture texturaIdle, Animation<TextureRegion> animacionCaminar) {
         super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 60f, 40f);

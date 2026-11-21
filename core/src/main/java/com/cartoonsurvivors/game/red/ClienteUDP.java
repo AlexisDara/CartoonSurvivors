@@ -328,6 +328,10 @@ public class ClienteUDP {
         return estadoConexion.estaPartidaIniciada();
     }
 
+    public TipoPersonaje getPersonajeRemoto() {
+        return estadoConexion.getPersonajeRemoto();
+    }
+
     public boolean estaPartidaFinalizada() {
         return estadoConexion.estaPartidaFinalizada();
     }

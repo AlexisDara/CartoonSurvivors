@@ -13,7 +13,7 @@ import java.util.Map;
 public class SincronizadorJugadores {
 
     private final Jugador jugadorLocal;
-    private final Jugador jugadorRemoto;
+    private Jugador jugadorRemoto;
     private final int idJugadorLocal;
     private final Map<Jugador, Map<Integer, Long>> ultimosAtaques = new IdentityHashMap<>();
     private long ultimaSecuencia = -1;
@@ -26,6 +26,14 @@ public class SincronizadorJugadores {
         this.jugadorLocal = jugadorLocal;
         this.jugadorRemoto = jugadorRemoto;
         this.idJugadorLocal = idJugadorLocal;
+    }
+
+    public void cambiarJugadorRemoto(Jugador nuevoJugador) {
+        Map<Integer, Long> ataques = ultimosAtaques.remove(jugadorRemoto);
+        jugadorRemoto = nuevoJugador;
+        if (ataques != null) {
+            ultimosAtaques.put(jugadorRemoto, ataques);
+        }
     }
 
     public void procesarEstado(String mensaje) {

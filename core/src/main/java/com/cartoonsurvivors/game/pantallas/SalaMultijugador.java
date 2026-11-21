@@ -101,7 +101,7 @@ public class SalaMultijugador extends ScreenAdapter {
         nombrePersonaje = new Label(getPersonajeSeleccionado().getNombre(), estiloTexto);
 
         // Imagen del personaje disponible
-        texturaPersonaje = new Texture("jugador/mordecai-idle.png");
+        texturaPersonaje = new Texture(getPersonajeSeleccionado().getRutaIdle());
 
         imagenPersonaje = new Image(texturaPersonaje);
 
@@ -270,8 +270,10 @@ public class SalaMultijugador extends ScreenAdapter {
 
         nombrePersonaje.setText(getPersonajeSeleccionado().getNombre());
 
-        // Cuando agreguemos más personajes,
-        // también cambiaremos la imagen aquí.
+        Texture anterior = texturaPersonaje;
+        texturaPersonaje = new Texture(getPersonajeSeleccionado().getRutaIdle());
+        imagenPersonaje.setDrawable(new TextureRegionDrawable(new TextureRegion(texturaPersonaje)));
+        anterior.dispose();
 
         Gdx.app.log("SalaMultijugador", "Personaje seleccionado: " + getPersonajeSeleccionado().name());
     }

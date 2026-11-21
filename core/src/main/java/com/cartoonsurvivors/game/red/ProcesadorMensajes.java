@@ -1,6 +1,7 @@
 package com.cartoonsurvivors.game.red;
 
 import com.badlogic.gdx.Gdx;
+import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;
@@ -75,6 +76,11 @@ public class ProcesadorMensajes {
             return;
         }
 
+        if (mensaje.startsWith(ProtocoloRed.PERSONAJES_ACTUALIZADOS + "|")) {
+            actualizarPersonajeRemoto(mensaje);
+            return;
+        }
+
         if (mensaje.equals(ProtocoloRed.KEEP_ALIVE_OK)) {
             gestorConexion.registrarRespuesta();
             return;
@@ -129,6 +135,27 @@ public class ProcesadorMensajes {
         }
 
         Gdx.app.log("ProcesadorMensajes", "Mensaje recibido: " + mensaje);
+    }
+
+    private void actualizarPersonajeRemoto(String mensaje) {
+        int idLocal = estadoConexion.getIdJugador();
+        if (idLocal != 1 && idLocal != 2) {
+            return;
+        }
+
+        String prefijoRemoto = (3 - idLocal) + ":";
+        String[] campos = mensaje.split("\\|");
+        for (int i = 1; i < campos.length; i++) {
+            if (campos[i].startsWith(prefijoRemoto)) {
+                String nombre = campos[i].substring(prefijoRemoto.length());
+                for (TipoPersonaje tipo : TipoPersonaje.values()) {
+                    if (tipo.name().equals(nombre)) {
+                        estadoConexion.setPersonajeRemoto(tipo);
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     private void conectarJugador(int idJugador) {

@@ -2,25 +2,27 @@ package com.cartoonsurvivors.game.entidades.jugadores;
 
 public enum TipoPersonaje {
 
-    MORDECAI("MORDECAI");
+    MORDECAI("jugador/mordecai-idle.png"),
+    FINN("jugador/FinIdle.png");
 
-    private final String nombre;
+    private final String rutaIdle;
 
-    TipoPersonaje(String nombre) {
-        this.nombre = nombre;
+    TipoPersonaje(String rutaIdle) {
+        this.rutaIdle = rutaIdle;
     }
 
     public String getNombre() {
-        return nombre;
+        return name();
+    }
+
+    public String getRutaIdle() {
+        return rutaIdle;
     }
 
     public Jugador crearPersonaje() {
-
-        switch (this) {
-            case MORDECAI:
-                return new Mordecai();
-            default:
-                throw new IllegalArgumentException("Personaje no reconocido");
-        }
+        return switch (this) {
+            case MORDECAI -> new Mordecai();
+            case FINN -> new Finn();
+        };
     }
 }

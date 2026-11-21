@@ -1,6 +1,8 @@
 
 package com.cartoonsurvivors.game.red;
 
+import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
+
 public class EstadoConexion {
 
     private volatile boolean conectado;
@@ -10,6 +12,15 @@ public class EstadoConexion {
     private volatile boolean servidorLleno;
 
     private volatile int idJugador;
+    private volatile TipoPersonaje personajeRemoto = TipoPersonaje.MORDECAI;
+
+    public TipoPersonaje getPersonajeRemoto() {
+        return personajeRemoto;
+    }
+
+    public void setPersonajeRemoto(TipoPersonaje personaje) {
+        personajeRemoto = personaje;
+    }
 
     public boolean estaConectado() {
         return conectado;
@@ -66,5 +77,6 @@ public class EstadoConexion {
         sesionFinalizada = false;
         servidorLleno = false;
         idJugador = 0;
+        personajeRemoto = TipoPersonaje.MORDECAI;
     }
 }

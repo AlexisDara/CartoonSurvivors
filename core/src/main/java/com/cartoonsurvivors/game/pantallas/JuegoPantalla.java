@@ -36,7 +36,8 @@ public class JuegoPantalla extends ScreenAdapter {
     private final TiledMap mapa;
     private final OrthogonalTiledMapRenderer renderizadorMapa;
     private final Jugador jugadorLocal;
-    private final Jugador jugadorRemoto;
+    private Jugador jugadorRemoto;
+    private TipoPersonaje tipoRemoto;
     private final SincronizadorJugadores sincronizadorJugadores;
     private final GestorEnemigos gestorEnemigosVisual;
     private final HUDJuego hudJuego;
@@ -51,8 +52,8 @@ public class JuegoPantalla extends ScreenAdapter {
 
         jugadorLocal = jugador;
 
-        // Por ahora el personaje remoto es Mordecai.
-        jugadorRemoto = TipoPersonaje.MORDECAI.crearPersonaje();
+        tipoRemoto = clienteUDP.getPersonajeRemoto();
+        jugadorRemoto = tipoRemoto.crearPersonaje();
 
         idJugadorLocal = clienteUDP.getIdJugador();
 
@@ -127,7 +128,16 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
     private void actualizarEstados() {
-
+        TipoPersonaje tipoRecibido = clienteUDP.getPersonajeRemoto();
+        if (tipoRecibido != tipoRemoto) {
+            Jugador anterior = jugadorRemoto;
+            jugadorRemoto = tipoRecibido.crearPersonaje();
+            jugadorRemoto.setPosicion(anterior.getPosicionX(), anterior.getPosicionY());
+            jugadorRemoto.setVida(anterior.getVida());
+            sincronizadorJugadores.cambiarJugadorRemoto(jugadorRemoto);
+            anterior.dispose();
+            tipoRemoto = tipoRecibido;
+        }
         sincronizadorJugadores.procesarEstado(clienteUDP.consumirUltimoEstado());
         sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
 
