@@ -61,8 +61,8 @@ public class HUDJuego {
         imagen.fill();
         pixel = new Texture(imagen);
         imagen.dispose();
-        iconoEspada = cargarIcono(RUTA_ICONO_ESPADA);
-        iconoPistola = cargarIcono(RUTA_ICONO_PISTOLA);
+        iconoEspada = cargarIcono("armas/Espada.png");
+        iconoPistola = cargarIcono("armas/Pistola.png");
     }
 
     // HUD utilizado durante la partida multijugador.
