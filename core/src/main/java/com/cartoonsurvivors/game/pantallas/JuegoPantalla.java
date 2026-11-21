@@ -107,8 +107,8 @@ public class JuegoPantalla extends ScreenAdapter {
 
         if (!enPausa) {
             enviarMovimiento(delta);
-            jugadorLocal.getArma().actualizar(delta);
-            jugadorRemoto.getArma().actualizar(delta);
+            jugadorLocal.getArmas().forEach(arma -> arma.actualizar(delta));
+            jugadorRemoto.getArmas().forEach(arma -> arma.actualizar(delta));
         }
 
         camaraSeguirJugador();
@@ -117,7 +117,7 @@ public class JuegoPantalla extends ScreenAdapter {
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto,
             sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
         if (enPausa) {
-            hudJuego.dibujarMejoras(estadisticas, seleccionMejora.seleccion(),
+            hudJuego.dibujarMejoras(jugadorLocal, estadisticas, seleccionMejora.seleccion(),
                 seleccionMejora.esperandoConfirmacion(estadisticas));
         }
     }
@@ -146,6 +146,7 @@ public class JuegoPantalla extends ScreenAdapter {
             jugadorRemoto = tipoRecibido.crearPersonaje();
             jugadorRemoto.setPosicion(anterior.getPosicionX(), anterior.getPosicionY());
             jugadorRemoto.setVida(anterior.getVida());
+            jugadorRemoto.setVidaMaxima(anterior.getVidaMaxima());
             sincronizadorJugadores.cambiarJugadorRemoto(jugadorRemoto);
             anterior.dispose();
             tipoRemoto = tipoRecibido;

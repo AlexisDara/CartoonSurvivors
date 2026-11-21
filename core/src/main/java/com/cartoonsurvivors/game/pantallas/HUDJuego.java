@@ -1,6 +1,7 @@
 
 package com.cartoonsurvivors.game.pantallas;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -10,12 +11,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.cartoonsurvivors.game.armas.Arma;
+import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
 
 import java.util.Locale;
 
-import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.VIDA_INICIAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_MUNDO;
@@ -26,6 +28,8 @@ public class HUDJuego {
     private static final int ANCHO_MENU = 620;
     private static final int ALTO_OPCION = 56;
     private static final int PASO_OPCION = 68;
+    private static final String RUTA_ICONO_ESPADA = "hud/armas/espada.png";
+    private static final String RUTA_ICONO_PISTOLA = "hud/armas/pistola.png";
     private static final Color CAPA_PAUSA = new Color(0x080d19bd);
     private static final Color FONDO_OPCION = new Color(0x2a3655ff);
     private static final Color PANEL = new Color(0x192036ef);
@@ -38,6 +42,8 @@ public class HUDJuego {
     private final BitmapFont font;
     private final ExtendViewport hudViewport;
     private final Texture pixel;
+    private final Texture iconoEspada;
+    private final Texture iconoPistola;
     private final Vector2 punteroHud = new Vector2();
     private final GlyphLayout textoCentrado = new GlyphLayout();
 
@@ -55,6 +61,8 @@ public class HUDJuego {
         imagen.fill();
         pixel = new Texture(imagen);
         imagen.dispose();
+        iconoEspada = cargarIcono(RUTA_ICONO_ESPADA);
+        iconoPistola = cargarIcono(RUTA_ICONO_PISTOLA);
     }
 
     // HUD utilizado durante la partida multijugador.
@@ -87,7 +95,7 @@ public class HUDJuego {
         rectangulo(MARCO, derecha - 72, arriba - 72, 64, 64);
         rectangulo(PANEL, derecha - 69, arriba - 69, 58, 58);
         batch.draw(jugadorLocal.getTexturaIdle(), derecha - 69, arriba - 69, 58, 58);
-        textoCentrado((int) Math.ceil(jugadorLocal.getVida()) + " / " + VIDA_INICIAL,
+        textoCentrado((int) Math.ceil(jugadorLocal.getVida()) + " / " + (int) jugadorLocal.getVidaMaxima(),
             izquierdaVida + 104, arriba - 8, Color.WHITE);
         dibujarBarra(jugadorLocal, izquierdaVida + 12, arriba - 67, 184, 17);
 
@@ -101,6 +109,7 @@ public class HUDJuego {
         font.getData().setScale(escalaX * 0.55f, escalaY * 0.55f);
         textoCentrado("Nivel " + nivel + "   ·   " + (meta > 0 ? experiencia + " / " + meta + " XP" : "-- XP"),
             izquierdaVida + 140, arriba - 99, EXPERIENCIA);
+        dibujarArmas(jugadorLocal, izquierdaVida + 12, arriba - 204);
 
         font.getData().setScale(escalaX, escalaY);
 
@@ -115,7 +124,30 @@ public class HUDJuego {
         font.setColor(Color.WHITE);
     }
 
-    public void dibujarMejoras(EstadisticasPartida estadisticas, int seleccion, boolean confirmando) {
+    private Texture cargarIcono(String ruta) {
+        var archivo = Gdx.files.internal(ruta);
+        return archivo.exists() ? new Texture(archivo) : null;
+    }
+
+    private void dibujarArmas(Jugador jugador, float x, float y) {
+        for (Arma arma : jugador.getArmas()) {
+            boolean espada = arma instanceof Espada;
+            Texture icono = espada ? iconoEspada : iconoPistola;
+            rectangulo(MARCO, x, y, 76, 64);
+            rectangulo(PANEL, x + 2, y + 2, 72, 60);
+            if (icono == null) {
+                textoCentrado(espada ? "Espada" : "Pistola", x + 38, y + 42, Color.WHITE);
+            } else {
+                float escala = Math.min(52f / icono.getWidth(), 52f / icono.getHeight());
+                float ancho = icono.getWidth() * escala;
+                float alto = icono.getHeight() * escala;
+                batch.draw(icono, x + (76 - ancho) / 2f, y + (64 - alto) / 2f, ancho, alto);
+            }
+            x += 84;
+        }
+    }
+
+    public void dibujarMejoras(Jugador jugador, EstadisticasPartida estadisticas, int seleccion, boolean confirmando) {
         prepararHUD();
         batch.begin();
 
@@ -132,14 +164,14 @@ public class HUDJuego {
         float escalaX = font.getScaleX();
         float escalaY = font.getScaleY();
         font.getData().setScale(escalaX * 0.65f, escalaY * 0.65f);
-        textoCentrado("La partida continúa en " + segundos + " s", centro, arriba - 72, EXPERIENCIA);
+        textoCentrado("Tiempo restante " + segundos + " s", centro, arriba - 72, EXPERIENCIA);
         for (int i = 0; i < ronda.opciones().size(); i++) {
             float y = baseOpcion(i);
             boolean elegida = i == seleccion;
             rectangulo(elegida ? MARCO : FONDO_OPCION, izquierda, y, ANCHO_MENU, ALTO_OPCION);
             rectangulo(FONDO_OPCION, izquierda + 2, y + 2, ANCHO_MENU - 4, ALTO_OPCION - 4);
             font.setColor(elegida ? MARCO : Color.WHITE);
-            font.draw(batch, (i + 1) + "   " + etiquetaMejora(ronda.opciones().get(i)),
+            font.draw(batch, (i + 1) + "   " + etiquetaMejora(ronda.opciones().get(i), jugador),
                 izquierda + 20, y + 39);
             if (elegida) {
                 String estado = confirmando ? "Enviando…" : "Elegida";
@@ -147,7 +179,9 @@ public class HUDJuego {
             }
         }
 
-        textoCentrado("Podés cambiar tu elección con clic o con 1–3", centro, arriba - 331, Color.WHITE);
+        String indicacion = seleccion < 0 ? "Elegí con clic o con 1–3"
+            : confirmando ? "Confirmando tu elección…" : "Esperando a tu compañero";
+        textoCentrado(indicacion, centro, arriba - 331, Color.WHITE);
         font.getData().setScale(escalaX, escalaY);
         font.setColor(Color.WHITE);
         batch.end();
@@ -180,12 +214,15 @@ public class HUDJuego {
         return arribaMenuMejoras() - 164 - indice * PASO_OPCION;
     }
 
-    private String etiquetaMejora(String mejora) {
+    private String etiquetaMejora(String mejora, Jugador jugador) {
         return switch (mejora) {
-            case "DANIO" -> "Daño del arma +5";
-            case "ALCANCE" -> "Alcance del arma +15 %";
+            case "DANIO" -> "Daño de armas +5";
+            case "ALCANCE" -> "Alcance de armas +15 %";
             case "CADENCIA" -> "Intervalo de ataque -10 %";
             case "VELOCIDAD" -> "Velocidad de movimiento +20";
+            case "ARMA" -> jugador.getArmas().getFirst() instanceof Espada ? "Desbloquear pistola" : "Desbloquear espada";
+            case "VIDA_MAXIMA" -> "Vida máxima +20 y curación +30";
+            case "REGENERACION" -> "Regeneración +1 vida por segundo";
             default -> mejora;
         };
     }
@@ -199,7 +236,7 @@ public class HUDJuego {
     }
 
     private void dibujarBarra(Jugador jugador, float x, float y, float ancho, float alto) {
-        float proporcion = MathUtils.clamp(jugador.getVida() / VIDA_INICIAL, 0f, 1f);
+        float proporcion = MathUtils.clamp(jugador.getVida() / jugador.getVidaMaxima(), 0f, 1f);
         dibujarBarra(proporcion, VIDA, x, y, ancho, alto);
     }
 
@@ -225,6 +262,12 @@ public class HUDJuego {
 
     public void dispose() {
         pixel.dispose();
+        if (iconoEspada != null) {
+            iconoEspada.dispose();
+        }
+        if (iconoPistola != null) {
+            iconoPistola.dispose();
+        }
     }
 
     // Aviso mostrado al finalizar la sesion multijugador.

@@ -9,7 +9,9 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Se agregó la pistola inicial de Mordecai, con disparos instantáneos en ocho direcciones, una zona de impacto amplia y menos daño que la espada de Finn.
 * Se agregaron niveles y experiencia compartidos por bajas, con una mejora por jugador al subir de nivel.
 * Se agregaron al HUD el número de nivel y la barra de experiencia.
-* Al subir de nivel, la partida se pausa durante 10 segundos y muestra tres mejoras aleatorias. Cada jugador puede cambiar su elección hasta que termine la cuenta regresiva.
+* Al subir de nivel, cada jugador recibe tres mejoras aleatorias. La partida se reanuda cuando ambos eligen o al vencer el límite de 10 segundos.
+* Se agregaron mejoras para desbloquear la segunda arma, aumentar la vida máxima con curación y regenerar vida de forma pasiva.
+* Se agregaron espacios para las armas equipadas debajo del panel de vida y experiencia.
 
 ---
 

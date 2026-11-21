@@ -6,6 +6,7 @@ import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.armas.Pistola;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.red.ProtocoloRed;
+import com.cartoonsurvivors.game.utilidades.Constantes;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -31,11 +32,8 @@ public class SincronizadorJugadores {
     }
 
     public void cambiarJugadorRemoto(Jugador nuevoJugador) {
-        Map<Integer, Long> ataques = ultimosAtaques.remove(jugadorRemoto);
+        ultimosAtaques.remove(jugadorRemoto);
         jugadorRemoto = nuevoJugador;
-        if (ataques != null) {
-            ultimosAtaques.put(jugadorRemoto, ataques);
-        }
     }
 
     public void procesarEstado(String mensaje) {
@@ -87,10 +85,10 @@ public class SincronizadorJugadores {
 
     private DatosJugador interpretarJugador(String datos) {
 
-        // ID:X:Y:DX:DY:VIDA:ARMAS
+        // ID:X:Y:DX:DY:VIDA:ARMAS[:VIDA_MAXIMA]
         String[] partes = datos.split(":", -1);
 
-        if (partes.length != 7) {
+        if (partes.length != 7 && partes.length != 8) {
             return null;
         }
 
@@ -103,12 +101,14 @@ public class SincronizadorJugadores {
         float direccionY = Float.parseFloat(partes[4]);
 
         float vida = Float.parseFloat(partes[5]);
+        float vidaMaxima = partes.length == 8 ? Float.parseFloat(partes[7]) : Constantes.Jugador.VIDA_INICIAL;
 
-        if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(direccionX) || !Float.isFinite(direccionY) || !Float.isFinite(vida) || vida < 0) {
+        if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(direccionX) || !Float.isFinite(direccionY)
+            || !Float.isFinite(vida) || !Float.isFinite(vidaMaxima) || vidaMaxima <= 0 || vida < 0 || vida > vidaMaxima) {
             return null;
         }
 
-        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6]);
+        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6], vidaMaxima);
     }
 
     private void aplicarEstado(Jugador jugador, DatosJugador datos) {
@@ -118,6 +118,7 @@ public class SincronizadorJugadores {
         // La vida llega calculada desde el servidor.
         // El cliente solamente actualiza el valor visual.
         jugador.setVida(datos.vida());
+        jugador.setVidaMaxima(datos.vidaMaxima());
 
         jugador.seMueve(datos.direccionX(), datos.direccionY());
 
@@ -154,18 +155,18 @@ public class SincronizadorJugadores {
 
                 float alcance = partes.length >= 5 ? Float.parseFloat(partes[4]) : 1f;
 
-                if (slot != 0 || numeroAtaque <= 0 || direccion < 0 || direccion >= 8
+                if (slot < 0 || slot > 1 || numeroAtaque < 0 || direccion < 0 || direccion >= 8
                     || !Float.isFinite(alcance) || alcance < 1f) {
                     continue;
                 }
 
+                Arma arma = obtenerArma(jugador, slot, tipo);
                 Long ultimoAtaque = ataquesJugador.get(slot);
 
-                if (ultimoAtaque != null && numeroAtaque <= ultimoAtaque) {
+                if (arma == null || numeroAtaque == 0 || (ultimoAtaque != null && numeroAtaque <= ultimoAtaque)) {
                     continue;
                 }
 
-                Arma arma = jugador.getArma();
                 if (tipo.equals("ESPADA") && arma instanceof Espada espada && partes.length <= 5) {
                     espada.reproducirAtaque(jugador.getHitbox(), direccion, alcance);
                 } else if (tipo.equals("PISTOLA") && arma instanceof Pistola pistola && partes.length == 7) {
@@ -184,6 +185,25 @@ public class SincronizadorJugadores {
                 Gdx.app.error("SincronizadorJugadores", "Ataque invalido: " + datosArma);
             }
         }
+    }
+
+    private Arma obtenerArma(Jugador jugador, int slot, String tipo) {
+        List<Arma> armas = jugador.getArmas();
+        if (slot < armas.size()) {
+            return armas.get(slot);
+        }
+
+        Arma principal = armas.getFirst();
+        Arma nueva;
+        if (tipo.equals("PISTOLA") && principal instanceof Espada) {
+            nueva = new Pistola();
+        } else if (tipo.equals("ESPADA") && principal instanceof Pistola) {
+            nueva = new Espada();
+        } else {
+            return null;
+        }
+        jugador.agregarArma(nueva);
+        return nueva;
     }
 
     public boolean hayEstadoRecibido() {
@@ -220,7 +240,11 @@ public class SincronizadorJugadores {
             RondaMejora ronda = null;
             if (partes.length == 12) {
                 int milisegundos = Integer.parseInt(partes[8]);
-                List<String> opciones = List.of(partes[9].split(",", -1));
+                String[] opcionesPorJugador = partes[9].split(";", -1);
+                if (opcionesPorJugador.length > 2) {
+                    return;
+                }
+                List<String> opciones = List.of(opcionesPorJugador[opcionesPorJugador.length == 1 ? 0 : idJugadorLocal - 1].split(",", -1));
                 String[] eleccion = partes[idJugadorLocal == 1 ? 10 : 11].split(",", -1);
                 if (milisegundos <= 0 || opciones.size() != 3 || eleccion.length != 2) {
                     return;
@@ -228,7 +252,7 @@ public class SincronizadorJugadores {
 
                 int seleccion = Integer.parseInt(eleccion[0]);
                 int revision = Integer.parseInt(eleccion[1]);
-                if (seleccion < 0 || seleccion >= opciones.size() || revision < 0) {
+                if (seleccion < -1 || seleccion >= opciones.size() || revision < 0 || (seleccion == -1 && revision != 0)) {
                     return;
                 }
                 ronda = new RondaMejora(milisegundos, opciones, seleccion, revision);
@@ -254,6 +278,6 @@ public class SincronizadorJugadores {
     }
 
     private record DatosJugador(int id, float x, float y, float direccionX, float direccionY, float vida,
-                                String armas) {
+                                String armas, float vidaMaxima) {
     }
 }

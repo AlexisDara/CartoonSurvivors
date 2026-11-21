@@ -8,6 +8,10 @@ import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.entidades.Entidad;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_SPRITE;
 
@@ -18,7 +22,9 @@ public abstract class Jugador extends Entidad {
     private float tiempoAnimacion = 0;
     private boolean mirandoDerecha = false;
     private boolean seEstaMoviendo = false;
-    private final Arma arma;
+    private final List<Arma> armas = new ArrayList<>(2);
+    private final List<Arma> armasEquipadas = Collections.unmodifiableList(armas);
+    private float vidaMaxima = Constantes.Jugador.VIDA_INICIAL;
 
     protected Jugador(String rutaIdle, String rutaCaminar, Arma arma) {
         this(new Texture(rutaIdle), crearAnimacionCaminar(rutaCaminar), arma);
@@ -34,11 +40,23 @@ public abstract class Jugador extends Entidad {
         super(Constantes.Jugador.VIDA_INICIAL, Constantes.Jugador.VELOCIDAD_INICIAL, 0, 0, 60f, 40f);
         this.texturaIdle = texturaIdle;
         this.animacionCaminar = animacionCaminar;
-        this.arma = arma;
+        armas.add(arma);
     }
 
-    public Arma getArma() {
-        return arma;
+    public List<Arma> getArmas() {
+        return armasEquipadas;
+    }
+
+    public void agregarArma(Arma arma) {
+        armas.add(arma);
+    }
+
+    public float getVidaMaxima() {
+        return vidaMaxima;
+    }
+
+    public void setVidaMaxima(float vidaMaxima) {
+        this.vidaMaxima = vidaMaxima;
     }
 
     public Texture getTexturaIdle() {
@@ -100,7 +118,7 @@ public abstract class Jugador extends Entidad {
 
     }
 
-      arma.dibujar(batch);
+      armas.forEach(arma -> arma.dibujar(batch));
     }
 
     @Override
@@ -117,9 +135,7 @@ public abstract class Jugador extends Entidad {
             }
         }
 
-        if (arma != null) {
-            arma.dispose();
-        }
+        armas.forEach(Arma::dispose);
     }
 
 
