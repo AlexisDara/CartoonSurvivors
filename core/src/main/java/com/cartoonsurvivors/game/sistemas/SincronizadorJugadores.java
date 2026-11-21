@@ -85,10 +85,10 @@ public class SincronizadorJugadores {
 
     private DatosJugador interpretarJugador(String datos) {
 
-        // ID:X:Y:DX:DY:VIDA:ARMAS[:VIDA_MAXIMA]
+        // ID:X:Y:DX:DY:VIDA:ARMAS[:VIDA_MAXIMA[:SEGUNDOS_REAPARICION]]
         String[] partes = datos.split(":", -1);
 
-        if (partes.length != 7 && partes.length != 8) {
+        if (partes.length < 7 || partes.length > 9) {
             return null;
         }
 
@@ -101,14 +101,16 @@ public class SincronizadorJugadores {
         float direccionY = Float.parseFloat(partes[4]);
 
         float vida = Float.parseFloat(partes[5]);
-        float vidaMaxima = partes.length == 8 ? Float.parseFloat(partes[7]) : Constantes.Jugador.VIDA_INICIAL;
+        float vidaMaxima = partes.length >= 8 ? Float.parseFloat(partes[7]) : Constantes.Jugador.VIDA_INICIAL;
+        int segundosParaReaparecer = partes.length == 9 ? Integer.parseInt(partes[8]) : 0;
 
         if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(direccionX) || !Float.isFinite(direccionY)
-            || !Float.isFinite(vida) || !Float.isFinite(vidaMaxima) || vidaMaxima <= 0 || vida < 0 || vida > vidaMaxima) {
+            || !Float.isFinite(vida) || !Float.isFinite(vidaMaxima) || vidaMaxima <= 0 || vida < 0 || vida > vidaMaxima
+            || segundosParaReaparecer < 0) {
             return null;
         }
 
-        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6], vidaMaxima);
+        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6], vidaMaxima, segundosParaReaparecer);
     }
 
     private void aplicarEstado(Jugador jugador, DatosJugador datos) {
@@ -119,6 +121,7 @@ public class SincronizadorJugadores {
         // El cliente solamente actualiza el valor visual.
         jugador.setVida(datos.vida());
         jugador.setVidaMaxima(datos.vidaMaxima());
+        jugador.setSegundosParaReaparecer(datos.segundosParaReaparecer());
 
         jugador.seMueve(datos.direccionX(), datos.direccionY());
 
@@ -278,6 +281,6 @@ public class SincronizadorJugadores {
     }
 
     private record DatosJugador(int id, float x, float y, float direccionX, float direccionY, float vida,
-                                String armas, float vidaMaxima) {
+                                String armas, float vidaMaxima, int segundosParaReaparecer) {
     }
 }

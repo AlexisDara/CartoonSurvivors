@@ -12,11 +12,13 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Al subir de nivel, cada jugador recibe tres mejoras aleatorias. La partida se reanuda cuando ambos eligen o al vencer el límite de 10 segundos.
 * Se agregaron mejoras para desbloquear la segunda arma, aumentar la vida máxima con curación y regenerar vida de forma pasiva.
 * Se agregaron espacios para las armas equipadas debajo del panel de vida y experiencia.
+* Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
 
 * Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
 * Se renovó la pantalla de mejoras con un fondo ilustrado, iconos para cada opción y marcos distintos para indicar la selección.
+* Las mejoras de daño, alcance y cadencia se aplican a una sola arma. El menú muestra el arma correspondiente con texto claro, más pequeño y con borde negro, dentro de marcos más grandes.
 
 ---
 

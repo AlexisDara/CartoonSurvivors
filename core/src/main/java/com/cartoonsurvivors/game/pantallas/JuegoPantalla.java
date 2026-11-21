@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -22,6 +23,7 @@ import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
+import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
 public class JuegoPantalla extends ScreenAdapter {
 
@@ -37,6 +39,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private final ControladorEntrada controladorEntrada = new ControladorEntrada();
     private final TiledMap mapa;
     private final OrthogonalTiledMapRenderer renderizadorMapa;
+    private final Texture tumba;
     private final Jugador jugadorLocal;
     private Jugador jugadorRemoto;
     private TipoPersonaje tipoRemoto;
@@ -62,6 +65,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
+        tumba = new Texture(Gdx.files.internal("jugador/tumba.png"));
 
         sincronizadorJugadores = new SincronizadorJugadores(jugadorLocal, jugadorRemoto, idJugadorLocal);
 
@@ -117,7 +121,7 @@ public class JuegoPantalla extends ScreenAdapter {
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto,
             sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
         if (enPausa) {
-            hudJuego.dibujarMejoras(jugadorLocal, estadisticas, seleccionMejora.seleccion(),
+            hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(),
                 seleccionMejora.esperandoConfirmacion(estadisticas));
         }
     }
@@ -147,6 +151,7 @@ public class JuegoPantalla extends ScreenAdapter {
             jugadorRemoto.setPosicion(anterior.getPosicionX(), anterior.getPosicionY());
             jugadorRemoto.setVida(anterior.getVida());
             jugadorRemoto.setVidaMaxima(anterior.getVidaMaxima());
+            jugadorRemoto.setSegundosParaReaparecer(anterior.getSegundosParaReaparecer());
             sincronizadorJugadores.cambiarJugadorRemoto(jugadorRemoto);
             anterior.dispose();
             tipoRemoto = tipoRecibido;
@@ -175,8 +180,8 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.begin();
 
-        jugadorLocal.dibujar(batch, delta);
-        jugadorRemoto.dibujar(batch, delta);
+        dibujarJugador(jugadorLocal, delta);
+        dibujarJugador(jugadorRemoto, delta);
 
         gestorEnemigosVisual.dibujar(batch, delta);
 
@@ -186,6 +191,19 @@ public class JuegoPantalla extends ScreenAdapter {
         }
 
         batch.end();
+    }
+
+    private void dibujarJugador(Jugador jugador, float delta) {
+        if (jugador.getVida() > 0f) {
+            jugador.dibujar(batch, delta);
+            return;
+        }
+
+        float escala = TAMAÑO_REAL / Math.max(tumba.getWidth(), tumba.getHeight());
+        float ancho = tumba.getWidth() * escala;
+        float alto = tumba.getHeight() * escala;
+        batch.draw(tumba, jugador.getHitbox().getX() + (jugador.getHitbox().getWidth() - ancho) / 2f,
+            jugador.getHitbox().getY() + (jugador.getHitbox().getHeight() - alto) / 2f, ancho, alto);
     }
 
     private void volverAlMenu() {
@@ -210,6 +228,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         gestorEnemigosVisual.dispose();
         hudJuego.dispose();
+        tumba.dispose();
 
         renderizadorMapa.dispose();
         mapa.dispose();

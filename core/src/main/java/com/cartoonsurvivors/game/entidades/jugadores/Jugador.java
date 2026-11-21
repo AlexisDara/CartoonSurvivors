@@ -25,6 +25,7 @@ public abstract class Jugador extends Entidad {
     private final List<Arma> armas = new ArrayList<>(2);
     private final List<Arma> armasEquipadas = Collections.unmodifiableList(armas);
     private float vidaMaxima = Constantes.Jugador.VIDA_INICIAL;
+    private int segundosParaReaparecer;
 
     protected Jugador(String rutaIdle, String rutaCaminar, Arma arma) {
         this(new Texture(rutaIdle), crearAnimacionCaminar(rutaCaminar), arma);
@@ -57,6 +58,14 @@ public abstract class Jugador extends Entidad {
 
     public void setVidaMaxima(float vidaMaxima) {
         this.vidaMaxima = vidaMaxima;
+    }
+
+    public int getSegundosParaReaparecer() {
+        return segundosParaReaparecer;
+    }
+
+    public void setSegundosParaReaparecer(int segundosParaReaparecer) {
+        this.segundosParaReaparecer = segundosParaReaparecer;
     }
 
     public Texture getTexturaIdle() {
