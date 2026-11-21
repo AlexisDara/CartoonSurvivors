@@ -207,6 +207,12 @@ public class ClienteUDP {
         enviarMensaje(mensaje);
     }
 
+    public void enviarMejora(String partidaId, int nivel, int revision, int opcion) {
+        if (estaConectado() && estaPartidaIniciada()) {
+            enviarMensaje(ProtocoloRed.MEJORA + "|" + partidaId + "|" + nivel + "|" + revision + "|" + opcion);
+        }
+    }
+
     public void enviarSeleccionPersonaje(TipoPersonaje personaje) {
 
         if (!estaConectado() || personaje == null) {

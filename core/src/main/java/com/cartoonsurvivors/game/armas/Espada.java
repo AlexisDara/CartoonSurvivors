@@ -24,6 +24,7 @@ public class Espada extends Arma {
 
     private Rectangle hitboxJugador;
     private float tiempoAnimacion;
+    private float alcanceEstela = 1f;
 
     public Espada() {
         super(24, 1.0f, 80f, 30f, DURACION);
@@ -44,6 +45,7 @@ public class Espada extends Arma {
     @Override
     public void atacar(Rectangle hitbox, Vector2 direccionMirada) {
 
+        alcanceEstela = 1f;
         hitboxJugador = hitbox;
 
         direccionAtaque.set(direccionMirada).nor();
@@ -56,12 +58,17 @@ public class Espada extends Arma {
     }
 
     public void reproducirAtaque(Rectangle hitbox, int direccion) {
+        reproducirAtaque(hitbox, direccion, 1f);
+    }
+
+    public void reproducirAtaque(Rectangle hitbox, int direccion, float alcance) {
 
         float angulo = direccion * 45f;
 
         Vector2 vector = new Vector2(MathUtils.cosDeg(angulo), MathUtils.sinDeg(angulo));
 
         atacar(hitbox, vector);
+        alcanceEstela = alcance;
     }
 
     @Override
@@ -114,6 +121,8 @@ public class Espada extends Arma {
 
     private void dibujarEstela(float centroX, float centroY, float inicio, float fin, float radioInterno, float radioExterno, Color color) {
 
+        radioInterno *= alcanceEstela;
+        radioExterno *= alcanceEstela;
         shapeRenderer.setColor(color);
 
         for (int i = 0; i < SEGMENTOS; i++) {

@@ -8,6 +8,7 @@ import com.cartoonsurvivors.game.red.ProtocoloRed;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SincronizadorJugadores {
@@ -136,10 +137,10 @@ public class SincronizadorJugadores {
 
         for (String datosArma : armasRecibidas) {
 
-            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION
+            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION,ALCANCE
             String[] partes = datosArma.split(",", -1);
 
-            if (partes.length != 4) {
+            if (partes.length != 4 && partes.length != 5) {
                 continue;
             }
 
@@ -150,7 +151,9 @@ public class SincronizadorJugadores {
                 long numeroAtaque = Long.parseLong(partes[2]);
                 int direccion = Integer.parseInt(partes[3]);
 
-                if (slot < 0 || numeroAtaque <= 0) {
+                float alcance = partes.length == 5 ? Float.parseFloat(partes[4]) : 1f;
+
+                if (slot < 0 || numeroAtaque <= 0 || !Float.isFinite(alcance) || alcance < 1f) {
                     continue;
                 }
 
@@ -167,7 +170,7 @@ public class SincronizadorJugadores {
                     Arma arma = jugador.getArma();
 
                     if (arma instanceof Espada espada) {
-                        espada.reproducirAtaque(jugador.getHitbox(), direccion);
+                        espada.reproducirAtaque(jugador.getHitbox(), direccion, alcance);
                     }
                 }
 
@@ -186,9 +189,9 @@ public class SincronizadorJugadores {
             return;
         }
 
-        // HUD|SECUENCIA|SEGUNDOS|KILLS
+        // HUD|SECUENCIA|SEGUNDOS|KILLS|PARTIDA|NIVEL|XP|META[|MS|OPCIONES|ELECCION_J1|ELECCION_J2]
         String[] partes = mensaje.split("\\|", -1);
-        if (partes.length != 4 || !ProtocoloRed.HUD.equals(partes[0])) {
+        if ((partes.length != 4 && partes.length != 8 && partes.length != 12) || !ProtocoloRed.HUD.equals(partes[0])) {
             return;
         }
 
@@ -196,10 +199,38 @@ public class SincronizadorJugadores {
             long secuencia = Long.parseLong(partes[1]);
             int segundos = Integer.parseInt(partes[2]);
             int kills = Integer.parseInt(partes[3]);
-            if (secuencia > ultimaSecuenciaHud && segundos >= 0 && kills >= 0) {
-                ultimaSecuenciaHud = secuencia;
-                estadisticasPartida = new EstadisticasPartida(segundos, kills);
+            if (secuencia <= ultimaSecuenciaHud || segundos < 0 || kills < 0) {
+                return;
             }
+
+            String partidaId = partes.length >= 8 ? partes[4] : "";
+            int nivel = partes.length >= 8 ? Integer.parseInt(partes[5]) : 1;
+            int experiencia = partes.length >= 8 ? Integer.parseInt(partes[6]) : 0;
+            int meta = partes.length >= 8 ? Integer.parseInt(partes[7]) : 1;
+            if (nivel < 1 || experiencia < 0 || meta <= 0) {
+                return;
+            }
+
+            RondaMejora ronda = null;
+            if (partes.length == 12) {
+                int milisegundos = Integer.parseInt(partes[8]);
+                List<String> opciones = List.of(partes[9].split(",", -1));
+                String[] eleccion = partes[idJugadorLocal == 1 ? 10 : 11].split(",", -1);
+                if (milisegundos <= 0 || opciones.size() != 3 || eleccion.length != 2) {
+                    return;
+                }
+
+                int seleccion = Integer.parseInt(eleccion[0]);
+                int revision = Integer.parseInt(eleccion[1]);
+                if (seleccion < 0 || seleccion >= opciones.size() || revision < 0) {
+                    return;
+                }
+                ronda = new RondaMejora(milisegundos, opciones, seleccion, revision);
+            }
+
+            ultimaSecuenciaHud = secuencia;
+            estadisticasPartida = new EstadisticasPartida(segundos, kills, partidaId,
+                nivel, experiencia, meta, ronda);
         } catch (NumberFormatException e) {
             Gdx.app.error("SincronizadorJugadores", "Estado HUD invalido: " + mensaje);
         }
@@ -209,7 +240,11 @@ public class SincronizadorJugadores {
         return estadisticasPartida;
     }
 
-    public record EstadisticasPartida(int segundos, int kills) {
+    public record EstadisticasPartida(int segundos, int kills, String partidaId, int nivel,
+                                      int experiencia, int meta, RondaMejora rondaMejora) {
+    }
+
+    public record RondaMejora(int milisegundos, List<String> opciones, int seleccion, int revision) {
     }
 
     private record DatosJugador(int id, float x, float y, float direccionX, float direccionY, float vida,

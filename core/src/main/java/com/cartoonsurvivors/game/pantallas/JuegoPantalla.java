@@ -19,6 +19,8 @@ import com.cartoonsurvivors.game.red.ClienteUDP;
 import com.cartoonsurvivors.game.sistemas.GestorEnemigos;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores;
 
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
+
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.*;
 
 public class JuegoPantalla extends ScreenAdapter {
@@ -41,6 +43,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private final SincronizadorJugadores sincronizadorJugadores;
     private final GestorEnemigos gestorEnemigosVisual;
     private final HUDJuego hudJuego;
+    private final SeleccionMejora seleccionMejora = new SeleccionMejora();
     private final int idJugadorLocal;
     private float tiempoEnvio = INTERVALO_MOVIMIENTO;
 
@@ -97,17 +100,26 @@ public class JuegoPantalla extends ScreenAdapter {
             return;
         }
 
-        enviarMovimiento(delta);
         actualizarEstados();
+        EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
+        boolean enPausa = estadisticas != null && estadisticas.rondaMejora() != null;
+        seleccionMejora.actualizar(delta, estadisticas, clienteUDP, hudJuego);
 
-        jugadorLocal.getArma().actualizar(delta);
-        jugadorRemoto.getArma().actualizar(delta);
+        if (!enPausa) {
+            enviarMovimiento(delta);
+            jugadorLocal.getArma().actualizar(delta);
+            jugadorRemoto.getArma().actualizar(delta);
+        }
 
         camaraSeguirJugador();
-        dibujarMundo(delta);
+        dibujarMundo(enPausa ? 0f : delta);
 
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto,
-            sincronizadorJugadores.hayEstadoRecibido(), sincronizadorJugadores.getEstadisticasPartida());
+            sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
+        if (enPausa) {
+            hudJuego.dibujarMejoras(estadisticas, seleccionMejora.seleccion(),
+                seleccionMejora.esperandoConfirmacion(estadisticas));
+        }
     }
 
     private void enviarMovimiento(float delta) {
