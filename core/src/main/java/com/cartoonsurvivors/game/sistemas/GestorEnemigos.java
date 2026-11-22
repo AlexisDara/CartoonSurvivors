@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.cartoonsurvivors.game.entidades.enemigos.Enemigo;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.enemigos.Jefe;
+import com.cartoonsurvivors.game.entidades.enemigos.Muerte;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ public class GestorEnemigos {
 
     private final Texture texturaEnemigos;
     private final Texture texturaJefe;
+    private final Texture texturaMuerte;
     private final Texture texturaFuego;
     private List<CirculoFuego> circulosFuego = List.of();
 
@@ -30,6 +32,7 @@ public class GestorEnemigos {
     public GestorEnemigos() {
         texturaEnemigos = new Texture("enemigos/minion.png");
         texturaJefe = new Texture("enemigos/elmacho.png");
+        texturaMuerte = new Texture("enemigos/Muerte.png");
         texturaFuego = crearTexturaFuego();
     }
 
@@ -86,7 +89,7 @@ public class GestorEnemigos {
                 float y = Float.parseFloat(datos[3]);
                 int vida = Integer.parseInt(datos[4]);
 
-                if (id <= 0 || (!tipo.equals("BASICO") && !tipo.equals("JEFE")) || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
+                if (id <= 0 || (!tipo.equals("BASICO") && !tipo.equals("JEFE") && !tipo.equals("MUERTE")) || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
                     return;
                 }
 
@@ -99,9 +102,11 @@ public class GestorEnemigos {
                 Enemigo enemigo = enemigos.get(datos.id());
 
                 if (enemigo == null) {
-                    enemigo = datos.tipo().equals("JEFE")
-                        ? new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe)
-                        : new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos);
+                    enemigo = switch (datos.tipo()) {
+                        case "JEFE" -> new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe);
+                        case "MUERTE" -> new Muerte(datos.vida(), datos.x(), datos.y(), texturaMuerte);
+                        default -> new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos);
+                    };
 
                     enemigos.put(datos.id(), enemigo);
                 }
@@ -186,6 +191,7 @@ public class GestorEnemigos {
         enemigos.clear();
         texturaEnemigos.dispose();
         texturaJefe.dispose();
+        texturaMuerte.dispose();
         texturaFuego.dispose();
     }
 

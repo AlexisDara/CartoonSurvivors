@@ -219,10 +219,10 @@ public class SincronizadorJugadores {
         }
 
         // HUD|SECUENCIA|SEGUNDOS|KILLS|PARTIDA|NIVEL|XP|META
-        // Sufijo opcional: VICTORIA o MS|OPCIONES|ELECCION_J1|ELECCION_J2.
+        // Sufijo opcional: estado de la fase final o MS|OPCIONES|ELECCION_J1|ELECCION_J2.
         String[] partes = mensaje.split("\\|", -1);
-        boolean victoria = partes.length == 9 && "VICTORIA".equals(partes[8]);
-        if ((!victoria && partes.length != 4 && partes.length != 8 && partes.length != 12)
+        Resultado resultado = partes.length == 9 ? leerResultado(partes[8]) : Resultado.EN_CURSO;
+        if ((partes.length != 4 && partes.length != 8 && partes.length != 12 && resultado == Resultado.EN_CURSO)
                 || !ProtocoloRed.HUD.equals(partes[0])) {
             return;
         }
@@ -266,10 +266,24 @@ public class SincronizadorJugadores {
 
             ultimaSecuenciaHud = secuencia;
             estadisticasPartida = new EstadisticasPartida(segundos, kills, partidaId,
-                nivel, experiencia, meta, ronda, victoria);
+                nivel, experiencia, meta, ronda, resultado);
         } catch (NumberFormatException e) {
             Gdx.app.error("SincronizadorJugadores", "Estado HUD invalido: " + mensaje);
         }
+    }
+
+    private Resultado leerResultado(String codigo) {
+        return switch (codigo) {
+            case "FASE_FINAL" -> Resultado.FASE_FINAL;
+            case "VICTORIA" -> Resultado.VICTORIA_COOPERATIVA;
+            case "VICTORIA_1" -> idJugadorLocal == 1 ? Resultado.VICTORIA_LOCAL : Resultado.VICTORIA_REMOTA;
+            case "VICTORIA_2" -> idJugadorLocal == 2 ? Resultado.VICTORIA_LOCAL : Resultado.VICTORIA_REMOTA;
+            default -> Resultado.EN_CURSO;
+        };
+    }
+
+    public enum Resultado {
+        EN_CURSO, FASE_FINAL, VICTORIA_LOCAL, VICTORIA_REMOTA, VICTORIA_COOPERATIVA
     }
 
     public EstadisticasPartida getEstadisticasPartida() {
@@ -277,7 +291,7 @@ public class SincronizadorJugadores {
     }
 
     public record EstadisticasPartida(int segundos, int kills, String partidaId, int nivel,
-                                      int experiencia, int meta, RondaMejora rondaMejora, boolean victoria) {
+                                      int experiencia, int meta, RondaMejora rondaMejora, Resultado resultado) {
     }
 
     public record RondaMejora(int milisegundos, List<String> opciones, int seleccion, int revision) {

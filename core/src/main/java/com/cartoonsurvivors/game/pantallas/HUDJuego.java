@@ -16,6 +16,7 @@ import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Resultado;
 
 import java.util.Locale;
 import java.util.Map;
@@ -130,7 +131,8 @@ public class HUDJuego {
 
         if (!estadoRecibido) {
             textoCentrado("Esperando al servidor...", centro, arriba - 76, TEXTO_HUD);
-        } else if (estadisticas == null || estadisticas.rondaMejora() == null) {
+        } else if (estadisticas == null || (estadisticas.rondaMejora() == null
+                && estadisticas.resultado() == Resultado.EN_CURSO)) {
             dibujarReaparicion(jugadorLocal, jugadorRemoto, centro, arriba);
         }
 
@@ -428,14 +430,19 @@ public class HUDJuego {
         batch.end();
     }
 
-    public void dibujarVictoria(int enemigosEliminados) {
+    public void dibujarResultado(Resultado resultado, int enemigosEliminados) {
         prepararHUD();
         batch.begin();
         float centro = hudViewport.getWorldWidth() / 2f;
         float altura = hudViewport.getWorldHeight() / 2f;
-        textoCentrado("¡Victoria!", centro, altura + 64f, Color.GREEN);
+        boolean companeroEnPartida = resultado == Resultado.VICTORIA_LOCAL;
+        textoCentrado(companeroEnPartida ? "¡Victoria!" : "¡Victoria cooperativa!", centro, altura + 64f,
+            Color.GREEN);
+        if (companeroEnPartida) {
+            textoCentrado("Tu compañero sigue en partida", centro, altura - 24f, Color.WHITE);
+        }
         textoCentrado("Enemigos eliminados: " + enemigosEliminados, centro, altura + 20f, Color.WHITE);
-        textoCentrado("Presiona ESC para volver al menú", centro, altura - 24f, Color.WHITE);
+        textoCentrado("Presiona ESC para volver al menú", centro, altura - (companeroEnPartida ? 68f : 24f), Color.WHITE);
         batch.end();
     }
 

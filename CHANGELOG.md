@@ -6,6 +6,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
+* La Muerte inicia la fase final al minuto 10 con 1000 de vida, 50 de daño por contacto y un tamaño mayor que El Macho. La primera baja da una victoria individual y la segunda muestra la victoria cooperativa a ambos jugadores.
+
 * Se agregó el jefe El Macho, un enemigo más grande y resistente que aparece a partir de los 10 segundos y lanza una línea de círculos de fuego que dañan y se desvanecen en orden.
 * Se agregó la pistola inicial de Mordecai, con disparos instantáneos en ocho direcciones, una zona de impacto amplia y menos daño que la espada de Finn.
 * Se agregaron niveles y experiencia compartidos por bajas, con una mejora por jugador al subir de nivel.
@@ -17,7 +19,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Cambiado
 
-* Las partidas cooperativas terminan en victoria al completar 10 minutos de juego activo. Cada dos minutos aumentan la vida de los nuevos enemigos, la cantidad por oleada y el límite de enemigos activos, y disminuye el intervalo entre oleadas.
+* La dificultad aumenta durante los primeros 10 minutos de juego activo. Aumentan la vida de los nuevos enemigos, la cantidad por oleada y el límite de enemigos activos, y disminuye el intervalo entre oleadas.
 * Se aumentaron el tamaño y la velocidad de El Macho, y el tamaño de sus círculos de fuego y la velocidad con la que avanza el ataque.
 * El ataque de El Macho apunta al jugador y recorre siempre su alcance completo. El jefe tiene más vida y daño, y pueden coexistir entre dos y cuatro según el tramo de la partida.
 * Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
