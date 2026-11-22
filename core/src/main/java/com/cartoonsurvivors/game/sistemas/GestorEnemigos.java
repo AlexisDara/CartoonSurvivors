@@ -1,9 +1,13 @@
 package com.cartoonsurvivors.game.sistemas;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.cartoonsurvivors.game.entidades.enemigos.Enemigo;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
+import com.cartoonsurvivors.game.entidades.enemigos.Jefe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,14 +18,19 @@ import java.util.Set;
 
 public class GestorEnemigos {
 
-    private final Map<Integer, EnemigoBasico> enemigos = new HashMap<>();
+    private final Map<Integer, Enemigo> enemigos = new HashMap<>();
 
     private final Texture texturaEnemigos;
+    private final Texture texturaJefe;
+    private final Texture texturaFuego;
+    private List<CirculoFuego> circulosFuego = List.of();
 
     private long ultimaSecuencia = -1;
 
     public GestorEnemigos() {
         texturaEnemigos = new Texture("enemigos/minion.png");
+        texturaJefe = new Texture("enemigos/elmacho.png");
+        texturaFuego = crearTexturaFuego();
     }
 
     public void procesarEstado(String mensaje) {
@@ -30,7 +39,7 @@ public class GestorEnemigos {
             return;
         }
 
-        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA|...
+        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA|FUEGO:X:Y:RADIO:OPACIDAD|...
         String[] partes = mensaje.split("\\|", -1);
 
         if (partes.length < 2 || !partes[0].equals("ENEMIGOS")) {
@@ -45,6 +54,7 @@ public class GestorEnemigos {
             }
 
             List<DatosEnemigo> recibidos = new ArrayList<>();
+            List<CirculoFuego> fuegoRecibido = new ArrayList<>();
             Set<Integer> idsRecibidos = new HashSet<>();
 
             // Validar todo el estado antes de aplicarlo.
@@ -56,6 +66,19 @@ public class GestorEnemigos {
                     return;
                 }
 
+                if (datos[0].equals("FUEGO")) {
+                    float x = Float.parseFloat(datos[1]);
+                    float y = Float.parseFloat(datos[2]);
+                    float radio = Float.parseFloat(datos[3]);
+                    float opacidad = Float.parseFloat(datos[4]);
+                    if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(radio) || radio <= 0f
+                            || !Float.isFinite(opacidad) || opacidad < 0f || opacidad > 1f) {
+                        return;
+                    }
+                    fuegoRecibido.add(new CirculoFuego(x, y, radio, opacidad));
+                    continue;
+                }
+
                 int id = Integer.parseInt(datos[0]);
                 String tipo = datos[1];
 
@@ -63,20 +86,22 @@ public class GestorEnemigos {
                 float y = Float.parseFloat(datos[3]);
                 int vida = Integer.parseInt(datos[4]);
 
-                if (id <= 0 || !tipo.equals("BASICO") || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
+                if (id <= 0 || (!tipo.equals("BASICO") && !tipo.equals("JEFE")) || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
                     return;
                 }
 
-                recibidos.add(new DatosEnemigo(id, x, y, vida));
+                recibidos.add(new DatosEnemigo(id, tipo, x, y, vida));
             }
 
             // Crear o actualizar las representaciones visuales.
             for (DatosEnemigo datos : recibidos) {
 
-                EnemigoBasico enemigo = enemigos.get(datos.id());
+                Enemigo enemigo = enemigos.get(datos.id());
 
                 if (enemigo == null) {
-                    enemigo = new EnemigoBasico(25, 80f, datos.x(), datos.y(), texturaEnemigos);
+                    enemigo = datos.tipo().equals("JEFE")
+                        ? new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe)
+                        : new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos);
 
                     enemigos.put(datos.id(), enemigo);
                 }
@@ -92,7 +117,7 @@ public class GestorEnemigos {
 
                 if (!idsRecibidos.contains(id)) {
 
-                    EnemigoBasico eliminado = enemigos.remove(id);
+                    Enemigo eliminado = enemigos.remove(id);
 
                     if (eliminado != null) {
                         eliminado.dispose();
@@ -100,6 +125,7 @@ public class GestorEnemigos {
                 }
             }
 
+            circulosFuego = fuegoRecibido;
             ultimaSecuencia = secuencia;
 
         } catch (NumberFormatException e) {
@@ -107,9 +133,43 @@ public class GestorEnemigos {
         }
     }
 
+    public void dibujarFuego(Batch batch) {
+        if (circulosFuego.isEmpty()) {
+            return;
+        }
+        float colorAnterior = batch.getPackedColor();
+        for (CirculoFuego circulo : circulosFuego) {
+            float diametro = circulo.radio() * 2f;
+            batch.setColor(1f, 1f, 1f, circulo.opacidad());
+            batch.draw(texturaFuego, circulo.x() - circulo.radio(), circulo.y() - circulo.radio(),
+                diametro, diametro);
+        }
+        batch.setPackedColor(colorAnterior);
+    }
+
+    private static Texture crearTexturaFuego() {
+        int tamano = 64;
+        float centro = (tamano - 1) / 2f;
+        Pixmap pixmap = new Pixmap(tamano, tamano, Pixmap.Format.RGBA8888);
+        pixmap.setBlending(Pixmap.Blending.None);
+        for (int y = 0; y < tamano; y++) {
+            for (int x = 0; x < tamano; x++) {
+                float distancia = (float) Math.hypot(x - centro, y - centro) / centro;
+                float brillo = Math.max(0f, 1f - distancia);
+                float opacidad = Math.min(1f, brillo * 8f);
+                pixmap.drawPixel(x, y, Color.rgba8888(1f, 0.19f + 0.76f * brillo,
+                    0.04f + 0.24f * brillo, opacidad));
+            }
+        }
+        Texture textura = new Texture(pixmap);
+        pixmap.dispose();
+        textura.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        return textura;
+    }
+
     public void dibujar(Batch batch, float delta) {
 
-        for (EnemigoBasico enemigo : enemigos.values()) {
+        for (Enemigo enemigo : enemigos.values()) {
 
             if (enemigo.estaVivo()) {
                 enemigo.dibujar(batch, delta);
@@ -119,14 +179,19 @@ public class GestorEnemigos {
 
     public void dispose() {
 
-        for (EnemigoBasico enemigo : enemigos.values()) {
+        for (Enemigo enemigo : enemigos.values()) {
             enemigo.dispose();
         }
 
         enemigos.clear();
         texturaEnemigos.dispose();
+        texturaJefe.dispose();
+        texturaFuego.dispose();
     }
 
-    private record DatosEnemigo(int id, float x, float y, int vida) {
+    private record CirculoFuego(float x, float y, float radio, float opacidad) {
+    }
+
+    private record DatosEnemigo(int id, String tipo, float x, float y, int vida) {
     }
 }

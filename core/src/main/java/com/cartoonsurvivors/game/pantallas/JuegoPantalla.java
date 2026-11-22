@@ -63,7 +63,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         idJugadorLocal = clienteUDP.getIdJugador();
 
-        mapa = new TmxMapLoader().load("mapas/mapa1.tmx");
+        mapa = new TmxMapLoader().load("mapas/mapa1/mapa1.tmx");
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
         tumba = new Texture(Gdx.files.internal("jugador/tumba.png"));
 
@@ -97,6 +97,13 @@ public class JuegoPantalla extends ScreenAdapter {
             return;
         }
 
+        sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
+        EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
+        if (estadisticas != null && estadisticas.victoria()) {
+            hudJuego.dibujarVictoria(estadisticas.kills());
+            return;
+        }
+
         if (clienteUDP.estaServidorDesconectado() || clienteUDP.estaSesionFinalizada() || !clienteUDP.estaPartidaIniciada()) {
 
             hudJuego.dibujarSesionFinalizada(clienteUDP.estaServidorDesconectado());
@@ -105,7 +112,6 @@ public class JuegoPantalla extends ScreenAdapter {
         }
 
         actualizarEstados();
-        EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
         boolean enPausa = estadisticas != null && estadisticas.rondaMejora() != null;
         seleccionMejora.actualizar(delta, estadisticas, clienteUDP, hudJuego);
 
@@ -157,7 +163,6 @@ public class JuegoPantalla extends ScreenAdapter {
             tipoRemoto = tipoRecibido;
         }
         sincronizadorJugadores.procesarEstado(clienteUDP.consumirUltimoEstado());
-        sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
 
         gestorEnemigosVisual.procesarEstado(clienteUDP.consumirEstadoEnemigos());
     }
@@ -180,6 +185,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         batch.begin();
 
+        gestorEnemigosVisual.dibujarFuego(batch);
         dibujarJugador(jugadorLocal, delta);
         dibujarJugador(jugadorRemoto, delta);
 

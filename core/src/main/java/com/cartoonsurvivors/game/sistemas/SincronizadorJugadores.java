@@ -218,9 +218,12 @@ public class SincronizadorJugadores {
             return;
         }
 
-        // HUD|SECUENCIA|SEGUNDOS|KILLS|PARTIDA|NIVEL|XP|META[|MS|OPCIONES|ELECCION_J1|ELECCION_J2]
+        // HUD|SECUENCIA|SEGUNDOS|KILLS|PARTIDA|NIVEL|XP|META
+        // Sufijo opcional: VICTORIA o MS|OPCIONES|ELECCION_J1|ELECCION_J2.
         String[] partes = mensaje.split("\\|", -1);
-        if ((partes.length != 4 && partes.length != 8 && partes.length != 12) || !ProtocoloRed.HUD.equals(partes[0])) {
+        boolean victoria = partes.length == 9 && "VICTORIA".equals(partes[8]);
+        if ((!victoria && partes.length != 4 && partes.length != 8 && partes.length != 12)
+                || !ProtocoloRed.HUD.equals(partes[0])) {
             return;
         }
 
@@ -263,7 +266,7 @@ public class SincronizadorJugadores {
 
             ultimaSecuenciaHud = secuencia;
             estadisticasPartida = new EstadisticasPartida(segundos, kills, partidaId,
-                nivel, experiencia, meta, ronda);
+                nivel, experiencia, meta, ronda, victoria);
         } catch (NumberFormatException e) {
             Gdx.app.error("SincronizadorJugadores", "Estado HUD invalido: " + mensaje);
         }
@@ -274,7 +277,7 @@ public class SincronizadorJugadores {
     }
 
     public record EstadisticasPartida(int segundos, int kills, String partidaId, int nivel,
-                                      int experiencia, int meta, RondaMejora rondaMejora) {
+                                      int experiencia, int meta, RondaMejora rondaMejora, boolean victoria) {
     }
 
     public record RondaMejora(int milisegundos, List<String> opciones, int seleccion, int revision) {

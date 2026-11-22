@@ -428,6 +428,17 @@ public class HUDJuego {
         batch.end();
     }
 
+    public void dibujarVictoria(int enemigosEliminados) {
+        prepararHUD();
+        batch.begin();
+        float centro = hudViewport.getWorldWidth() / 2f;
+        float altura = hudViewport.getWorldHeight() / 2f;
+        textoCentrado("¡Victoria!", centro, altura + 64f, Color.GREEN);
+        textoCentrado("Enemigos eliminados: " + enemigosEliminados, centro, altura + 20f, Color.WHITE);
+        textoCentrado("Presiona ESC para volver al menú", centro, altura - 24f, Color.WHITE);
+        batch.end();
+    }
+
     // Pantalla anterior, conservada por compatibilidad.
     public void dibujarPantallaVictoriaDerrota(
         Color color,
