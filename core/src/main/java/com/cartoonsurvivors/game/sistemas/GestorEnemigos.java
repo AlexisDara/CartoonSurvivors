@@ -19,21 +19,31 @@ import java.util.Set;
 
 public class GestorEnemigos {
 
+    private static final Set<String> TIPOS_ENEMIGOS = Set.of("BASICO", "VIOLETA", "JEFE", "MUERTE");
+
     private final Map<Integer, Enemigo> enemigos = new HashMap<>();
 
     private final Texture texturaEnemigos;
+    private final Texture texturaVioleta;
     private final Texture texturaJefe;
     private final Texture texturaMuerte;
     private final Texture texturaFuego;
+    private final Texture pixelBarraVida;
     private List<CirculoFuego> circulosFuego = List.of();
 
     private long ultimaSecuencia = -1;
 
     public GestorEnemigos() {
         texturaEnemigos = new Texture("enemigos/minion.png");
+        texturaVioleta = new Texture("enemigos/minionvioleta.png");
         texturaJefe = new Texture("enemigos/elmacho.png");
         texturaMuerte = new Texture("enemigos/Muerte.png");
         texturaFuego = crearTexturaFuego();
+        Pixmap pixel = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixel.setColor(Color.WHITE);
+        pixel.fill();
+        pixelBarraVida = new Texture(pixel);
+        pixel.dispose();
     }
 
     public void procesarEstado(String mensaje) {
@@ -42,7 +52,7 @@ public class GestorEnemigos {
             return;
         }
 
-        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA|FUEGO:X:Y:RADIO:OPACIDAD|...
+        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA[:VIDA_MAXIMA]|FUEGO:X:Y:RADIO:OPACIDAD|...
         String[] partes = mensaje.split("\\|", -1);
 
         if (partes.length < 2 || !partes[0].equals("ENEMIGOS")) {
@@ -65,11 +75,14 @@ public class GestorEnemigos {
 
                 String[] datos = partes[i].split(":", -1);
 
-                if (datos.length != 5) {
+                if (datos.length != 5 && datos.length != 6) {
                     return;
                 }
 
                 if (datos[0].equals("FUEGO")) {
+                    if (datos.length != 5) {
+                        return;
+                    }
                     float x = Float.parseFloat(datos[1]);
                     float y = Float.parseFloat(datos[2]);
                     float radio = Float.parseFloat(datos[3]);
@@ -88,12 +101,20 @@ public class GestorEnemigos {
                 float x = Float.parseFloat(datos[2]);
                 float y = Float.parseFloat(datos[3]);
                 int vida = Integer.parseInt(datos[4]);
+                int vidaMaxima = 0;
+                if (datos.length == 6) {
+                    vidaMaxima = Integer.parseInt(datos[5]);
+                    if (!tipo.equals("JEFE") || vidaMaxima <= 0 || vida > vidaMaxima) {
+                        return;
+                    }
+                }
 
-                if (id <= 0 || (!tipo.equals("BASICO") && !tipo.equals("JEFE") && !tipo.equals("MUERTE")) || !Float.isFinite(x) || !Float.isFinite(y) || vida < 0 || !idsRecibidos.add(id)) {
+                if (id <= 0 || !TIPOS_ENEMIGOS.contains(tipo) || !Float.isFinite(x) || !Float.isFinite(y)
+                        || vida < 0 || !idsRecibidos.add(id)) {
                     return;
                 }
 
-                recibidos.add(new DatosEnemigo(id, tipo, x, y, vida));
+                recibidos.add(new DatosEnemigo(id, tipo, x, y, vida, vidaMaxima));
             }
 
             // Crear o actualizar las representaciones visuales.
@@ -105,6 +126,7 @@ public class GestorEnemigos {
                     enemigo = switch (datos.tipo()) {
                         case "JEFE" -> new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe);
                         case "MUERTE" -> new Muerte(datos.vida(), datos.x(), datos.y(), texturaMuerte);
+                        case "VIOLETA" -> new EnemigoBasico(datos.vida(), 225f, datos.x(), datos.y(), texturaVioleta);
                         default -> new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos);
                     };
 
@@ -113,6 +135,9 @@ public class GestorEnemigos {
 
                 enemigo.setPosicion(datos.x(), datos.y());
                 enemigo.setVida(datos.vida());
+                if (enemigo instanceof Jefe jefe) {
+                    jefe.setVidaMaxima(datos.vidaMaxima());
+                }
             }
 
             // Eliminar enemigos ausentes en el nuevo estado.
@@ -180,6 +205,11 @@ public class GestorEnemigos {
                 enemigo.dibujar(batch, delta);
             }
         }
+        for (Enemigo enemigo : enemigos.values()) {
+            if (enemigo instanceof Jefe jefe && jefe.estaVivo()) {
+                jefe.dibujarBarraVida(batch, pixelBarraVida);
+            }
+        }
     }
 
     public void dispose() {
@@ -190,14 +220,16 @@ public class GestorEnemigos {
 
         enemigos.clear();
         texturaEnemigos.dispose();
+        texturaVioleta.dispose();
         texturaJefe.dispose();
         texturaMuerte.dispose();
         texturaFuego.dispose();
+        pixelBarraVida.dispose();
     }
 
     private record CirculoFuego(float x, float y, float radio, float opacidad) {
     }
 
-    private record DatosEnemigo(int id, String tipo, float x, float y, int vida) {
+    private record DatosEnemigo(int id, String tipo, float x, float y, int vida, int vidaMaxima) {
     }
 }

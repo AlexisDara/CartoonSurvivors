@@ -6,6 +6,10 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
+* El Macho muestra una barra de vida sobre su cabeza que refleja su vida máxima según la dificultad al aparecer.
+
+* Se agregó el minion violeta a las oleadas normales. Tiene el mismo tamaño que el minion básico, menos vida y una velocidad superior a la inicial del jugador.
+
 * La Muerte inicia la fase final al minuto 10 con 1000 de vida, 50 de daño por contacto y un tamaño mayor que El Macho. La primera baja da una victoria individual y la segunda muestra la victoria cooperativa a ambos jugadores.
 
 * Se agregó el jefe El Macho, un enemigo más grande y resistente que aparece a partir de los 10 segundos y lanza una línea de círculos de fuego que dañan y se desvanecen en orden.
@@ -18,6 +22,11 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
+
+* La Muerte atraviesa a los demás enemigos y conserva el daño por contacto con los jugadores.
+
+* Se redujo la velocidad del minion violeta y se amplió su área de colisión. El minion se separa del jugador al tocarlo y rebota con más fuerza, incluso mientras el daño por contacto está en recarga.
+* Los jugadores regeneran 0,5 puntos de vida por segundo desde el inicio. Cada mejora de regeneración suma 1 punto por segundo a la tasa actual.
 
 * La dificultad aumenta durante los primeros 10 minutos de juego activo. Aumentan la vida de los nuevos enemigos, la cantidad por oleada y el límite de enemigos activos, y disminuye el intervalo entre oleadas.
 * Se aumentaron el tamaño y la velocidad de El Macho, y el tamaño de sus círculos de fuego y la velocidad con la que avanza el ataque.
