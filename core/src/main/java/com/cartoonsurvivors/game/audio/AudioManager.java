@@ -82,7 +82,7 @@ public class AudioManager {
     }
 
     public float getVolumenMusica() {
-        return Math.max(0f, Math.min(1f, prefs.getFloat("volumenMusica", 0.1f)));
+        return volumenMusica;
     }
 
     public void setVolumenSonidoEfecto(float volumenSonidoEfecto) {

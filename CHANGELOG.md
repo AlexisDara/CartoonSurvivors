@@ -6,6 +6,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
+* Escape abre una pausa compartida de hasta 40 segundos. Ambos jugadores ven quién pausó y pueden ajustar su volumen o salir. La partida se reanuda antes del límite si ambos confirman. El menú usa un marco ilustrado amplio y botones de texto.
+
 * Se agregó Tierra como segundo mapa cooperativo. El jugador 1 elige el mapa en la sala. En Tierra, el Marciano, Woody y Rex reemplazan visualmente al minion básico, al minion violeta y a El Macho.
 
 * El Macho muestra una barra de vida sobre su cabeza que refleja su vida máxima según la dificultad al aparecer.

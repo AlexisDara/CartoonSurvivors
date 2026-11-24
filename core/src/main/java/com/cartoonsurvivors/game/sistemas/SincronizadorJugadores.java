@@ -233,8 +233,17 @@ public class SincronizadorJugadores {
         }
 
         // HUD|SECUENCIA|SEGUNDOS|KILLS|PARTIDA|NIVEL|XP|META
-        // Sufijo opcional: estado de la fase final o MS|OPCIONES|ELECCION_J1|ELECCION_J2.
+        // Tras el resultado o la ronda de mejoras puede venir PAUSA:REVISION:JUGADOR:MS:CONFIRMACIONES.
         String[] partes = mensaje.split("\\|", -1);
+        String datosPausa = partes[partes.length - 1];
+        if (datosPausa.startsWith(ProtocoloRed.PAUSA + ":")) {
+            partes = Arrays.copyOf(partes, partes.length - 1);
+        } else {
+            datosPausa = null;
+        }
+        if (partes.length == 0) {
+            return;
+        }
         Resultado resultado = partes.length == 9 ? leerResultado(partes[8]) : Resultado.EN_CURSO;
         if ((partes.length != 4 && partes.length != 8 && partes.length != 12 && resultado == Resultado.EN_CURSO)
                 || !ProtocoloRed.HUD.equals(partes[0])) {
@@ -280,12 +289,30 @@ public class SincronizadorJugadores {
                 ronda = new RondaMejora(milisegundos, opciones, seleccion, revision);
             }
 
+            Pausa pausa = datosPausa == null ? null : leerPausa(datosPausa);
             ultimaSecuenciaHud = secuencia;
             estadisticasPartida = new EstadisticasPartida(segundos, kills, partidaId,
-                nivel, experiencia, meta, ronda, resultado);
+                nivel, experiencia, meta, ronda, resultado, pausa);
         } catch (NumberFormatException e) {
             Gdx.app.error("SincronizadorJugadores", "Estado HUD invalido: " + mensaje);
         }
+    }
+
+    private Pausa leerPausa(String mensaje) {
+        String[] campos = mensaje.split(":", -1);
+        if (campos.length != 5) {
+            throw new NumberFormatException("Formato de pausa inválido");
+        }
+        int revision = Integer.parseInt(campos[1]);
+        int solicitante = Integer.parseInt(campos[2]);
+        int milisegundos = Integer.parseInt(campos[3]);
+        int confirmaciones = Integer.parseInt(campos[4]);
+        if (revision < 0 || solicitante < 0 || solicitante > 2 || milisegundos < 0 || milisegundos > 40_000
+            || confirmaciones < 0 || confirmaciones > 2 || (milisegundos == 0) != (solicitante == 0)
+            || (milisegundos == 0 && confirmaciones != 0)) {
+            throw new NumberFormatException("Estado de pausa inválido");
+        }
+        return new Pausa(revision, solicitante, milisegundos, confirmaciones);
     }
 
     private Resultado leerResultado(String codigo) {
@@ -310,7 +337,18 @@ public class SincronizadorJugadores {
     }
 
     public record EstadisticasPartida(int segundos, int kills, String partidaId, int nivel,
-                                      int experiencia, int meta, RondaMejora rondaMejora, Resultado resultado) {
+                                      int experiencia, int meta, RondaMejora rondaMejora, Resultado resultado,
+                                      Pausa pausa) {
+    }
+
+    public record Pausa(int revision, int solicitante, int milisegundos, int confirmaciones) {
+        public boolean activa() {
+            return milisegundos > 0;
+        }
+
+        public boolean confirmado(int jugador) {
+            return (confirmaciones & (1 << (jugador - 1))) != 0;
+        }
     }
 
     public record RondaMejora(int milisegundos, List<OpcionMejora> opciones, int seleccion, int revision) {

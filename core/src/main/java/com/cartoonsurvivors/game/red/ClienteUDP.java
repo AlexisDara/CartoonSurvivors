@@ -214,6 +214,13 @@ public class ClienteUDP {
         }
     }
 
+    public void enviarPausa(String partidaId, int revision, boolean reanudar) {
+        if (estaConectado() && estaPartidaIniciada()) {
+            enviarMensaje(ProtocoloRed.PAUSA + "|" + partidaId + "|" + revision
+                + "|" + (reanudar ? "REANUDAR" : "ABRIR"));
+        }
+    }
+
     public void enviarSeleccionPersonaje(TipoPersonaje personaje) {
 
         if (!estaConectado() || personaje == null) {

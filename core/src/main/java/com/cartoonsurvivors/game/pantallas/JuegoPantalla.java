@@ -47,9 +47,12 @@ public class JuegoPantalla extends ScreenAdapter {
     private final SincronizadorJugadores sincronizadorJugadores;
     private final GestorEnemigos gestorEnemigosVisual;
     private final HUDJuego hudJuego;
+    private final PantallaPausa pantallaPausa;
+    private final ControlPausa controlPausa = new ControlPausa();
     private final SeleccionMejora seleccionMejora = new SeleccionMejora();
     private final int idJugadorLocal;
     private float tiempoEnvio = INTERVALO_MOVIMIENTO;
+    private boolean salidaSolicitada;
 
     public JuegoPantalla(CartoonSurvivors game, Jugador jugador) {
 
@@ -74,12 +77,17 @@ public class JuegoPantalla extends ScreenAdapter {
         gestorEnemigosVisual = new GestorEnemigos(tipoMapa);
 
         hudJuego = new HUDJuego(batch, game.getFont(), hudViewport);
+        pantallaPausa = new PantallaPausa(game, hudViewport,
+            () -> controlPausa.solicitar(sincronizadorJugadores.getEstadisticasPartida(), true),
+            () -> salidaSolicitada = true);
     }
 
     @Override
     public void show() {
 
         Gdx.input.setInputProcessor(null);
+        game.getAudioManager().detenerMusicaMenu();
+        game.getAudioManager().reproducirMusicaJuego();
 
         jugadorLocal.setPosicion(idJugadorLocal == 1 ? 6340 : 6460, 6400);
 
@@ -94,29 +102,49 @@ public class JuegoPantalla extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+        if (salidaSolicitada) {
             volverAlMenu();
             return;
         }
 
+        boolean escape = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE);
         sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
         EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
         if (estadisticas != null && estadisticas.resultado().esFinal()) {
+            if (escape) {
+                volverAlMenu();
+                return;
+            }
+            activarEntradaPausa(false);
             hudJuego.dibujarResultado(estadisticas.resultado(), estadisticas.kills());
             return;
         }
 
         if (clienteUDP.estaServidorDesconectado() || clienteUDP.estaSesionFinalizada() || !clienteUDP.estaPartidaIniciada()) {
-
+            if (escape) {
+                volverAlMenu();
+                return;
+            }
+            activarEntradaPausa(false);
             hudJuego.dibujarSesionFinalizada(clienteUDP.estaServidorDesconectado());
 
             return;
         }
 
         actualizarEstados();
-        boolean enPausa = estadisticas != null && estadisticas.rondaMejora() != null;
-        seleccionMejora.actualizar(delta, estadisticas, clienteUDP, hudJuego);
+        var pausa = estadisticas == null ? null : estadisticas.pausa();
+        boolean pausaManual = pausa != null && pausa.activa();
+        boolean enMejora = estadisticas != null && estadisticas.rondaMejora() != null;
+        if (escape && !pausaManual) {
+            controlPausa.solicitar(estadisticas, false);
+        }
+        controlPausa.actualizar(delta, estadisticas, idJugadorLocal, clienteUDP);
+        activarEntradaPausa(pausaManual);
+        if (!pausaManual) {
+            seleccionMejora.actualizar(delta, estadisticas, clienteUDP, hudJuego);
+        }
 
+        boolean enPausa = pausaManual || enMejora;
         if (!enPausa) {
             enviarMovimiento(delta);
             jugadorLocal.getArmas().forEach(arma -> arma.actualizar(delta));
@@ -128,8 +156,20 @@ public class JuegoPantalla extends ScreenAdapter {
 
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(),
             estadisticas, sincronizadorJugadores.getPasivasLocales());
-        if (enPausa) {
+        if (pausaManual) {
+            pantallaPausa.render(delta, pausa, idJugadorLocal, controlPausa.enviandoConfirmacion());
+        } else if (enMejora) {
             hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(), seleccionMejora.esperandoConfirmacion(estadisticas));
+        }
+    }
+
+    private void activarEntradaPausa(boolean activa) {
+        var stage = pantallaPausa.getStage();
+        if (activa && Gdx.input.getInputProcessor() != stage) {
+            Gdx.input.setInputProcessor(stage);
+        } else if (!activa && Gdx.input.getInputProcessor() == stage) {
+            stage.cancelTouchFocus();
+            Gdx.input.setInputProcessor(null);
         }
     }
 
@@ -228,6 +268,12 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
     @Override
+    public void hide() {
+        activarEntradaPausa(false);
+        game.getAudioManager().detenerMusicaJuego();
+    }
+
+    @Override
     public void dispose() {
 
         jugadorLocal.dispose();
@@ -235,6 +281,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         gestorEnemigosVisual.dispose();
         hudJuego.dispose();
+        pantallaPausa.dispose();
         tumba.dispose();
 
         renderizadorMapa.dispose();
