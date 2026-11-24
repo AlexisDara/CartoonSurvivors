@@ -19,6 +19,7 @@ import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.red.ClienteUDP;
 import com.cartoonsurvivors.game.sistemas.GestorEnemigos;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
 
@@ -63,13 +64,14 @@ public class JuegoPantalla extends ScreenAdapter {
 
         idJugadorLocal = clienteUDP.getIdJugador();
 
-        mapa = new TmxMapLoader().load("mapas/mapa1/mapa1.tmx");
+        TipoMapa tipoMapa = clienteUDP.getMapaPartida();
+        mapa = new TmxMapLoader().load(tipoMapa.getRuta());
         renderizadorMapa = new OrthogonalTiledMapRenderer(mapa);
         tumba = new Texture(Gdx.files.internal("jugador/tumba.png"));
 
         sincronizadorJugadores = new SincronizadorJugadores(jugadorLocal, jugadorRemoto, idJugadorLocal);
 
-        gestorEnemigosVisual = new GestorEnemigos();
+        gestorEnemigosVisual = new GestorEnemigos(tipoMapa);
 
         hudJuego = new HUDJuego(batch, game.getFont(), hudViewport);
     }
@@ -99,8 +101,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
         EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
-        if (estadisticas != null && (estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_LOCAL
-                || estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_COOPERATIVA)) {
+        if (estadisticas != null && (estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_LOCAL || estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_COOPERATIVA)) {
             hudJuego.dibujarResultado(estadisticas.resultado(), estadisticas.kills());
             return;
         }
@@ -125,11 +126,9 @@ public class JuegoPantalla extends ScreenAdapter {
         camaraSeguirJugador();
         dibujarMundo(enPausa ? 0f : delta);
 
-        hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto,
-            sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
+        hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
         if (enPausa) {
-            hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(),
-                seleccionMejora.esperandoConfirmacion(estadisticas));
+            hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(), seleccionMejora.esperandoConfirmacion(estadisticas));
         }
     }
 
@@ -209,8 +208,7 @@ public class JuegoPantalla extends ScreenAdapter {
         float escala = TAMAÑO_REAL / Math.max(tumba.getWidth(), tumba.getHeight());
         float ancho = tumba.getWidth() * escala;
         float alto = tumba.getHeight() * escala;
-        batch.draw(tumba, jugador.getHitbox().getX() + (jugador.getHitbox().getWidth() - ancho) / 2f,
-            jugador.getHitbox().getY() + (jugador.getHitbox().getHeight() - alto) / 2f, ancho, alto);
+        batch.draw(tumba, jugador.getHitbox().getX() + (jugador.getHitbox().getWidth() - ancho) / 2f, jugador.getHitbox().getY() + (jugador.getHitbox().getHeight() - alto) / 2f, ancho, alto);
     }
 
     private void volverAlMenu() {

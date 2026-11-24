@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="400" height="400" tilewidth="32" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="1">
- <tileset firstgid="1" source="mapa1.tsx"/>
+ <tileset firstgid="1" source="../mapa1/mapa1.tsx"/>
  <tileset firstgid="65" source="tierraMarte.tsx"/>
  <layer id="1" name="Mapa" width="400" height="400">
   <data encoding="base64">

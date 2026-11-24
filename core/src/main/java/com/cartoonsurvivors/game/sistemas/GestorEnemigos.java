@@ -9,6 +9,7 @@ import com.cartoonsurvivors.game.entidades.enemigos.Enemigo;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.enemigos.Jefe;
 import com.cartoonsurvivors.game.entidades.enemigos.Muerte;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class GestorEnemigos {
 
     private final Map<Integer, Enemigo> enemigos = new HashMap<>();
 
+    private final boolean esMapa2;
     private final Texture texturaEnemigos;
     private final Texture texturaVioleta;
     private final Texture texturaJefe;
@@ -33,10 +35,11 @@ public class GestorEnemigos {
 
     private long ultimaSecuencia = -1;
 
-    public GestorEnemigos() {
-        texturaEnemigos = new Texture("enemigos/minion.png");
-        texturaVioleta = new Texture("enemigos/minionvioleta.png");
-        texturaJefe = new Texture("enemigos/elmacho.png");
+    public GestorEnemigos(TipoMapa mapa) {
+        esMapa2 = mapa == TipoMapa.MAPA2;
+        texturaEnemigos = new Texture(esMapa2 ? "enemigos/marciano.png" : "enemigos/minion.png");
+        texturaVioleta = new Texture(esMapa2 ? "enemigos/woody.png" : "enemigos/minionvioleta.png");
+        texturaJefe = new Texture(esMapa2 ? "enemigos/rex.png" : "enemigos/elmacho.png");
         texturaMuerte = new Texture("enemigos/Muerte.png");
         texturaFuego = crearTexturaFuego();
         Pixmap pixel = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -124,10 +127,10 @@ public class GestorEnemigos {
 
                 if (enemigo == null) {
                     enemigo = switch (datos.tipo()) {
-                        case "JEFE" -> new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe);
+                        case "JEFE" -> new Jefe(datos.vida(), datos.x(), datos.y(), texturaJefe, esMapa2 ? 64 : 128);
                         case "MUERTE" -> new Muerte(datos.vida(), datos.x(), datos.y(), texturaMuerte);
-                        case "VIOLETA" -> new EnemigoBasico(datos.vida(), 225f, datos.x(), datos.y(), texturaVioleta);
-                        default -> new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos);
+                        case "VIOLETA" -> new EnemigoBasico(datos.vida(), 225f, datos.x(), datos.y(), texturaVioleta, esMapa2 ? 64 : 48);
+                        default -> new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), texturaEnemigos, 48);
                     };
 
                     enemigos.put(datos.id(), enemigo);

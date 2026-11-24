@@ -1,6 +1,7 @@
 package com.cartoonsurvivors.game.red;
 
 import com.badlogic.gdx.Gdx;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 
 import java.io.IOException;
@@ -348,6 +349,14 @@ public class ClienteUDP {
 
     public boolean estaServidorLleno() {
         return estadoConexion.estaServidorLleno();
+    }
+
+    public TipoMapa getMapaLobby() {
+        return estadoConexion.getMapaLobby();
+    }
+
+    public TipoMapa getMapaPartida() {
+        return estadoConexion.getMapaPartida();
     }
 
     public int getIdJugador() {

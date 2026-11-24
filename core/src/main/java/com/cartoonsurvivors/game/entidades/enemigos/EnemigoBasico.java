@@ -15,10 +15,10 @@ public class EnemigoBasico extends Enemigo {
     private Animation<TextureRegion> animacionCaminar;
     private float tiempoAnimacion;
 
-    public EnemigoBasico(int vida, float velocidad, float posicionX, float posicionY, Texture spriteSheet) {
+    public EnemigoBasico(int vida, float velocidad, float posicionX, float posicionY, Texture spriteSheet, int anchoFrame) {
         super(vida, velocidad, posicionX, posicionY, ALTO_ENEMIGO/1.5f, ANCHO_ENEMIGO/1.5f);
         this.spriteSheet = spriteSheet;
-        this.frames = TextureRegion.split(spriteSheet, 48, 80)[0];
+        this.frames = TextureRegion.split(spriteSheet, anchoFrame, spriteSheet.getHeight())[0];
         this.animacionCaminar = new Animation<>(0.1f, frames);
 
     }

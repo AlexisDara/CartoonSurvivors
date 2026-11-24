@@ -2,6 +2,7 @@
 package com.cartoonsurvivors.game.red;
 
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 public class EstadoConexion {
 
@@ -11,7 +12,27 @@ public class EstadoConexion {
     private volatile boolean sesionFinalizada;
     private volatile boolean servidorLleno;
 
+    private volatile TipoMapa mapaLobby = TipoMapa.MAPA1;
+    private volatile TipoMapa mapaPartida = TipoMapa.MAPA1;
     private volatile int idJugador;
+
+    public TipoMapa getMapaLobby() {
+        return mapaLobby;
+    }
+
+    public void setMapaLobby(TipoMapa mapaLobby) {
+        this.mapaLobby = mapaLobby;
+    }
+
+    public TipoMapa getMapaPartida() {
+        return mapaPartida;
+    }
+
+    public void iniciarPartida(TipoMapa mapa) {
+        mapaPartida = mapa;
+        partidaIniciada = true;
+    }
+
     private volatile TipoPersonaje personajeRemoto = TipoPersonaje.MORDECAI;
 
     public TipoPersonaje getPersonajeRemoto() {
@@ -77,6 +98,8 @@ public class EstadoConexion {
         sesionFinalizada = false;
         servidorLleno = false;
         idJugador = 0;
+        mapaLobby = TipoMapa.MAPA1;
+        mapaPartida = TipoMapa.MAPA1;
         personajeRemoto = TipoPersonaje.MORDECAI;
     }
 }

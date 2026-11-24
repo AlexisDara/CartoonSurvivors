@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 import com.cartoonsurvivors.game.CartoonSurvivors;
@@ -23,6 +24,7 @@ import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.red.ClienteUDP;
 import com.cartoonsurvivors.game.red.ProtocoloRed;
 import com.cartoonsurvivors.game.utilidades.Constantes;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 public class SalaMultijugador extends ScreenAdapter {
 
@@ -34,6 +36,10 @@ public class SalaMultijugador extends ScreenAdapter {
     private Label estadoConexion;
     private Label numeroJugador;
     private Label nombrePersonaje;
+    private Label nombreMapa;
+    private TextButton botonMapaAnterior;
+    private TextButton botonMapaSiguiente;
+    private TipoMapa mapaSeleccionado = TipoMapa.MAPA1;
 
     private TextButton botonListo;
     private TextButton botonAnterior;
@@ -99,6 +105,7 @@ public class SalaMultijugador extends ScreenAdapter {
         Label tituloSeleccion = new Label("Seleccionar personaje", estiloTexto);
 
         nombrePersonaje = new Label(getPersonajeSeleccionado().getNombre(), estiloTexto);
+        nombrePersonaje.setAlignment(Align.center);
 
         // Imagen del personaje disponible
         texturaPersonaje = new Texture(getPersonajeSeleccionado().getRutaIdle());
@@ -208,38 +215,56 @@ public class SalaMultijugador extends ScreenAdapter {
 
         stage.addActor(tabla);
 
-        tabla.add(titulo).padBottom(20);
+        tabla.add(titulo).padBottom(12);
         tabla.row();
 
         tabla.add(estadoConexion).padBottom(10);
         tabla.row();
 
-        tabla.add(numeroJugador).padBottom(20);
+        tabla.add(numeroJugador).padBottom(12);
         tabla.row();
 
         tabla.add(tituloSeleccion).padBottom(10);
         tabla.row();
 
-        tabla.add(imagenPersonaje).width(110).height(130).padBottom(10);
+        tabla.add(imagenPersonaje).width(95).height(110).padBottom(6);
 
         tabla.row();
 
         Table selector = new Table();
 
-        selector.add(botonAnterior).width(70).height(60).padRight(25);
+        selector.add(botonAnterior).width(50).height(40).padRight(14);
 
-        selector.add(nombrePersonaje).minWidth(260).center();
+        selector.add(nombrePersonaje).width(260);
 
-        selector.add(botonSiguiente).width(70).height(60).padLeft(25);
+        selector.add(botonSiguiente).width(50).height(40).padLeft(14);
 
-        tabla.add(selector).padBottom(25);
+        tabla.add(selector).padBottom(12);
         tabla.row();
 
-        tabla.add(botonListo).width(300).height(65).padBottom(20);
+        Label tituloMapa = new Label("Mapa (elige el jugador 1)", estiloTexto);
+        nombreMapa = new Label(mapaSeleccionado.getNombre(), estiloTexto);
+        nombreMapa.setAlignment(Align.center);
+        botonMapaAnterior = crearBotonMapa("<", estiloBoton, -1);
+        botonMapaSiguiente = crearBotonMapa(">", estiloBoton, 1);
+
+        Table selectorMapa = new Table();
+        selectorMapa.add(botonMapaAnterior).width(50).height(40).padRight(14);
+        selectorMapa.add(nombreMapa).width(260);
+        selectorMapa.add(botonMapaSiguiente).width(50).height(40).padLeft(14);
+
+        tabla.add(tituloMapa).padBottom(5);
+        tabla.row();
+        tabla.add(selectorMapa).padBottom(10);
+        tabla.row();
+
+        botonListo.getLabel().setFontScale(0.8f);
+        tabla.add(botonListo).width(230).height(48).padBottom(8);
 
         tabla.row();
 
-        tabla.add(botonVolver).width(300).height(65);
+        botonVolver.getLabel().setFontScale(0.8f);
+        tabla.add(botonVolver).width(230).height(48);
 
         actualizarBotonesSeleccion();
     }
@@ -278,12 +303,37 @@ public class SalaMultijugador extends ScreenAdapter {
         Gdx.app.log("SalaMultijugador", "Personaje seleccionado: " + getPersonajeSeleccionado().name());
     }
 
+    private TextButton crearBotonMapa(String texto, TextButton.TextButtonStyle estilo, int direccion) {
+        TextButton boton = new TextButton(texto, estilo);
+        boton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!puedeElegirMapa()) {
+                    return;
+                }
+                TipoMapa[] mapas = TipoMapa.values();
+                mapaSeleccionado = mapas[Math.floorMod(mapaSeleccionado.ordinal() + direccion, mapas.length)];
+                nombreMapa.setText(mapaSeleccionado.getNombre());
+                clienteUDP.enviarMensaje(ProtocoloRed.MAPA + "|" + mapaSeleccionado.name());
+            }
+        });
+        return boton;
+    }
+
+    private boolean puedeElegirMapa() {
+        return clienteUDP.estaConectado() && !clienteUDP.estaServidorDesconectado()
+            && clienteUDP.getIdJugador() == 1 && !listo && !cambiandoPantalla;
+    }
+
     private void actualizarBotonesSeleccion() {
 
         boolean deshabilitar = listo || cambiandoPantalla || personajes.length <= 1;
 
         botonAnterior.setDisabled(deshabilitar);
         botonSiguiente.setDisabled(deshabilitar);
+        boolean deshabilitarMapa = !puedeElegirMapa();
+        botonMapaAnterior.setDisabled(deshabilitarMapa);
+        botonMapaSiguiente.setDisabled(deshabilitarMapa);
     }
 
     // CREAR TEXTURA DE COLOR
@@ -317,7 +367,11 @@ public class SalaMultijugador extends ScreenAdapter {
             botonListo.setText("LISTO");
             botonListo.setStyle(estiloListo);
 
-            clienteUDP.enviarMensaje(ProtocoloRed.LISTO);
+            String mensaje = ProtocoloRed.LISTO;
+            if (clienteUDP.getIdJugador() == 1) {
+                mensaje += "|" + mapaSeleccionado.name();
+            }
+            clienteUDP.enviarMensaje(mensaje);
 
         } else {
 
@@ -334,6 +388,11 @@ public class SalaMultijugador extends ScreenAdapter {
 
 
     private void actualizarEstado() {
+        actualizarBotonesSeleccion();
+        if (clienteUDP.getIdJugador() != 1) {
+            nombreMapa.setText(clienteUDP.getMapaLobby().getNombre());
+        }
+
 
         if (clienteUDP.estaServidorDesconectado()) {
 

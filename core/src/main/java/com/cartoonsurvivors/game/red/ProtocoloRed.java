@@ -18,6 +18,7 @@ public class ProtocoloRed {
     public static final String JUGADOR_CONECTADO = "JUGADOR_CONECTADO";
     public static final String LISTO = "LISTO";
     public static final String JUGADOR_LISTO = "JUGADOR_LISTO";
+    public static final String MAPA = "MAPA";
     public static final String EMPIEZA = "EMPIEZA";
     public static final String SELECCIONAR_PERSONAJE = "PERSONAJE";
     public static final String PERSONAJES_ACTUALIZADOS = "PERSONAJES";

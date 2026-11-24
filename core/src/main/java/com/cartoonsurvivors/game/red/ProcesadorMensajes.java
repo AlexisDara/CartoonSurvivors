@@ -2,6 +2,7 @@ package com.cartoonsurvivors.game.red;
 
 import com.badlogic.gdx.Gdx;
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;
@@ -101,11 +102,22 @@ public class ProcesadorMensajes {
             return;
         }
 
-        if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
-            estadoConexion.setPartidaIniciada(true);
-            estadoConexion.setPartidaFinalizada(false);
+        if (mensaje.startsWith(ProtocoloRed.MAPA + "|")) {
+            TipoMapa mapa = TipoMapa.desdeId(mensaje.substring(ProtocoloRed.MAPA.length() + 1));
+            if (mapa != null) {
+                estadoConexion.setMapaLobby(mapa);
+            }
+            return;
+        }
 
-            Gdx.app.log("ProcesadorMensajes", "Empieza la partida");
+        if (mensaje.equals(ProtocoloRed.EMPIEZA) || mensaje.startsWith(ProtocoloRed.EMPIEZA + "|")) {
+            TipoMapa mapa = mensaje.equals(ProtocoloRed.EMPIEZA) ? TipoMapa.MAPA1
+                : TipoMapa.desdeId(mensaje.substring(ProtocoloRed.EMPIEZA.length() + 1));
+            if (mapa != null && estadoConexion.estaConectado() && !estadoConexion.estaPartidaIniciada()
+                    && !estadoConexion.estaPartidaFinalizada()) {
+                estadoConexion.iniciarPartida(mapa);
+                Gdx.app.log("ProcesadorMensajes", "Empieza la partida en " + mapa.getNombre());
+            }
             return;
         }
 

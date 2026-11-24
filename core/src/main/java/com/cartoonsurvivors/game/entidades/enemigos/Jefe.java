@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public final class Jefe extends Enemigo {
 
-    private static final int TAMANO_FRAME = 128;
     private static final float TAMANO_SPRITE = 130f;
     private static final float ANCHO_HITBOX = 84f;
     private static final float ALTO_HITBOX = 94f;
@@ -19,9 +18,16 @@ public final class Jefe extends Enemigo {
     private float tiempoAnimacion;
     private int vidaMaxima;
 
-    public Jefe(int vida, float x, float y, Texture spriteSheet) {
+    public Jefe(int vida, float x, float y, Texture spriteSheet, int anchoFrame) {
         super(vida, 78f, x, y, ALTO_HITBOX, ANCHO_HITBOX);
-        animacionCaminar = new Animation<>(0.12f, TextureRegion.split(spriteSheet, TAMANO_FRAME, TAMANO_FRAME)[0]);
+        int anchoTextura = spriteSheet.getWidth();
+        TextureRegion[] frames = new TextureRegion[(anchoTextura + anchoFrame - 1) / anchoFrame];
+        for (int i = 0; i < frames.length; i++) {
+            int origenX = i * anchoFrame;
+            int anchoVisible = Math.min(anchoFrame, anchoTextura - origenX);
+            frames[i] = new TextureRegion(spriteSheet, origenX, 0, anchoVisible, spriteSheet.getHeight());
+        }
+        animacionCaminar = new Animation<>(0.12f, frames);
     }
 
     @Override

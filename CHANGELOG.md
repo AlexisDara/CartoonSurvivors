@@ -6,6 +6,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
+* Se agregó Tierra como segundo mapa cooperativo. El jugador 1 elige el mapa en la sala. En Tierra, el Marciano, Woody y Rex reemplazan visualmente al minion básico, al minion violeta y a El Macho.
+
 * El Macho muestra una barra de vida sobre su cabeza que refleja su vida máxima según la dificultad al aparecer.
 
 * Se agregó el minion violeta a las oleadas normales. Tiene el mismo tamaño que el minion básico, menos vida y una velocidad superior a la inicial del jugador.
@@ -22,6 +24,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
+
+* Se redujo el tamaño de los botones de la sala multijugador y se centraron los nombres en los selectores.
 
 * La Muerte atraviesa a los demás enemigos y conserva el daño por contacto con los jugadores.
 
