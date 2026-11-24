@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
@@ -46,6 +47,7 @@ public class HUDJuego {
     private final BitmapFont font;
     private final ExtendViewport hudViewport;
     private final Texture pixel;
+    private final TextureRegion flechaCompanero;
     private final Texture iconoEspada;
     private final Texture iconoPistola;
     private final Texture fondoHud;
@@ -74,6 +76,7 @@ public class HUDJuego {
         imagen.fill();
         pixel = new Texture(imagen);
         imagen.dispose();
+        flechaCompanero = new TextureRegion(crearFlechaCompanero());
         iconoEspada = cargarIcono("armas/marco-espada.png");
         iconoPistola = cargarIcono("armas/marco-pistola.png");
         fondoHud = cargarTextura("Hud/fondo-mejora.png");
@@ -235,6 +238,33 @@ public class HUDJuego {
         dibujarPasiva("REGENERACION", valorPasiva(pasivas.regeneracion()) + "/s", izquierda + 88f, segundaFila);
     }
 
+    private static Texture crearFlechaCompanero() {
+        Pixmap imagen = new Pixmap(36, 32, Pixmap.Format.RGBA8888);
+        imagen.setColor(0x171d32ff);
+        imagen.fillRectangle(2, 10, 18, 12);
+        imagen.fillTriangle(16, 1, 34, 16, 16, 31);
+        imagen.setColor(0x81e6ffff);
+        imagen.fillRectangle(5, 13, 16, 6);
+        imagen.fillTriangle(19, 7, 30, 16, 19, 25);
+        Texture textura = new Texture(imagen);
+        textura.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        imagen.dispose();
+        return textura;
+    }
+
+    public void dibujarFlechaCompanero(float dx, float dy) {
+        float centroX = hudViewport.getWorldWidth() / 2f;
+        float centroY = hudViewport.getWorldHeight() / 2f;
+        float proporcion = Math.min((centroX - 24f) / Math.abs(dx), (centroY - 24f) / Math.abs(dy));
+        float x = centroX + dx * proporcion;
+        float y = centroY + dy * proporcion;
+        float angulo = (float) Math.toDegrees(Math.atan2(dy, dx));
+        prepararHUD();
+        batch.begin();
+        batch.draw(flechaCompanero, x - 18f, y - 16f, 18f, 16f, 36f, 32f, 1f, 1f, angulo);
+        batch.end();
+    }
+
     private void dibujarPasiva(String tipo, String valor, float x, float centroY) {
         dibujarIcono(iconosMejora.get(tipo), x + 14f, centroY, 28f);
         font.setColor(TEXTO_HUD);
@@ -351,13 +381,20 @@ public class HUDJuego {
 
     private String etiquetaArma(String nombre, OpcionMejora mejora) {
         StringBuilder texto = new StringBuilder(nombre);
-        if (mejora.valores().size() == 4) {
-            texto.append(" · +").append(mejora.valor(3)).append(" bala");
+        boolean conRebotes = mejora.valores().size() == 5;
+        int balaExtra = conRebotes ? mejora.valor(4) : mejora.valores().size() == 4 ? mejora.valor(3) : 0;
+        if (balaExtra > 0) {
+            texto.append(" · +").append(balaExtra).append(" bala");
         }
         if (mejora.valor(0) > 0) {
             texto.append("\nDaño +").append(mejora.valor(0)).append(" %");
         }
-        if (mejora.valor(1) > 0) {
+        if (conRebotes && mejora.valor(1) > 0) {
+            texto.append("\n+1 rebote");
+            if (mejora.valor(3) > 0) {
+                texto.append(" · -").append(mejora.valor(3)).append(" pp");
+            }
+        } else if (!conRebotes && mejora.valor(1) > 0) {
             texto.append("\nAlcance +").append(mejora.valor(1)).append(" %");
         }
         if (mejora.valor(2) > 0) {
@@ -404,6 +441,7 @@ public class HUDJuego {
 
     public void dispose() {
         pixel.dispose();
+        flechaCompanero.getTexture().dispose();
         fondoHud.dispose();
         fondoVictoria.dispose();
         fondoDerrota.dispose();

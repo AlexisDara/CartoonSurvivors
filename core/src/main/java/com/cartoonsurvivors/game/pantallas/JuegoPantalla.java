@@ -156,6 +156,9 @@ public class JuegoPantalla extends ScreenAdapter {
 
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(),
             estadisticas, sincronizadorJugadores.getPasivasLocales());
+        if (!enPausa && sincronizadorJugadores.hayEstadoRecibido()) {
+            indicarCompaneroFueraDePantalla();
+        }
         if (pausaManual) {
             pantallaPausa.render(delta, pausa, idJugadorLocal, controlPausa.enviandoConfirmacion());
         } else if (enMejora) {
@@ -213,6 +216,16 @@ public class JuegoPantalla extends ScreenAdapter {
         camera.position.set(jugadorLocal.getPosicionX() + 20, jugadorLocal.getPosicionY() + 30, 0);
 
         camera.update();
+    }
+
+    private void indicarCompaneroFueraDePantalla() {
+        float dx = jugadorRemoto.getHitbox().x + jugadorRemoto.getHitbox().width / 2f - camera.position.x;
+        float dy = jugadorRemoto.getHitbox().y + jugadorRemoto.getHitbox().height / 2f - camera.position.y;
+        float margen = TAMAÑO_REAL / 2f;
+        if (Math.abs(dx) > viewport.getWorldWidth() * camera.zoom / 2f + margen
+            || Math.abs(dy) > viewport.getWorldHeight() * camera.zoom / 2f + margen) {
+            hudJuego.dibujarFlechaCompanero(dx, dy);
+        }
     }
 
     private void dibujarMundo(float delta) {

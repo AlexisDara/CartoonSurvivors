@@ -14,7 +14,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 * Se agregó el minion violeta a las oleadas normales. Tiene el mismo tamaño que el minion básico, menos vida y una velocidad superior a la inicial del jugador.
 
-* La Muerte aparece a los 600 segundos de juego activo. La partida continúa y la primera baja de un jugador durante esa fase da la victoria a ambos, incluso si su compañero ya estaba muerto.
+* La Muerte aparece a los 600 segundos de juego activo. La partida continúa hasta que ambos jugadores estén muertos, momento en que reciben la victoria.
 * Si ambos jugadores mueren antes de la fase final, ambos reciben una derrota. Las pantallas de resultado muestran los fondos ilustrados de victoria y derrota.
 
 * Se agregó el jefe El Macho, un enemigo más grande y resistente que aparece a partir de los 10 segundos y lanza una línea de círculos de fuego que dañan y se desvanecen en orden.
@@ -26,6 +26,7 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * La armadura reduce el daño recibido con un máximo de 80 %. Cada mejora de críticos suma 5 puntos porcentuales de probabilidad de infligir daño doble con cualquier arma.
 * Se agregaron espacios para las armas equipadas debajo del panel de vida y experiencia.
 * Debajo de las armas, el HUD muestra los iconos y valores totales de críticos, armadura, velocidad, vida máxima y regeneración del jugador local.
+* Una flecha en el borde del HUD indica dónde está el compañero cuando queda fuera de pantalla.
 * Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
@@ -45,7 +46,9 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * El ataque de El Macho apunta al jugador y recorre siempre su alcance completo. El jefe tiene más vida y daño, y pueden coexistir entre dos y cuatro según el tramo de la partida.
 * Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
 * Se amplió el fondo de la pantalla de mejoras, se redujo el tamaño de la letra y se agregaron iconos de armadura y críticos. La tarjeta de vida muestra el aumento de vida máxima.
-* Cada arma tiene una sola opción de mejora que puede combinar daño, alcance y reducción del intervalo entre ataques. Cada atributo sorteado cambia entre 5 y 15 % sobre su valor actual. La pantalla muestra los valores antes de elegir.
+* Se duplicó el alcance base de la espada. La pistola conserva su alcance inicial y cambia la mejora de alcance por un rebote adicional. Cada rebote pierde un 25 % de daño al principio y cada mejora reduce esa pérdida en 5 puntos porcentuales, hasta un mínimo del 5 %.
+* Las opciones de arma pueden combinar daño, intervalo y alcance para la espada o rebotes para la pistola. Los aumentos porcentuales sorteados cambian entre 5 y 15 % sobre el valor actual.
+* Desde el nivel 5, la meta de experiencia aumenta de a 2 por nivel. Los minions violetas dan 2 XP y los jefes 30 XP.
 * Se agrandó la bala de la pistola y su intervalo base entre disparos bajó a 0,85 segundos. Las opciones de pistola tienen un 3 % de probabilidad de sumar una bala por disparo.
 * El temporizador de reaparición queda en pausa mientras está abierto el menú de mejoras.
 

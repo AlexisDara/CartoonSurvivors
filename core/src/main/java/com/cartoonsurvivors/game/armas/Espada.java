@@ -14,7 +14,7 @@ public class Espada extends Arma {
     private static final float DURACION = 0.20f;
 
     private static final float RADIO_INTERNO = 37f;
-    private static final float RADIO_EXTERNO = 92f;
+    private static final float RADIO_EXTERNO = 184f;
 
     private static final float ANGULO_BARRIDO = 110f;
     private static final int SEGMENTOS = 20;
@@ -112,7 +112,7 @@ public class Espada extends Arma {
         dibujarEstela(centroX, centroY, inicio, fin, RADIO_INTERNO, RADIO_EXTERNO, new Color(0.35f, 0.8f, 1f, 0.65f * desvanecimiento));
 
         // Franja brillante interior.
-        dibujarEstela(centroX, centroY, inicio, fin, RADIO_EXTERNO - 13f, RADIO_EXTERNO - 3f, new Color(0.9f, 1f, 1f, 0.9f * desvanecimiento));
+        dibujarEstela(centroX, centroY, inicio, fin, RADIO_EXTERNO - 26f, RADIO_EXTERNO - 6f, new Color(0.9f, 1f, 1f, 0.9f * desvanecimiento));
 
         shapeRenderer.end();
 
@@ -141,11 +141,11 @@ public class Espada extends Arma {
 
             float r2 = MathUtils.lerp(radioExterno, radioInterno, grosor2);
 
-            float x1 = centroX + MathUtils.cosDeg(a1) * radioInterno;
-            float y1 = centroY + MathUtils.sinDeg(a1) * radioInterno;
+            float x1 = centroX + MathUtils.cosDeg(a1) * radioExterno;
+            float y1 = centroY + MathUtils.sinDeg(a1) * radioExterno;
 
-            float x2 = centroX + MathUtils.cosDeg(a2) * radioInterno;
-            float y2 = centroY + MathUtils.sinDeg(a2) * radioInterno;
+            float x2 = centroX + MathUtils.cosDeg(a2) * radioExterno;
+            float y2 = centroY + MathUtils.sinDeg(a2) * radioExterno;
 
             float x3 = centroX + MathUtils.cosDeg(a1) * r1;
             float y3 = centroY + MathUtils.sinDeg(a1) * r1;

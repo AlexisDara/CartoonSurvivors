@@ -359,7 +359,11 @@ public class SincronizadorJugadores {
             String[] campos = codigo.split(":", -1);
             int cantidad = switch (campos[0]) {
                 case "ESPADA" -> 3;
-                case "PISTOLA" -> campos.length == 5 && campos[4].equals("1") ? 4 : 3;
+                case "PISTOLA" -> switch (campos.length) {
+                    case 6 -> 5;
+                    case 5 -> campos[4].equals("1") ? 4 : 3;
+                    default -> 3;
+                };
                 case "VIDA_MAXIMA" -> 2;
                 case "VELOCIDAD", "REGENERACION", "ARMADURA", "CRITICO" -> 1;
                 case "ARMA" -> 0;
