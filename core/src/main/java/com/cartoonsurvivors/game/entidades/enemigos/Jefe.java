@@ -1,9 +1,7 @@
 package com.cartoonsurvivors.game.entidades.enemigos;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public final class Jefe extends Enemigo {
 
@@ -13,21 +11,14 @@ public final class Jefe extends Enemigo {
     private static final float ANCHO_BARRA = 84f;
     private static final float ALTO_BARRA = 8f;
 
-    private final Animation<TextureRegion> animacionCaminar;
+    private final AparienciaEnemigo apariencia;
     private boolean mirandoIzquierda;
     private float tiempoAnimacion;
     private int vidaMaxima;
 
-    public Jefe(int vida, float x, float y, Texture spriteSheet, int anchoFrame) {
+    public Jefe(int vida, float x, float y, AparienciaEnemigo apariencia) {
         super(vida, 78f, x, y, ALTO_HITBOX, ANCHO_HITBOX);
-        int anchoTextura = spriteSheet.getWidth();
-        TextureRegion[] frames = new TextureRegion[(anchoTextura + anchoFrame - 1) / anchoFrame];
-        for (int i = 0; i < frames.length; i++) {
-            int origenX = i * anchoFrame;
-            int anchoVisible = Math.min(anchoFrame, anchoTextura - origenX);
-            frames[i] = new TextureRegion(spriteSheet, origenX, 0, anchoVisible, spriteSheet.getHeight());
-        }
-        animacionCaminar = new Animation<>(0.12f, frames);
+        this.apariencia = apariencia;
     }
 
     @Override
@@ -46,13 +37,10 @@ public final class Jefe extends Enemigo {
     @Override
     public void dibujar(Batch batch, float delta) {
         tiempoAnimacion += delta;
-        TextureRegion frame = animacionCaminar.getKeyFrame(tiempoAnimacion, true);
-        if (frame.isFlipX() != isMirandoIzquierda()) {
-            frame.flip(true, false);
-        }
         float x = getPosicionX() + (ANCHO_HITBOX - TAMANO_SPRITE) / 2f;
         float y = getPosicionY() + (ALTO_HITBOX - TAMANO_SPRITE) / 2f;
-        batch.draw(frame, x, y, TAMANO_SPRITE, TAMANO_SPRITE);
+        apariencia.dibujar(batch, (int) (tiempoAnimacion / 0.12f), x, y, TAMANO_SPRITE, TAMANO_SPRITE,
+            isMirandoIzquierda());
     }
 
     public void setVidaMaxima(int vidaMaxima) {

@@ -27,8 +27,7 @@ public class Lwjgl3Launcher {
         //// refresh rates. The Vsync setting above should limit the actual FPS to match the monitor.
         configuration.setForegroundFPS(60);
 
-        configuration.setWindowedMode(1280, 720);
-        configuration.setMaximized(true);
+        configuration.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .

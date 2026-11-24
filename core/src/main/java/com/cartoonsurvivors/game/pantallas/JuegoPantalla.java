@@ -47,6 +47,7 @@ public class JuegoPantalla extends ScreenAdapter {
     private final SincronizadorJugadores sincronizadorJugadores;
     private final GestorEnemigos gestorEnemigosVisual;
     private final HUDJuego hudJuego;
+    private final MenuMejoras menuMejoras;
     private final PantallaPausa pantallaPausa;
     private final ControlPausa controlPausa = new ControlPausa();
     private final SeleccionMejora seleccionMejora = new SeleccionMejora();
@@ -77,6 +78,7 @@ public class JuegoPantalla extends ScreenAdapter {
         gestorEnemigosVisual = new GestorEnemigos(tipoMapa);
 
         hudJuego = new HUDJuego(batch, game.getFont(), hudViewport);
+        menuMejoras = new MenuMejoras(hudJuego, batch, game.getFont(), hudViewport);
         pantallaPausa = new PantallaPausa(game, hudViewport,
             () -> controlPausa.solicitar(sincronizadorJugadores.getEstadisticasPartida(), true),
             () -> salidaSolicitada = true);
@@ -141,7 +143,7 @@ public class JuegoPantalla extends ScreenAdapter {
         controlPausa.actualizar(delta, estadisticas, idJugadorLocal, clienteUDP);
         activarEntradaPausa(pausaManual);
         if (!pausaManual) {
-            seleccionMejora.actualizar(delta, estadisticas, clienteUDP, hudJuego);
+            seleccionMejora.actualizar(delta, estadisticas, clienteUDP, menuMejoras);
         }
 
         boolean enPausa = pausaManual || enMejora;
@@ -162,7 +164,8 @@ public class JuegoPantalla extends ScreenAdapter {
         if (pausaManual) {
             pantallaPausa.render(delta, pausa, idJugadorLocal, controlPausa.enviandoConfirmacion());
         } else if (enMejora) {
-            hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(), seleccionMejora.esperandoConfirmacion(estadisticas));
+            menuMejoras.dibujar(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(),
+                seleccionMejora.esperandoConfirmacion(estadisticas));
         }
     }
 
@@ -294,6 +297,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         gestorEnemigosVisual.dispose();
         hudJuego.dispose();
+        menuMejoras.dispose();
         pantallaPausa.dispose();
         tumba.dispose();
 

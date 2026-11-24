@@ -15,7 +15,7 @@ final class SeleccionMejora {
     private int revision;
     private float tiempoReintento;
 
-    void actualizar(float delta, EstadisticasPartida estadisticas, ClienteUDP cliente, HUDJuego hud) {
+    void actualizar(float delta, EstadisticasPartida estadisticas, ClienteUDP cliente, MenuMejoras menu) {
         var ronda = estadisticas == null ? null : estadisticas.rondaMejora();
         if (ronda == null) {
             partidaId = null;
@@ -37,7 +37,7 @@ final class SeleccionMejora {
             }
         }
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            opcion = hud.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY(), ronda.opciones().size());
+            opcion = menu.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY(), ronda.opciones().size());
         }
         if (opcion >= 0 && opcion < ronda.opciones().size() && opcion != seleccion) {
             seleccion = opcion;

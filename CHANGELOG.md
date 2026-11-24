@@ -31,6 +31,9 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Cambiado
 
+* Los enemigos de Tierra tienen el mismo tamaño visible que sus equivalentes del primer mapa. El juego de escritorio inicia en pantalla completa con la resolución del monitor.
+* Se separaron el menú de mejoras, la interfaz de la sala y la lectura de estados de enemigos de sus clases de juego.
+
 * El contador de enemigos eliminados y la indicación para volver al menú se centran directamente sobre los fondos de victoria y derrota.
 
 * Se redujo el tamaño de los botones de la sala multijugador y se centraron los nombres en los selectores.

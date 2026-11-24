@@ -10,14 +10,11 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
-import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.OpcionMejora;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Pasivas;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Resultado;
 
@@ -26,19 +23,11 @@ import java.util.Map;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Jugador.TAMAÑO_REAL;
 
-import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_MUNDO;
-import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_MUNDO;
 
 public class HUDJuego {
 
-    private static final int ANCHO_FONDO_MEJORAS = 860;
-    private static final int ALTO_FONDO_MEJORAS = 416;
-    private static final int ALTO_MENU = 370;
-    private static final int TAMANIO_OPCION = 220;
-    private static final int PASO_OPCION = 230;
-    private static final Color CAPA_PAUSA = new Color(0x080d19bd);
     private static final Color PANEL = new Color(0x192036ef);
-    private static final Color TEXTO_HUD = new Color(0xfff2d6ff);
+    static final Color TEXTO_HUD = new Color(0xfff2d6ff);
     private static final Color FONDO_BARRA = new Color(0x361d2cff);
     private static final Color EXPERIENCIA = new Color(0x268cecff);
     private static final Color VIDA = new Color(0xf35266ff);
@@ -56,10 +45,7 @@ public class HUDJuego {
     private final Texture marcoXp;
     private final Texture marcoElegido;
     private final Texture marcoNoElegido;
-    private final Texture espadaMejora;
-    private final Texture pistolaMejora;
     private final Map<String, Texture> iconosMejora;
-    private final Vector2 punteroHud = new Vector2();
     private final GlyphLayout textoCentrado = new GlyphLayout();
 
     public HUDJuego(
@@ -85,8 +71,6 @@ public class HUDJuego {
         marcoXp = cargarTextura("Hud/barraXp.png");
         marcoElegido = cargarTextura("Hud/marco-elegido.png");
         marcoNoElegido = cargarTextura("Hud/marco-noElegido.png");
-        espadaMejora = cargarTextura("armas/espada.png");
-        pistolaMejora = cargarTextura("armas/pistola.png");
         iconosMejora = Map.of(
             "VELOCIDAD", cargarTextura("Hud/velocidad.png"),
             "VIDA_MAXIMA", cargarTextura("Hud/vida-maxima.png"),
@@ -169,7 +153,7 @@ public class HUDJuego {
         font.getData().setScale(escalaX, escalaY);
     }
 
-    private void dibujarReaparicion(Jugador local, Jugador remoto, float centro, float arriba) {
+    void dibujarReaparicion(Jugador local, Jugador remoto, float centro, float arriba) {
         boolean reapareceLocal = local.getVida() <= 0f;
         boolean reapareceRemoto = remoto.getVida() <= 0f;
         if (!reapareceLocal && !reapareceRemoto) {
@@ -198,7 +182,7 @@ public class HUDJuego {
         return archivo.exists() ? cargarTextura(ruta) : null;
     }
 
-    private Texture cargarTextura(String ruta) {
+    static Texture cargarTextura(String ruta) {
         Texture textura = new Texture(Gdx.files.internal(ruta));
         textura.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         return textura;
@@ -218,7 +202,7 @@ public class HUDJuego {
         batch.draw(marcoXp, x, y, ancho, alto);
     }
 
-    private void dibujarIcono(Texture icono, float centroX, float centroY, float tamanio) {
+    void dibujarIcono(Texture icono, float centroX, float centroY, float tamanio) {
         float escala = tamanio / Math.max(icono.getWidth(), icono.getHeight());
         float ancho = icono.getWidth() * escala;
         float alto = icono.getHeight() * escala;
@@ -290,130 +274,16 @@ public class HUDJuego {
             : String.format(Locale.ROOT, "%.1f", valor);
     }
 
-    public void dibujarMejoras(Jugador jugador, Jugador jugadorRemoto, EstadisticasPartida estadisticas,
-                              int seleccion, boolean confirmando) {
-        prepararHUD();
-        batch.begin();
-
-        float centro = hudViewport.getWorldWidth() / 2f;
-        float arriba = arribaMenuMejoras();
-        var ronda = estadisticas.rondaMejora();
-        int segundos = (ronda.milisegundos() + 999) / 1000;
-
-        rectangulo(CAPA_PAUSA, 0, 0, hudViewport.getWorldWidth(), hudViewport.getWorldHeight());
-        float centroY = hudViewport.getWorldHeight() / 2f;
-        batch.draw(fondoHud, centro - ANCHO_FONDO_MEJORAS / 2f, centroY - ALTO_FONDO_MEJORAS / 2f,
-            ANCHO_FONDO_MEJORAS, ALTO_FONDO_MEJORAS);
-        float escalaX = font.getScaleX();
-        float escalaY = font.getScaleY();
-        font.getData().setScale(escalaX * 0.72f, escalaY * 0.72f);
-        textoCentrado("Nivel " + estadisticas.nivel(), centro, arriba - 38, TEXTO_HUD);
-        font.getData().setScale(escalaX * 0.39f, escalaY * 0.39f);
-        textoCentrado("Tiempo restante " + segundos + " s", centro, arriba - 70, TEXTO_HUD);
-        int cantidad = ronda.opciones().size();
-        float y = baseOpciones();
-        for (int i = 0; i < cantidad; i++) {
-            float x = izquierdaOpcion(i, cantidad);
-            OpcionMejora mejora = ronda.opciones().get(i);
-            batch.draw(i == seleccion ? marcoElegido : marcoNoElegido, x, y, TAMANIO_OPCION, TAMANIO_OPCION);
-            float centroOpcion = x + TAMANIO_OPCION / 2f;
-            textoCentrado(Integer.toString(i + 1), centroOpcion, y + 181, TEXTO_HUD);
-            Texture icono = iconoMejora(mejora.tipo(), jugador);
-            if (icono != null) {
-                dibujarIcono(icono, centroOpcion, y + 133, 64);
-            }
-            font.setColor(TEXTO_HUD);
-            font.draw(batch, etiquetaMejora(mejora, jugador),
-                centroOpcion - 76, y + (icono == null ? 133 : 97), 152, Align.center, true);
-        }
-
-        String indicacion = seleccion < 0 ? "Elegí con clic o con 1–3"
-            : confirmando ? "Confirmando tu elección…" : "Esperando a tu compañero";
-        textoCentrado(indicacion, centro, arriba - 307, TEXTO_HUD);
-        font.getData().setScale(escalaX * 0.55f, escalaY * 0.55f);
-        dibujarReaparicion(jugador, jugadorRemoto, centro, hudViewport.getWorldHeight() - 20);
-        font.getData().setScale(escalaX, escalaY);
-        font.setColor(Color.WHITE);
-        batch.end();
+    void dibujarFondo(float x, float y, float ancho, float alto) {
+        batch.draw(fondoHud, x, y, ancho, alto);
     }
 
-    int obtenerOpcionMejora(int x, int y, int cantidad) {
-        hudViewport.unproject(punteroHud.set(x, y));
-        float base = baseOpciones();
-        if (punteroHud.y < base || punteroHud.y > base + TAMANIO_OPCION) {
-            return -1;
-        }
-        for (int i = 0; i < cantidad; i++) {
-            float izquierda = izquierdaOpcion(i, cantidad);
-            if (punteroHud.x >= izquierda && punteroHud.x <= izquierda + TAMANIO_OPCION) {
-                return i;
-            }
-        }
-        return -1;
+    void dibujarMarcoOpcion(boolean seleccionada, float x, float y, float tamano) {
+        batch.draw(seleccionada ? marcoElegido : marcoNoElegido, x, y, tamano, tamano);
     }
 
-    private float izquierdaOpcion(int indice, int cantidad) {
-        float ancho = TAMANIO_OPCION + (cantidad - 1) * PASO_OPCION;
-        return (hudViewport.getWorldWidth() - ancho) / 2f + indice * PASO_OPCION;
-    }
-
-    private float arribaMenuMejoras() {
-        return (hudViewport.getWorldHeight() + ALTO_MENU) / 2f;
-    }
-
-    private float baseOpciones() {
-        return arribaMenuMejoras() - 299;
-    }
-
-    private Texture iconoMejora(String mejora, Jugador jugador) {
-        return switch (mejora) {
-            case "ARMA" -> desbloqueaPistola(jugador) ? pistolaMejora : espadaMejora;
-            case "ESPADA" -> espadaMejora;
-            case "PISTOLA" -> pistolaMejora;
-            default -> iconosMejora.get(mejora);
-        };
-    }
-
-    private boolean desbloqueaPistola(Jugador jugador) {
-        return jugador.getArmas().getFirst() instanceof Espada;
-    }
-
-    private String etiquetaMejora(OpcionMejora mejora, Jugador jugador) {
-        return switch (mejora.tipo()) {
-            case "ESPADA" -> etiquetaArma("Espada", mejora);
-            case "PISTOLA" -> etiquetaArma("Pistola", mejora);
-            case "VELOCIDAD" -> "Velocidad de movimiento\n+" + mejora.valor(0) + " %";
-            case "ARMA" -> desbloqueaPistola(jugador) ? "Desbloquear pistola" : "Desbloquear espada";
-            case "VIDA_MAXIMA" -> "+" + mejora.valor(0) + " de vida máxima";
-            case "REGENERACION" -> "Regeneración\n+" + mejora.valor(0) + " vida por segundo";
-            case "ARMADURA" -> "Armadura\n+" + mejora.valor(0) + " puntos de reducción de daño";
-            case "CRITICO" -> "Críticos\n+" + mejora.valor(0) + " puntos de probabilidad\nDaño doble";
-            default -> mejora.tipo();
-        };
-    }
-
-    private String etiquetaArma(String nombre, OpcionMejora mejora) {
-        StringBuilder texto = new StringBuilder(nombre);
-        boolean conRebotes = mejora.valores().size() == 5;
-        int balaExtra = conRebotes ? mejora.valor(4) : mejora.valores().size() == 4 ? mejora.valor(3) : 0;
-        if (balaExtra > 0) {
-            texto.append(" · +").append(balaExtra).append(" bala");
-        }
-        if (mejora.valor(0) > 0) {
-            texto.append("\nDaño +").append(mejora.valor(0)).append(" %");
-        }
-        if (conRebotes && mejora.valor(1) > 0) {
-            texto.append("\n+1 rebote");
-            if (mejora.valor(3) > 0) {
-                texto.append(" · -").append(mejora.valor(3)).append(" pp");
-            }
-        } else if (!conRebotes && mejora.valor(1) > 0) {
-            texto.append("\nAlcance +").append(mejora.valor(1)).append(" %");
-        }
-        if (mejora.valor(2) > 0) {
-            texto.append("\nIntervalo -").append(mejora.valor(2)).append(" %");
-        }
-        return texto.toString();
+    Texture iconoPasiva(String tipo) {
+        return iconosMejora.get(tipo);
     }
 
     public void dibujarBarraJugador(Jugador jugador) {
@@ -440,13 +310,13 @@ public class HUDJuego {
         }
     }
 
-    private void rectangulo(Color color, float x, float y, float ancho, float alto) {
+    void rectangulo(Color color, float x, float y, float ancho, float alto) {
         batch.setColor(color);
         batch.draw(pixel, x, y, ancho, alto);
         batch.setColor(Color.WHITE);
     }
 
-    private void textoCentrado(String texto, float centro, float y, Color color) {
+    void textoCentrado(String texto, float centro, float y, Color color) {
         font.setColor(color);
         textoCentrado.setText(font, texto);
         font.draw(batch, textoCentrado, centro - textoCentrado.width / 2f, y);
@@ -461,8 +331,6 @@ public class HUDJuego {
         marcoXp.dispose();
         marcoElegido.dispose();
         marcoNoElegido.dispose();
-        espadaMejora.dispose();
-        pistolaMejora.dispose();
         iconosMejora.values().forEach(Texture::dispose);
         if (iconoEspada != null) {
             iconoEspada.dispose();
@@ -497,39 +365,11 @@ public class HUDJuego {
         batch.end();
     }
 
-    private void prepararHUD() {
+    void prepararHUD() {
         hudViewport.apply();
         batch.setProjectionMatrix(
             hudViewport.getCamera().combined
         );
-    }
-
-    // HUD anterior, conservado por compatibilidad.
-    public void dibujarHUD(
-        Jugador jugador,
-        float tiempoJuego,
-        int enemigosMatados) {
-
-        prepararHUD();
-
-        batch.begin();
-
-        font.setColor(Color.WHITE);
-
-        font.draw(batch,
-            "Vida: " + String.format("%.0f", jugador.getVida()),
-            10, ALTO_MUNDO - 10);
-
-        font.draw(batch,
-            "Tiempo: " + String.format("%.0f", tiempoJuego),
-            (ANCHO_MUNDO / 2) - 90f,
-            ALTO_MUNDO - 10);
-
-        font.draw(batch,
-            "Enemigos: " + enemigosMatados,
-            10, ALTO_MUNDO - 35);
-
-        batch.end();
     }
 
     public void dibujarResultado(Resultado resultado, int enemigosEliminados) {
@@ -551,64 +391,4 @@ public class HUDJuego {
         batch.end();
     }
 
-    // Pantalla anterior, conservada por compatibilidad.
-    public void dibujarPantallaVictoriaDerrota(
-        Color color,
-        String texto,
-        int enemigosMatados,
-        float tiempoJuego) {
-
-        prepararHUD();
-
-        GlyphLayout layout = new GlyphLayout();
-
-        batch.begin();
-
-        font.setColor(color);
-        layout.setText(font, texto);
-
-        font.draw(batch, texto,
-            ANCHO_MUNDO / 2f - layout.width / 2f,
-            500);
-
-        font.setColor(Color.WHITE);
-
-        String textoEnemigos =
-            "Enemigos eliminados: " + enemigosMatados;
-
-        layout.setText(font, textoEnemigos);
-
-        font.draw(batch, textoEnemigos,
-            ANCHO_MUNDO / 2f - layout.width / 2f,
-            430);
-
-        String textoTiempo =
-            "Tiempo sobrevivido: "
-                + String.format("%.0f", tiempoJuego)
-                + " segundos";
-
-        layout.setText(font, textoTiempo);
-
-        font.draw(batch, textoTiempo,
-            ANCHO_MUNDO / 2f - layout.width / 2f,
-            370);
-
-        String textoReiniciar = "Toca R para reiniciar";
-
-        layout.setText(font, textoReiniciar);
-
-        font.draw(batch, textoReiniciar,
-            ANCHO_MUNDO / 2f - layout.width / 2f,
-            270);
-
-        String textoMenu = "Toca M para volver al menú";
-
-        layout.setText(font, textoMenu);
-
-        font.draw(batch, textoMenu,
-            ANCHO_MUNDO / 2f - layout.width / 2f,
-            210);
-
-        batch.end();
-    }
 }
