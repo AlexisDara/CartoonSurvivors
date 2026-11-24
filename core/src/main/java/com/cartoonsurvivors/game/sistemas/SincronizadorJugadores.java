@@ -275,15 +275,18 @@ public class SincronizadorJugadores {
     private Resultado leerResultado(String codigo) {
         return switch (codigo) {
             case "FASE_FINAL" -> Resultado.FASE_FINAL;
-            case "VICTORIA" -> Resultado.VICTORIA_COOPERATIVA;
-            case "VICTORIA_1" -> idJugadorLocal == 1 ? Resultado.VICTORIA_LOCAL : Resultado.VICTORIA_REMOTA;
-            case "VICTORIA_2" -> idJugadorLocal == 2 ? Resultado.VICTORIA_LOCAL : Resultado.VICTORIA_REMOTA;
+            case "VICTORIA" -> Resultado.VICTORIA;
+            case "DERROTA" -> Resultado.DERROTA;
             default -> Resultado.EN_CURSO;
         };
     }
 
     public enum Resultado {
-        EN_CURSO, FASE_FINAL, VICTORIA_LOCAL, VICTORIA_REMOTA, VICTORIA_COOPERATIVA
+        EN_CURSO, FASE_FINAL, VICTORIA, DERROTA;
+
+        public boolean esFinal() {
+            return this == VICTORIA || this == DERROTA;
+        }
     }
 
     public EstadisticasPartida getEstadisticasPartida() {

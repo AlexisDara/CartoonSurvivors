@@ -101,7 +101,7 @@ public class JuegoPantalla extends ScreenAdapter {
 
         sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
         EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
-        if (estadisticas != null && (estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_LOCAL || estadisticas.resultado() == SincronizadorJugadores.Resultado.VICTORIA_COOPERATIVA)) {
+        if (estadisticas != null && estadisticas.resultado().esFinal()) {
             hudJuego.dibujarResultado(estadisticas.resultado(), estadisticas.kills());
             return;
         }

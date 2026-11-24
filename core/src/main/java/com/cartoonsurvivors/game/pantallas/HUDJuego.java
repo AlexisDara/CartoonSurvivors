@@ -46,6 +46,8 @@ public class HUDJuego {
     private final Texture iconoEspada;
     private final Texture iconoPistola;
     private final Texture fondoHud;
+    private final Texture fondoVictoria;
+    private final Texture fondoDerrota;
     private final Texture marcoXp;
     private final Texture marcoElegido;
     private final Texture marcoNoElegido;
@@ -72,6 +74,8 @@ public class HUDJuego {
         iconoEspada = cargarIcono("armas/marco-espada.png");
         iconoPistola = cargarIcono("armas/marco-pistola.png");
         fondoHud = cargarTextura("Hud/fondo-mejora.png");
+        fondoVictoria = cargarTextura("resultados/victoria.png");
+        fondoDerrota = cargarTextura("resultados/derrota.png");
         marcoXp = cargarTextura("Hud/barraXp.png");
         marcoElegido = cargarTextura("Hud/marco-elegido.png");
         marcoNoElegido = cargarTextura("Hud/marco-noElegido.png");
@@ -356,6 +360,8 @@ public class HUDJuego {
     public void dispose() {
         pixel.dispose();
         fondoHud.dispose();
+        fondoVictoria.dispose();
+        fondoDerrota.dispose();
         marcoXp.dispose();
         marcoElegido.dispose();
         marcoNoElegido.dispose();
@@ -432,17 +438,20 @@ public class HUDJuego {
 
     public void dibujarResultado(Resultado resultado, int enemigosEliminados) {
         prepararHUD();
+        Texture fondo = resultado == Resultado.VICTORIA ? fondoVictoria : fondoDerrota;
+        float ancho = hudViewport.getWorldWidth();
+        float alto = hudViewport.getWorldHeight();
+        float centroX = ancho / 2f;
+        float centroY = alto / 2f;
+        float escala = Math.min(ancho / fondo.getWidth(), alto / fondo.getHeight());
+        float anchoFondo = fondo.getWidth() * escala;
+        float altoFondo = fondo.getHeight() * escala;
         batch.begin();
-        float centro = hudViewport.getWorldWidth() / 2f;
-        float altura = hudViewport.getWorldHeight() / 2f;
-        boolean companeroEnPartida = resultado == Resultado.VICTORIA_LOCAL;
-        textoCentrado(companeroEnPartida ? "¡Victoria!" : "¡Victoria cooperativa!", centro, altura + 64f,
-            Color.GREEN);
-        if (companeroEnPartida) {
-            textoCentrado("Tu compañero sigue en partida", centro, altura - 24f, Color.WHITE);
-        }
-        textoCentrado("Enemigos eliminados: " + enemigosEliminados, centro, altura + 20f, Color.WHITE);
-        textoCentrado("Presiona ESC para volver al menú", centro, altura - (companeroEnPartida ? 68f : 24f), Color.WHITE);
+        batch.draw(fondo, centroX - anchoFondo / 2f, centroY - altoFondo / 2f, anchoFondo, altoFondo);
+        float linea = font.getLineHeight();
+        float inicioTexto = centroY + (linea + font.getCapHeight()) / 2f;
+        textoCentrado("Enemigos eliminados: " + enemigosEliminados, centroX, inicioTexto, Color.WHITE);
+        textoCentrado("Presiona ESC para volver al menú", centroX, inicioTexto - linea, Color.WHITE);
         batch.end();
     }
 
