@@ -14,7 +14,7 @@ public class Espada extends Arma {
     private static final float DURACION = 0.20f;
 
     private static final float RADIO_INTERNO = 37f;
-    private static final float RADIO_EXTERNO = 184f;
+    private static final float RADIO_EXTERNO = 130f;
 
     private static final float ANGULO_BARRIDO = 110f;
     private static final int SEGMENTOS = 20;

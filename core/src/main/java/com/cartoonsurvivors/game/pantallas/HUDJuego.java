@@ -111,9 +111,7 @@ public class HUDJuego {
         float centro = hudViewport.getWorldWidth() / 2f;
         float derecha = hudViewport.getWorldWidth() - 20;
 
-        batch.draw(fondoHud, 20, arriba - 58, 216, 58);
-        textoCentrado("Kills " + (estadisticas == null ? "--" : estadisticas.kills()),
-            128, arriba - 13, TEXTO_HUD);
+        dibujarContadorBajas(estadisticas, arriba);
 
         int segundos = estadisticas == null ? 0 : estadisticas.segundos();
         String tiempo = estadisticas == null ? "--:--"
@@ -154,6 +152,21 @@ public class HUDJuego {
         font.getData().setScale(escalaX, escalaY);
         batch.end();
         font.setColor(Color.WHITE);
+    }
+
+    private void dibujarContadorBajas(EstadisticasPartida estadisticas, float arriba) {
+        float ancho = 312f;
+        float izquierda = 20f;
+        batch.draw(fondoHud, izquierda, arriba - 58f, ancho, 58f);
+        String texto = "Kills " + (estadisticas == null ? "--" : estadisticas.kills());
+        font.setColor(TEXTO_HUD);
+        textoCentrado.setText(font, texto);
+        float escalaX = font.getScaleX();
+        float escalaY = font.getScaleY();
+        float ajuste = Math.min(1f, (ancho - 36f) / textoCentrado.width);
+        font.getData().setScale(escalaX * ajuste, escalaY * ajuste);
+        textoCentrado(texto, izquierda + ancho / 2f, arriba - 29f + font.getCapHeight() / 2f, TEXTO_HUD);
+        font.getData().setScale(escalaX, escalaY);
     }
 
     private void dibujarReaparicion(Jugador local, Jugador remoto, float centro, float arriba) {
