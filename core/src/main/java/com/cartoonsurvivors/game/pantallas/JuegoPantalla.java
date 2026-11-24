@@ -126,7 +126,8 @@ public class JuegoPantalla extends ScreenAdapter {
         camaraSeguirJugador();
         dibujarMundo(enPausa ? 0f : delta);
 
-        hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(), estadisticas);
+        hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(),
+            estadisticas, sincronizadorJugadores.getPasivasLocales());
         if (enPausa) {
             hudJuego.dibujarMejoras(jugadorLocal, jugadorRemoto, estadisticas, seleccionMejora.seleccion(), seleccionMejora.esperandoConfirmacion(estadisticas));
         }
@@ -190,6 +191,7 @@ public class JuegoPantalla extends ScreenAdapter {
         dibujarJugador(jugadorRemoto, delta);
 
         gestorEnemigosVisual.dibujar(batch, delta);
+        gestorEnemigosVisual.dibujarBalas(batch);
 
         if (sincronizadorJugadores.hayEstadoRecibido()) {
             hudJuego.dibujarBarraJugador(jugadorLocal);

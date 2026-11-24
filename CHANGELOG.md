@@ -16,12 +16,14 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Si ambos jugadores mueren antes de la fase final, ambos reciben una derrota. Las pantallas de resultado muestran los fondos ilustrados de victoria y derrota.
 
 * Se agregó el jefe El Macho, un enemigo más grande y resistente que aparece a partir de los 10 segundos y lanza una línea de círculos de fuego que dañan y se desvanecen en orden.
-* Se agregó la pistola inicial de Mordecai, con disparos instantáneos en ocho direcciones, una zona de impacto amplia y menos daño que la espada de Finn.
+* La pistola inicial de Mordecai dispara una bala que sigue al enemigo más cercano dentro del alcance y del cono frontal. El daño se aplica al impactar.
 * Se agregaron niveles y experiencia compartidos por bajas, con una mejora por jugador al subir de nivel.
 * Se agregaron al HUD el número de nivel y la barra de experiencia.
 * Al subir de nivel, cada jugador recibe tres mejoras aleatorias. La partida se reanuda cuando ambos eligen o al vencer el límite de 10 segundos.
 * Se agregaron mejoras para desbloquear la segunda arma, aumentar la vida máxima con curación y regenerar vida de forma pasiva.
+* La armadura reduce el daño recibido con un máximo de 80 %. Cada mejora de críticos suma 5 puntos porcentuales de probabilidad de infligir daño doble con cualquier arma.
 * Se agregaron espacios para las armas equipadas debajo del panel de vida y experiencia.
+* Debajo de las armas, el HUD muestra los iconos y valores totales de críticos, armadura, velocidad, vida máxima y regeneración del jugador local.
 * Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
@@ -33,14 +35,15 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * La Muerte atraviesa a los demás enemigos y conserva el daño por contacto con los jugadores.
 
 * Se redujo la velocidad del minion violeta y se amplió su área de colisión. El minion se separa del jugador al tocarlo y rebota con más fuerza, incluso mientras el daño por contacto está en recarga.
-* Los jugadores regeneran 0,5 puntos de vida por segundo desde el inicio. Cada mejora de regeneración suma 1 punto por segundo a la tasa actual.
+* La velocidad aumenta entre 5 y 15 % sobre su valor actual. Cada mejora de vida máxima suma entre 10 y 30 puntos y cura 30. La regeneración parte de 0,5 puntos de vida por segundo y suma 1 por mejora.
+* Cada mejora de armadura suma entre 5 y 15 puntos porcentuales de reducción, hasta completar el máximo.
 
 * La dificultad aumenta durante los primeros 10 minutos de juego activo. Aumentan la vida de los nuevos enemigos, la cantidad por oleada y el límite de enemigos activos, y disminuye el intervalo entre oleadas.
 * Se aumentaron el tamaño y la velocidad de El Macho, y el tamaño de sus círculos de fuego y la velocidad con la que avanza el ataque.
 * El ataque de El Macho apunta al jugador y recorre siempre su alcance completo. El jefe tiene más vida y daño, y pueden coexistir entre dos y cuatro según el tramo de la partida.
 * Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
-* Se renovó la pantalla de mejoras con un fondo ilustrado, iconos para cada opción y marcos distintos para indicar la selección.
-* Las mejoras de daño, alcance y cadencia se aplican a una sola arma. El menú muestra el arma correspondiente con texto claro, más pequeño y con borde negro, dentro de marcos más grandes.
+* Se amplió el fondo de la pantalla de mejoras, se redujo el tamaño de la letra y se agregaron iconos de armadura y críticos. La tarjeta de vida muestra el aumento de vida máxima.
+* Cada arma tiene una sola opción de mejora que puede combinar daño, alcance y reducción del intervalo entre ataques. Cada atributo sorteado cambia entre 5 y 15 % sobre su valor actual. La pantalla muestra los valores antes de elegir.
 
 ---
 

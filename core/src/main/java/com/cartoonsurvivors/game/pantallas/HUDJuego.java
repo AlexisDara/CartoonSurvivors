@@ -16,6 +16,8 @@ import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.armas.Espada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.OpcionMejora;
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Pasivas;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Resultado;
 
 import java.util.Locale;
@@ -28,7 +30,8 @@ import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_MUNDO;
 
 public class HUDJuego {
 
-    private static final int ANCHO_MENU = 766;
+    private static final int ANCHO_FONDO_MEJORAS = 860;
+    private static final int ALTO_FONDO_MEJORAS = 416;
     private static final int ALTO_MENU = 370;
     private static final int TAMANIO_OPCION = 220;
     private static final int PASO_OPCION = 230;
@@ -82,12 +85,11 @@ public class HUDJuego {
         espadaMejora = cargarTextura("armas/espada.png");
         pistolaMejora = cargarTextura("armas/pistola.png");
         iconosMejora = Map.of(
-            "DANIO", cargarTextura("Hud/danio.png"),
-            "ALCANCE", cargarTextura("Hud/alcance.png"),
-            "CADENCIA", cargarTextura("Hud/cadencia.png"),
             "VELOCIDAD", cargarTextura("Hud/velocidad.png"),
             "VIDA_MAXIMA", cargarTextura("Hud/vida-maxima.png"),
-            "REGENERACION", cargarTextura("Hud/regeneracion.png"));
+            "REGENERACION", cargarTextura("Hud/regeneracion.png"),
+            "ARMADURA", cargarTextura("Hud/armadura.png"),
+            "CRITICO", cargarTextura("Hud/critico.png"));
     }
 
     // HUD utilizado durante la partida multijugador.
@@ -95,7 +97,8 @@ public class HUDJuego {
         Jugador jugadorLocal,
         Jugador jugadorRemoto,
         boolean estadoRecibido,
-        EstadisticasPartida estadisticas) {
+        EstadisticasPartida estadisticas,
+        Pasivas pasivas) {
 
         prepararHUD();
 
@@ -132,6 +135,11 @@ public class HUDJuego {
         textoCentrado(meta > 0 ? experiencia + " / " + meta + " XP" : "-- XP",
             izquierdaXp + 106, arriba - 66, TEXTO_HUD);
         dibujarArmas(jugadorLocal, izquierdaXp + 12, arriba - 164);
+        if (pasivas != null) {
+            font.getData().setScale(escalaX * 0.43f, escalaY * 0.43f);
+            dibujarPasivas(pasivas, izquierdaXp, arriba - 174);
+            font.getData().setScale(escalaX * 0.55f, escalaY * 0.55f);
+        }
 
         if (!estadoRecibido) {
             textoCentrado("Esperando al servidor...", centro, arriba - 76, TEXTO_HUD);
@@ -215,6 +223,30 @@ public class HUDJuego {
         }
     }
 
+    private void dibujarPasivas(Pasivas pasivas, float x, float arriba) {
+        batch.draw(fondoHud, x, arriba - 76f, 288f, 76f);
+        float izquierda = x + 12f;
+        float primeraFila = arriba - 19f;
+        float segundaFila = arriba - 54f;
+        dibujarPasiva("CRITICO", pasivas.critico() + " %", izquierda, primeraFila);
+        dibujarPasiva("ARMADURA", pasivas.armadura() + " %", izquierda + 88f, primeraFila);
+        dibujarPasiva("VELOCIDAD", valorPasiva(pasivas.velocidad()), izquierda + 176f, primeraFila);
+        dibujarPasiva("VIDA_MAXIMA", valorPasiva(pasivas.vidaMaxima()), izquierda, segundaFila);
+        dibujarPasiva("REGENERACION", valorPasiva(pasivas.regeneracion()) + "/s", izquierda + 88f, segundaFila);
+    }
+
+    private void dibujarPasiva(String tipo, String valor, float x, float centroY) {
+        dibujarIcono(iconosMejora.get(tipo), x + 14f, centroY, 28f);
+        font.setColor(TEXTO_HUD);
+        font.draw(batch, valor, x + 31f, centroY + font.getCapHeight() / 2f);
+    }
+
+    private String valorPasiva(float valor) {
+        return valor == Math.rint(valor)
+            ? String.format(Locale.ROOT, "%.0f", valor)
+            : String.format(Locale.ROOT, "%.1f", valor);
+    }
+
     public void dibujarMejoras(Jugador jugador, Jugador jugadorRemoto, EstadisticasPartida estadisticas,
                               int seleccion, boolean confirmando) {
         prepararHUD();
@@ -226,29 +258,30 @@ public class HUDJuego {
         int segundos = (ronda.milisegundos() + 999) / 1000;
 
         rectangulo(CAPA_PAUSA, 0, 0, hudViewport.getWorldWidth(), hudViewport.getWorldHeight());
-        batch.draw(fondoHud, centro - ANCHO_MENU / 2f, arriba - ALTO_MENU, ANCHO_MENU, ALTO_MENU);
+        float centroY = hudViewport.getWorldHeight() / 2f;
+        batch.draw(fondoHud, centro - ANCHO_FONDO_MEJORAS / 2f, centroY - ALTO_FONDO_MEJORAS / 2f,
+            ANCHO_FONDO_MEJORAS, ALTO_FONDO_MEJORAS);
         float escalaX = font.getScaleX();
         float escalaY = font.getScaleY();
-        font.getData().setScale(escalaX * 0.8f, escalaY * 0.8f);
+        font.getData().setScale(escalaX * 0.72f, escalaY * 0.72f);
         textoCentrado("Nivel " + estadisticas.nivel(), centro, arriba - 38, TEXTO_HUD);
-        font.getData().setScale(escalaX * 0.43f, escalaY * 0.43f);
+        font.getData().setScale(escalaX * 0.39f, escalaY * 0.39f);
         textoCentrado("Tiempo restante " + segundos + " s", centro, arriba - 70, TEXTO_HUD);
         int cantidad = ronda.opciones().size();
         float y = baseOpciones();
         for (int i = 0; i < cantidad; i++) {
             float x = izquierdaOpcion(i, cantidad);
-            String mejora = ronda.opciones().get(i);
+            OpcionMejora mejora = ronda.opciones().get(i);
             batch.draw(i == seleccion ? marcoElegido : marcoNoElegido, x, y, TAMANIO_OPCION, TAMANIO_OPCION);
             float centroOpcion = x + TAMANIO_OPCION / 2f;
             textoCentrado(Integer.toString(i + 1), centroOpcion, y + 181, TEXTO_HUD);
-            String atributo = atributoMejora(mejora);
-            Texture icono = iconoMejora(atributo, jugador);
+            Texture icono = iconoMejora(mejora.tipo(), jugador);
             if (icono != null) {
                 dibujarIcono(icono, centroOpcion, y + 133, 64);
             }
             font.setColor(TEXTO_HUD);
-            font.draw(batch, etiquetaMejora(mejora, atributo, jugador),
-                centroOpcion - 76, y + 93, 152, Align.center, true);
+            font.draw(batch, etiquetaMejora(mejora, jugador),
+                centroOpcion - 76, y + (icono == null ? 133 : 97), 152, Align.center, true);
         }
 
         String indicacion = seleccion < 0 ? "Elegí con clic o con 1–3"
@@ -290,35 +323,44 @@ public class HUDJuego {
     }
 
     private Texture iconoMejora(String mejora, Jugador jugador) {
-        if ("ARMA".equals(mejora)) {
-            return desbloqueaPistola(jugador) ? pistolaMejora : espadaMejora;
-        }
-        return iconosMejora.get(mejora);
+        return switch (mejora) {
+            case "ARMA" -> desbloqueaPistola(jugador) ? pistolaMejora : espadaMejora;
+            case "ESPADA" -> espadaMejora;
+            case "PISTOLA" -> pistolaMejora;
+            default -> iconosMejora.get(mejora);
+        };
     }
 
     private boolean desbloqueaPistola(Jugador jugador) {
         return jugador.getArmas().getFirst() instanceof Espada;
     }
 
-    private String atributoMejora(String mejora) {
-        if (mejora.endsWith("_ESPADA") || mejora.endsWith("_PISTOLA")) {
-            return mejora.substring(0, mejora.lastIndexOf('_'));
-        }
-        return mejora;
+    private String etiquetaMejora(OpcionMejora mejora, Jugador jugador) {
+        return switch (mejora.tipo()) {
+            case "ESPADA" -> etiquetaArma("Espada", mejora);
+            case "PISTOLA" -> etiquetaArma("Pistola", mejora);
+            case "VELOCIDAD" -> "Velocidad de movimiento\n+" + mejora.valor(0) + " %";
+            case "ARMA" -> desbloqueaPistola(jugador) ? "Desbloquear pistola" : "Desbloquear espada";
+            case "VIDA_MAXIMA" -> "+" + mejora.valor(0) + " de vida máxima";
+            case "REGENERACION" -> "Regeneración\n+" + mejora.valor(0) + " vida por segundo";
+            case "ARMADURA" -> "Armadura\n+" + mejora.valor(0) + " puntos de reducción de daño";
+            case "CRITICO" -> "Críticos\n+" + mejora.valor(0) + " puntos de probabilidad\nDaño doble";
+            default -> mejora.tipo();
+        };
     }
 
-    private String etiquetaMejora(String mejora, String atributo, Jugador jugador) {
-        String arma = mejora.endsWith("_ESPADA") ? "espada" : mejora.endsWith("_PISTOLA") ? "pistola" : "armas";
-        return switch (atributo) {
-            case "DANIO" -> "Daño de " + arma + " +5";
-            case "ALCANCE" -> "Alcance de " + arma + " +15 %";
-            case "CADENCIA" -> "Intervalo de " + arma + " -10 %";
-            case "VELOCIDAD" -> "Velocidad de movimiento +20";
-            case "ARMA" -> desbloqueaPistola(jugador) ? "Desbloquear pistola" : "Desbloquear espada";
-            case "VIDA_MAXIMA" -> "Vida máxima +20 y curación +30";
-            case "REGENERACION" -> "Regeneración +1 vida por segundo";
-            default -> mejora;
-        };
+    private String etiquetaArma(String nombre, OpcionMejora mejora) {
+        StringBuilder texto = new StringBuilder(nombre);
+        if (mejora.valor(0) > 0) {
+            texto.append("\nDaño +").append(mejora.valor(0)).append(" %");
+        }
+        if (mejora.valor(1) > 0) {
+            texto.append("\nAlcance +").append(mejora.valor(1)).append(" %");
+        }
+        if (mejora.valor(2) > 0) {
+            texto.append("\nIntervalo -").append(mejora.valor(2)).append(" %");
+        }
+        return texto.toString();
     }
 
     public void dibujarBarraJugador(Jugador jugador) {

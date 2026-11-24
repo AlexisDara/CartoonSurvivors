@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.cartoonsurvivors.game.entidades.enemigos.Enemigo;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.enemigos.Jefe;
@@ -31,7 +32,9 @@ public class GestorEnemigos {
     private final Texture texturaMuerte;
     private final Texture texturaFuego;
     private final Texture pixelBarraVida;
+    private final TextureRegion texturaBala;
     private List<CirculoFuego> circulosFuego = List.of();
+    private List<Bala> balas = List.of();
 
     private long ultimaSecuencia = -1;
 
@@ -42,6 +45,7 @@ public class GestorEnemigos {
         texturaJefe = new Texture(esMapa2 ? "enemigos/rex.png" : "enemigos/elmacho.png");
         texturaMuerte = new Texture("enemigos/Muerte.png");
         texturaFuego = crearTexturaFuego();
+        texturaBala = new TextureRegion(crearTexturaBala());
         Pixmap pixel = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixel.setColor(Color.WHITE);
         pixel.fill();
@@ -55,7 +59,7 @@ public class GestorEnemigos {
             return;
         }
 
-        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA[:VIDA_MAXIMA]|FUEGO:X:Y:RADIO:OPACIDAD|...
+        // ENEMIGOS|SECUENCIA|ID:TIPO:X:Y:VIDA[:VIDA_MAXIMA]|FUEGO:X:Y:RADIO:OPACIDAD|BALA:X:Y:ANGULO|...
         String[] partes = mensaje.split("\\|", -1);
 
         if (partes.length < 2 || !partes[0].equals("ENEMIGOS")) {
@@ -71,12 +75,27 @@ public class GestorEnemigos {
 
             List<DatosEnemigo> recibidos = new ArrayList<>();
             List<CirculoFuego> fuegoRecibido = new ArrayList<>();
+            List<Bala> balasRecibidas = new ArrayList<>();
             Set<Integer> idsRecibidos = new HashSet<>();
 
             // Validar todo el estado antes de aplicarlo.
             for (int i = 2; i < partes.length; i++) {
 
                 String[] datos = partes[i].split(":", -1);
+
+                if (datos[0].equals("BALA")) {
+                    if (datos.length != 4) {
+                        return;
+                    }
+                    float x = Float.parseFloat(datos[1]);
+                    float y = Float.parseFloat(datos[2]);
+                    float angulo = Float.parseFloat(datos[3]);
+                    if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(angulo)) {
+                        return;
+                    }
+                    balasRecibidas.add(new Bala(x, y, angulo));
+                    continue;
+                }
 
                 if (datos.length != 5 && datos.length != 6) {
                     return;
@@ -159,6 +178,7 @@ public class GestorEnemigos {
             }
 
             circulosFuego = fuegoRecibido;
+            balas = balasRecibidas;
             ultimaSecuencia = secuencia;
 
         } catch (NumberFormatException e) {
@@ -200,6 +220,28 @@ public class GestorEnemigos {
         return textura;
     }
 
+    private static Texture crearTexturaBala() {
+        Pixmap pixmap = new Pixmap(16, 8, Pixmap.Format.RGBA8888);
+        pixmap.setColor(0x4a2925ff);
+        pixmap.fillRectangle(4, 0, 8, 8);
+        pixmap.fillCircle(4, 4, 3);
+        pixmap.fillCircle(12, 4, 3);
+        pixmap.setColor(0xffb94aff);
+        pixmap.fillRectangle(4, 2, 8, 4);
+        pixmap.fillCircle(12, 4, 2);
+        pixmap.setColor(0xffead0ff);
+        pixmap.drawLine(6, 2, 12, 2);
+        Texture textura = new Texture(pixmap);
+        pixmap.dispose();
+        return textura;
+    }
+
+    public void dibujarBalas(Batch batch) {
+        for (Bala bala : balas) {
+            batch.draw(texturaBala, bala.x() - 8f, bala.y() - 4f, 8f, 4f, 16f, 8f, 1f, 1f, bala.angulo());
+        }
+    }
+
     public void dibujar(Batch batch, float delta) {
 
         for (Enemigo enemigo : enemigos.values()) {
@@ -227,10 +269,14 @@ public class GestorEnemigos {
         texturaJefe.dispose();
         texturaMuerte.dispose();
         texturaFuego.dispose();
+        texturaBala.getTexture().dispose();
         pixelBarraVida.dispose();
     }
 
     private record CirculoFuego(float x, float y, float radio, float opacidad) {
+    }
+
+    private record Bala(float x, float y, float angulo) {
     }
 
     private record DatosEnemigo(int id, String tipo, float x, float y, int vida, int vidaMaxima) {

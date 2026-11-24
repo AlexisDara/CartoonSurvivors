@@ -8,6 +8,7 @@ import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.red.ProtocoloRed;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ public class SincronizadorJugadores {
     private final Map<Jugador, Map<Integer, Long>> ultimosAtaques = new IdentityHashMap<>();
     private long ultimaSecuencia = -1;
     private boolean estadoRecibido = false;
+    private Pasivas pasivasLocales;
     private EstadisticasPartida estadisticasPartida;
     private long ultimaSecuenciaHud = -1;
 
@@ -70,9 +72,11 @@ public class SincronizadorJugadores {
             if (idJugadorLocal == 1) {
                 aplicarEstado(jugadorLocal, datos1);
                 aplicarEstado(jugadorRemoto, datos2);
+                pasivasLocales = datos1.pasivas();
             } else {
                 aplicarEstado(jugadorLocal, datos2);
                 aplicarEstado(jugadorRemoto, datos1);
+                pasivasLocales = datos2.pasivas();
             }
 
             ultimaSecuencia = secuencia;
@@ -85,10 +89,10 @@ public class SincronizadorJugadores {
 
     private DatosJugador interpretarJugador(String datos) {
 
-        // ID:X:Y:DX:DY:VIDA:ARMAS[:VIDA_MAXIMA[:SEGUNDOS_REAPARICION]]
+        // ID:X:Y:DX:DY:VIDA:ARMAS:VIDA_MAXIMA:REAPARICION:VELOCIDAD:REGEN:ARMADURA:CRITICO:LADO
         String[] partes = datos.split(":", -1);
 
-        if (partes.length < 7 || partes.length > 9) {
+        if (partes.length < 7 || (partes.length > 9 && partes.length != 14)) {
             return null;
         }
 
@@ -102,7 +106,7 @@ public class SincronizadorJugadores {
 
         float vida = Float.parseFloat(partes[5]);
         float vidaMaxima = partes.length >= 8 ? Float.parseFloat(partes[7]) : Constantes.Jugador.VIDA_INICIAL;
-        int segundosParaReaparecer = partes.length == 9 ? Integer.parseInt(partes[8]) : 0;
+        int segundosParaReaparecer = partes.length >= 9 ? Integer.parseInt(partes[8]) : 0;
 
         if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(direccionX) || !Float.isFinite(direccionY)
             || !Float.isFinite(vida) || !Float.isFinite(vidaMaxima) || vidaMaxima <= 0 || vida < 0 || vida > vidaMaxima
@@ -110,7 +114,22 @@ public class SincronizadorJugadores {
             return null;
         }
 
-        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6], vidaMaxima, segundosParaReaparecer);
+        Pasivas pasivas = null;
+        float lado = direccionX;
+        if (partes.length == 14) {
+            float velocidad = Float.parseFloat(partes[9]);
+            float regeneracion = Float.parseFloat(partes[10]);
+            int armadura = Integer.parseInt(partes[11]);
+            int critico = Integer.parseInt(partes[12]);
+            lado = Integer.parseInt(partes[13]);
+            if (!Float.isFinite(velocidad) || velocidad <= 0f || !Float.isFinite(regeneracion) || regeneracion < 0f
+                || armadura < 0 || armadura > 80 || critico < 0 || critico > 100 || Math.abs(lado) != 1f) {
+                return null;
+            }
+            pasivas = new Pasivas(vidaMaxima, velocidad, regeneracion, armadura, critico);
+        }
+        return new DatosJugador(id, x, y, direccionX, direccionY, vida, partes[6], vidaMaxima,
+            segundosParaReaparecer, lado, pasivas);
     }
 
     private void aplicarEstado(Jugador jugador, DatosJugador datos) {
@@ -125,7 +144,7 @@ public class SincronizadorJugadores {
 
         jugador.seMueve(datos.direccionX(), datos.direccionY());
 
-        jugador.calcularLadoMirada(datos.direccionX());
+        jugador.calcularLadoMirada(datos.lado());
 
         actualizarArmas(jugador, datos.armas());
     }
@@ -142,7 +161,7 @@ public class SincronizadorJugadores {
 
         for (String datosArma : armasRecibidas) {
 
-            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION[,ALCANCE[,ORIGEN_X,ORIGEN_Y]]
+            // SLOT,TIPO,NUMERO_ATAQUE,DIRECCION[,ALCANCE]
             String[] partes = datosArma.split(",", -1);
 
             if (partes.length != 4 && partes.length != 5 && partes.length != 7) {
@@ -172,17 +191,8 @@ public class SincronizadorJugadores {
 
                 if (tipo.equals("ESPADA") && arma instanceof Espada espada && partes.length <= 5) {
                     espada.reproducirAtaque(jugador.getHitbox(), direccion, alcance);
-                } else if (tipo.equals("PISTOLA") && arma instanceof Pistola pistola && partes.length == 7) {
-                    float origenX = Float.parseFloat(partes[5]);
-                    float origenY = Float.parseFloat(partes[6]);
-                    if (!Float.isFinite(origenX) || !Float.isFinite(origenY)) {
-                        continue;
-                    }
-                    pistola.reproducirAtaque(origenX, origenY, direccion, alcance);
-                } else {
-                    continue;
+                    ataquesJugador.put(slot, numeroAtaque);
                 }
-                ataquesJugador.put(slot, numeroAtaque);
 
             } catch (NumberFormatException e) {
                 Gdx.app.error("SincronizadorJugadores", "Ataque invalido: " + datosArma);
@@ -211,6 +221,10 @@ public class SincronizadorJugadores {
 
     public boolean hayEstadoRecibido() {
         return estadoRecibido;
+    }
+
+    public Pasivas getPasivasLocales() {
+        return pasivasLocales;
     }
 
     public void procesarEstadoHud(String mensaje) {
@@ -250,7 +264,9 @@ public class SincronizadorJugadores {
                 if (opcionesPorJugador.length > 2) {
                     return;
                 }
-                List<String> opciones = List.of(opcionesPorJugador[opcionesPorJugador.length == 1 ? 0 : idJugadorLocal - 1].split(",", -1));
+                List<OpcionMejora> opciones = Arrays.stream(
+                        opcionesPorJugador[opcionesPorJugador.length == 1 ? 0 : idJugadorLocal - 1].split(",", -1))
+                    .map(OpcionMejora::leer).toList();
                 String[] eleccion = partes[idJugadorLocal == 1 ? 10 : 11].split(",", -1);
                 if (milisegundos <= 0 || opciones.size() != 3 || eleccion.length != 2) {
                     return;
@@ -297,10 +313,35 @@ public class SincronizadorJugadores {
                                       int experiencia, int meta, RondaMejora rondaMejora, Resultado resultado) {
     }
 
-    public record RondaMejora(int milisegundos, List<String> opciones, int seleccion, int revision) {
+    public record RondaMejora(int milisegundos, List<OpcionMejora> opciones, int seleccion, int revision) {
+    }
+
+    public record OpcionMejora(String tipo, List<Integer> valores) {
+        private static OpcionMejora leer(String codigo) {
+            String[] campos = codigo.split(":", -1);
+            int cantidad = switch (campos[0]) {
+                case "ESPADA", "PISTOLA" -> 3;
+                case "VIDA_MAXIMA" -> 2;
+                case "VELOCIDAD", "REGENERACION", "ARMADURA", "CRITICO" -> 1;
+                case "ARMA" -> 0;
+                default -> throw new NumberFormatException("Tipo de mejora desconocido");
+            };
+            if (campos.length != cantidad + 1) {
+                throw new NumberFormatException("Cantidad de valores de mejora inválida");
+            }
+            return new OpcionMejora(campos[0], Arrays.stream(campos, 1, campos.length)
+                .map(Integer::valueOf).toList());
+        }
+
+        public int valor(int indice) {
+            return valores.get(indice);
+        }
+    }
+
+    public record Pasivas(float vidaMaxima, float velocidad, float regeneracion, int armadura, int critico) {
     }
 
     private record DatosJugador(int id, float x, float y, float direccionX, float direccionY, float vida,
-                                String armas, float vidaMaxima, int segundosParaReaparecer) {
+                                String armas, float vidaMaxima, int segundosParaReaparecer, float lado, Pasivas pasivas) {
     }
 }
