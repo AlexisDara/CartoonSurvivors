@@ -238,7 +238,7 @@ public class GestorEnemigos {
 
     public void dibujarBalas(Batch batch) {
         for (Bala bala : balas) {
-            batch.draw(texturaBala, bala.x() - 8f, bala.y() - 4f, 8f, 4f, 16f, 8f, 1f, 1f, bala.angulo());
+            batch.draw(texturaBala, bala.x() - 12f, bala.y() - 6f, 12f, 6f, 24f, 12f, 1f, 1f, bala.angulo());
         }
     }
 

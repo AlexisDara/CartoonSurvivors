@@ -46,6 +46,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Se renovó el HUD con un fondo ilustrado, un marco para el retrato y un marco para la barra azul de experiencia. Se retiró la barra de vida superior y se conservó la de cada personaje.
 * Se amplió el fondo de la pantalla de mejoras, se redujo el tamaño de la letra y se agregaron iconos de armadura y críticos. La tarjeta de vida muestra el aumento de vida máxima.
 * Cada arma tiene una sola opción de mejora que puede combinar daño, alcance y reducción del intervalo entre ataques. Cada atributo sorteado cambia entre 5 y 15 % sobre su valor actual. La pantalla muestra los valores antes de elegir.
+* Se agrandó la bala de la pistola y su intervalo base entre disparos bajó a 0,85 segundos. Las opciones de pistola tienen un 3 % de probabilidad de sumar una bala por disparo.
+* El temporizador de reaparición queda en pausa mientras está abierto el menú de mejoras.
 
 ---
 

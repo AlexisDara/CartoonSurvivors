@@ -351,6 +351,9 @@ public class HUDJuego {
 
     private String etiquetaArma(String nombre, OpcionMejora mejora) {
         StringBuilder texto = new StringBuilder(nombre);
+        if (mejora.valores().size() == 4) {
+            texto.append(" · +").append(mejora.valor(3)).append(" bala");
+        }
         if (mejora.valor(0) > 0) {
             texto.append("\nDaño +").append(mejora.valor(0)).append(" %");
         }

@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Pistola extends Arma {
     public Pistola() {
-        super(15, 1f, 0f, 0f, 0f);
+        super(15, 0.85f, 0f, 0f, 0f);
     }
 
     @Override
