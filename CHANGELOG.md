@@ -6,6 +6,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Agregado
 
+* Se preparó la distribución de escritorio con los JAR ejecutables del cliente y el servidor, lanzadores de Windows e instrucciones para jugar en red local.
+
 * Escape abre una pausa compartida de hasta 40 segundos. Ambos jugadores ven quién pausó y pueden ajustar su volumen o salir. La partida se reanuda antes del límite si ambos confirman. El menú usa un marco ilustrado amplio y botones de texto.
 
 * Se agregó Tierra como segundo mapa cooperativo. El jugador 1 elige el mapa en la sala. En Tierra, el Marciano, Woody y Rex reemplazan visualmente al minion básico, al minion violeta y a El Macho.
@@ -30,6 +32,10 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 * Al morir, el personaje deja una tumba y reaparece en el mismo lugar con la vida completa tras 30 segundos. El HUD muestra la cuenta regresiva.
 
 ### Cambiado
+
+* La sala, la pausa y las mejoras usan llamadas directas. La lectura de estados y la actualización de entidades usan bucles explícitos.
+
+* El procesador de mensajes del cliente UDP usa llamadas directas al cliente para registrar el servidor y guardar los estados de partida y del HUD.
 
 * Los enemigos de Tierra tienen el mismo tamaño visible que sus equivalentes del primer mapa. El juego de escritorio inicia en pantalla completa con la resolución del monitor.
 * Se separaron el menú de mejoras, la interfaz de la sala y la lectura de estados de enemigos de sus clases de juego.

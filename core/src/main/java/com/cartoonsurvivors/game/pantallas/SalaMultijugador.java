@@ -30,13 +30,13 @@ public class SalaMultijugador extends ScreenAdapter {
     @Override
     public void show() {
         interfaz = new InterfazSala(game, personajes[indicePersonaje], mapaSeleccionado);
-        interfaz.conectarAcciones(this::cambiarPersonaje, this::cambiarMapa, this::cambiarEstadoListo, this::volver);
+        interfaz.conectarAcciones(this);
         Gdx.input.setInputProcessor(interfaz.stage());
         actualizarBotonesSeleccion();
         clienteUDP.conectar();
     }
 
-    private void cambiarPersonaje(int direccion) {
+    void cambiarPersonaje(int direccion) {
         if (listo || cambiandoPantalla || personajes.length <= 1) {
             return;
         }
@@ -45,7 +45,7 @@ public class SalaMultijugador extends ScreenAdapter {
         Gdx.app.log("SalaMultijugador", "Personaje seleccionado: " + personajes[indicePersonaje].name());
     }
 
-    private void cambiarMapa(int direccion) {
+    void cambiarMapa(int direccion) {
         if (!puedeElegirMapa()) {
             return;
         }
@@ -63,7 +63,7 @@ public class SalaMultijugador extends ScreenAdapter {
         interfaz.habilitarSelectores(!listo && !cambiandoPantalla && personajes.length > 1, puedeElegirMapa());
     }
 
-    private void cambiarEstadoListo() {
+    void cambiarEstadoListo() {
         if (!clienteUDP.estaConectado() || interfaz.listoDeshabilitado() || cambiandoPantalla) {
             return;
         }
@@ -104,7 +104,7 @@ public class SalaMultijugador extends ScreenAdapter {
         }
     }
 
-    private void volver() {
+    void volver() {
         if (!cambiandoPantalla) {
             clienteUDP.desconectar();
             game.setScreen(new MenuPantalla(game));

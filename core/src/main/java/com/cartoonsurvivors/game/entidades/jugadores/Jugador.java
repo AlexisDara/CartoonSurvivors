@@ -127,7 +127,9 @@ public abstract class Jugador extends Entidad {
 
     }
 
-      armas.forEach(arma -> arma.dibujar(batch));
+        for (Arma arma : armas) {
+            arma.dibujar(batch);
+        }
     }
 
     @Override
@@ -144,7 +146,9 @@ public abstract class Jugador extends Entidad {
             }
         }
 
-        armas.forEach(Arma::dispose);
+        for (Arma arma : armas) {
+            arma.dispose();
+        }
     }
 
 

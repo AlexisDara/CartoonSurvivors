@@ -2,6 +2,7 @@ package com.cartoonsurvivors.game.red;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class GestorConexion {
@@ -25,23 +26,27 @@ public class GestorConexion {
             return;
         }
 
-        hiloKeepAlive = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            Thread hilo = new Thread(runnable, "ClienteUDP-KeepAlive");
-            hilo.setDaemon(true);
-            return hilo;
+        hiloKeepAlive = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable tarea) {
+                Thread hilo = new Thread(tarea, "ClienteUDP-KeepAlive");
+                hilo.setDaemon(true);
+                return hilo;
+            }
         });
 
-        hiloKeepAlive.scheduleAtFixedRate(() -> {
+        hiloKeepAlive.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if (comprobarDesconexion()) {
+                    clienteUDP.notificarServidorDesconectado();
+                    return;
+                }
 
-            if (comprobarDesconexion()) {
-                clienteUDP.notificarServidorDesconectado();
-                return;
+                if (clienteUDP.estaConectado()) {
+                    clienteUDP.enviarMensaje(ProtocoloRed.KEEP_ALIVE);
+                }
             }
-
-            if (clienteUDP.estaConectado()) {
-                clienteUDP.enviarMensaje(ProtocoloRed.KEEP_ALIVE);
-            }
-
         }, 0, 2, TimeUnit.SECONDS);
     }
 

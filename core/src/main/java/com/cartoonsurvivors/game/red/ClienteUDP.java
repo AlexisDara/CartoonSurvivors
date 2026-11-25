@@ -34,7 +34,8 @@ public class ClienteUDP {
 
     private final GestorConexion gestorConexion = new GestorConexion(this);
 
-    private final ProcesadorMensajes procesadorMensajes = new ProcesadorMensajes(estadoConexion, gestorConexion, gestorEnemigos, this::registrarServidor, () -> direccionServidor, this::guardarEstado, this::guardarEstadoHud);
+    private final ProcesadorMensajes procesadorMensajes =
+        new ProcesadorMensajes(this, estadoConexion, gestorConexion, gestorEnemigos);
 
     public synchronized void conectar() {
 
@@ -65,7 +66,12 @@ public class ClienteUDP {
             socket = nuevoSocket;
             ejecutando = true;
 
-            hiloReceptor = new Thread(() -> escucharMensajes(nuevoSocket), "ClienteUDP-Receptor");
+            hiloReceptor = new Thread("ClienteUDP-Receptor") {
+                @Override
+                public void run() {
+                    escucharMensajes(nuevoSocket);
+                }
+            };
 
             hiloReceptor.setDaemon(true);
             hiloReceptor.start();
@@ -160,7 +166,7 @@ public class ClienteUDP {
         }
     }
 
-    private synchronized void registrarServidor(InetAddress ipServidor) {
+    synchronized void registrarServidor(InetAddress ipServidor) {
 
         if (!ejecutando || direccionServidor != null || estaServidorLleno()) {
             return;
@@ -234,11 +240,11 @@ public class ClienteUDP {
         Gdx.app.log("ClienteUDP", "Seleccion enviada: " + mensaje);
     }
 
-    private synchronized void guardarEstado(String mensaje) {
+    synchronized void guardarEstado(String mensaje) {
         ultimoEstadoRecibido = mensaje;
     }
 
-    private synchronized void guardarEstadoHud(String mensaje) {
+    synchronized void guardarEstadoHud(String mensaje) {
         ultimoEstadoHud = mensaje;
     }
 
@@ -372,6 +378,10 @@ public class ClienteUDP {
 
     public boolean estaServidorDesconectado() {
         return gestorConexion.estaServidorDesconectado();
+    }
+
+    InetAddress getDireccionServidor() {
+        return direccionServidor;
     }
 
     public String getIpServidor() {

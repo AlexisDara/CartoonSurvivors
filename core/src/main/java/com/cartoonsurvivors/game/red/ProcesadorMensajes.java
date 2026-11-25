@@ -5,8 +5,6 @@ import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 import java.net.InetAddress;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ProcesadorMensajes {
 
@@ -14,20 +12,15 @@ public class ProcesadorMensajes {
     private final GestorConexion gestorConexion;
     private final GestorEnemigos gestorEnemigos;
 
-    private final Consumer<InetAddress> registrarServidor;
-    private final Supplier<InetAddress> obtenerServidor;
-    private final Consumer<String> guardarEstado;
-    private final Consumer<String> guardarEstadoHud;
+    private final ClienteUDP cliente;
 
-    public ProcesadorMensajes(EstadoConexion estadoConexion, GestorConexion gestorConexion, GestorEnemigos gestorEnemigos, Consumer<InetAddress> registrarServidor, Supplier<InetAddress> obtenerServidor, Consumer<String> guardarEstado, Consumer<String> guardarEstadoHud) {
+    public ProcesadorMensajes(ClienteUDP cliente, EstadoConexion estadoConexion, GestorConexion gestorConexion,
+                              GestorEnemigos gestorEnemigos) {
 
+        this.cliente = cliente;
         this.estadoConexion = estadoConexion;
         this.gestorConexion = gestorConexion;
         this.gestorEnemigos = gestorEnemigos;
-        this.registrarServidor = registrarServidor;
-        this.obtenerServidor = obtenerServidor;
-        this.guardarEstado = guardarEstado;
-        this.guardarEstadoHud = guardarEstadoHud;
     }
 
     public void procesar(String mensaje, InetAddress ipOrigen) {
@@ -38,14 +31,14 @@ public class ProcesadorMensajes {
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_ENCONTRADO)) {
             if (!estadoConexion.estaServidorLleno()) {
-                registrarServidor.accept(ipOrigen);
+                cliente.registrarServidor(ipOrigen);
             }
             return;
         }
 
         if (mensaje.equals(ProtocoloRed.SERVIDOR_LLENO) || mensaje.equals("LLENO")) {
 
-            InetAddress servidor = obtenerServidor.get();
+            InetAddress servidor = cliente.getDireccionServidor();
 
             if (servidor != null && !servidor.equals(ipOrigen)) {
                 return;
@@ -56,19 +49,19 @@ public class ProcesadorMensajes {
             return;
         }
 
-        InetAddress servidor = obtenerServidor.get();
+        InetAddress servidor = cliente.getDireccionServidor();
 
         if (servidor == null || !servidor.equals(ipOrigen)) {
             return;
         }
 
         if (mensaje.startsWith(ProtocoloRed.ESTADO + "|")) {
-            guardarEstado.accept(mensaje);
+            cliente.guardarEstado(mensaje);
             return;
         }
 
         if (mensaje.startsWith(ProtocoloRed.HUD + "|")) {
-            guardarEstadoHud.accept(mensaje);
+            cliente.guardarEstadoHud(mensaje);
             return;
         }
 

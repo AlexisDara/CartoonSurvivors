@@ -19,7 +19,6 @@ import com.cartoonsurvivors.game.CartoonSurvivors;
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
 import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
-import java.util.function.IntConsumer;
 
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ALTO_INTERFAZ;
 import static com.cartoonsurvivors.game.utilidades.Constantes.Mundo.ANCHO_INTERFAZ;
@@ -113,21 +112,57 @@ final class InterfazSala implements Disposable {
         return estilo;
     }
 
-    void conectarAcciones(IntConsumer personaje, IntConsumer mapa, Runnable listo, Runnable volver) {
-        alPulsar(personajeAnterior, () -> personaje.accept(-1));
-        alPulsar(personajeSiguiente, () -> personaje.accept(1));
-        alPulsar(mapaAnterior, () -> mapa.accept(-1));
-        alPulsar(mapaSiguiente, () -> mapa.accept(1));
-        alPulsar(botonListo, listo);
-        alPulsar(botonVolver, volver);
-    }
-
-    private static void alPulsar(TextButton boton, Runnable accion) {
-        boton.addListener(new ClickListener() {
+    void conectarAcciones(SalaMultijugador sala) {
+        personajeAnterior.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (!boton.isDisabled()) {
-                    accion.run();
+                if (!personajeAnterior.isDisabled()) {
+                    sala.cambiarPersonaje(-1);
+                }
+            }
+        });
+
+        personajeSiguiente.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!personajeSiguiente.isDisabled()) {
+                    sala.cambiarPersonaje(1);
+                }
+            }
+        });
+
+        mapaAnterior.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!mapaAnterior.isDisabled()) {
+                    sala.cambiarMapa(-1);
+                }
+            }
+        });
+
+        mapaSiguiente.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!mapaSiguiente.isDisabled()) {
+                    sala.cambiarMapa(1);
+                }
+            }
+        });
+
+        botonListo.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!botonListo.isDisabled()) {
+                    sala.cambiarEstadoListo();
+                }
+            }
+        });
+
+        botonVolver.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!botonVolver.isDisabled()) {
+                    sala.volver();
                 }
             }
         });

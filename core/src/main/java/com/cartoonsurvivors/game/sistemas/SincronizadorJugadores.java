@@ -8,6 +8,7 @@ import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.red.ProtocoloRed;
 import com.cartoonsurvivors.game.utilidades.Constantes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -155,7 +156,11 @@ public class SincronizadorJugadores {
             return;
         }
 
-        Map<Integer, Long> ataquesJugador = ultimosAtaques.computeIfAbsent(jugador, j -> new HashMap<>());
+        Map<Integer, Long> ataquesJugador = ultimosAtaques.get(jugador);
+        if (ataquesJugador == null) {
+            ataquesJugador = new HashMap<>();
+            ultimosAtaques.put(jugador, ataquesJugador);
+        }
 
         String[] armasRecibidas = datosArmas.split(";");
 
@@ -273,9 +278,12 @@ public class SincronizadorJugadores {
                 if (opcionesPorJugador.length > 2) {
                     return;
                 }
-                List<OpcionMejora> opciones = Arrays.stream(
-                        opcionesPorJugador[opcionesPorJugador.length == 1 ? 0 : idJugadorLocal - 1].split(",", -1))
-                    .map(OpcionMejora::leer).toList();
+                int indiceOpciones = opcionesPorJugador.length == 1 ? 0 : idJugadorLocal - 1;
+                ArrayList<OpcionMejora> opcionesLeidas = new ArrayList<>();
+                for (String opcion : opcionesPorJugador[indiceOpciones].split(",", -1)) {
+                    opcionesLeidas.add(OpcionMejora.leer(opcion));
+                }
+                List<OpcionMejora> opciones = List.copyOf(opcionesLeidas);
                 String[] eleccion = partes[idJugadorLocal == 1 ? 10 : 11].split(",", -1);
                 if (milisegundos <= 0 || opciones.size() != 3 || eleccion.length != 2) {
                     return;
@@ -372,8 +380,11 @@ public class SincronizadorJugadores {
             if (campos.length != cantidad + 1) {
                 throw new NumberFormatException("Cantidad de valores de mejora inválida");
             }
-            return new OpcionMejora(campos[0], Arrays.stream(campos, 1, campos.length)
-                .map(Integer::valueOf).toList());
+            ArrayList<Integer> valores = new ArrayList<>();
+            for (int i = 1; i < campos.length; i++) {
+                valores.add(Integer.parseInt(campos[i]));
+            }
+            return new OpcionMejora(campos[0], List.copyOf(valores));
         }
 
         public int valor(int indice) {

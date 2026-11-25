@@ -13,6 +13,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 import com.cartoonsurvivors.game.CartoonSurvivors;
+import com.cartoonsurvivors.game.armas.Arma;
 import com.cartoonsurvivors.game.controles.ControladorEntrada;
 import com.cartoonsurvivors.game.entidades.jugadores.Jugador;
 import com.cartoonsurvivors.game.entidades.jugadores.TipoPersonaje;
@@ -79,9 +80,15 @@ public class JuegoPantalla extends ScreenAdapter {
 
         hudJuego = new HUDJuego(batch, game.getFont(), hudViewport);
         menuMejoras = new MenuMejoras(hudJuego, batch, game.getFont(), hudViewport);
-        pantallaPausa = new PantallaPausa(game, hudViewport,
-            () -> controlPausa.solicitar(sincronizadorJugadores.getEstadisticasPartida(), true),
-            () -> salidaSolicitada = true);
+        pantallaPausa = new PantallaPausa(game, hudViewport, this);
+    }
+
+    void solicitarReanudacion() {
+        controlPausa.solicitar(sincronizadorJugadores.getEstadisticasPartida(), true);
+    }
+
+    void solicitarSalida() {
+        salidaSolicitada = true;
     }
 
     @Override
@@ -149,8 +156,12 @@ public class JuegoPantalla extends ScreenAdapter {
         boolean enPausa = pausaManual || enMejora;
         if (!enPausa) {
             enviarMovimiento(delta);
-            jugadorLocal.getArmas().forEach(arma -> arma.actualizar(delta));
-            jugadorRemoto.getArmas().forEach(arma -> arma.actualizar(delta));
+            for (Arma arma : jugadorLocal.getArmas()) {
+                arma.actualizar(delta);
+            }
+            for (Arma arma : jugadorRemoto.getArmas()) {
+                arma.actualizar(delta);
+            }
         }
 
         camaraSeguirJugador();

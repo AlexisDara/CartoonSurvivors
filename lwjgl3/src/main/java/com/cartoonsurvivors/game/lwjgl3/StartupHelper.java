@@ -55,11 +55,14 @@ public class StartupHelper {
 	 * @return whether NVIDIA drivers are present on Linux.
 	 */
 	public static boolean isLinuxNvidia() {
-		String[] drivers = new File("/proc/driver").list(
-			(dir, path) -> path.toUpperCase(Locale.ROOT).contains("NVIDIA")
-		);
+		String[] drivers = new File("/proc/driver").list();
 		if (drivers == null) return false;
-		return drivers.length > 0;
+		for (String driver : drivers) {
+			if (driver.toUpperCase(Locale.ROOT).contains("NVIDIA")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

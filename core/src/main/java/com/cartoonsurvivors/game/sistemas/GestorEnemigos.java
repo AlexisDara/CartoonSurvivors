@@ -63,7 +63,11 @@ public class GestorEnemigos {
         }
 
         for (DatosEnemigo datos : estado.enemigos()) {
-            Enemigo enemigo = enemigos.computeIfAbsent(datos.id(), id -> crearEnemigo(datos));
+            Enemigo enemigo = enemigos.get(datos.id());
+            if (enemigo == null) {
+                enemigo = crearEnemigo(datos);
+                enemigos.put(datos.id(), enemigo);
+            }
             enemigo.setPosicion(datos.x(), datos.y());
             enemigo.setVida(datos.vida());
             if (enemigo instanceof Jefe jefe) {

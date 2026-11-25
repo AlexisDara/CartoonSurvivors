@@ -331,7 +331,9 @@ public class HUDJuego {
         marcoXp.dispose();
         marcoElegido.dispose();
         marcoNoElegido.dispose();
-        iconosMejora.values().forEach(Texture::dispose);
+        for (Texture icono : iconosMejora.values()) {
+            icono.dispose();
+        }
         if (iconoEspada != null) {
             iconoEspada.dispose();
         }

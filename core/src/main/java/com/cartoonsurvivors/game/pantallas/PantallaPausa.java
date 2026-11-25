@@ -28,7 +28,7 @@ public class PantallaPausa {
     private final Label volumen;
     private final TextButton continuar;
 
-    PantallaPausa(CartoonSurvivors game, Viewport viewport, Runnable reanudar, Runnable salir) {
+    PantallaPausa(CartoonSurvivors game, Viewport viewport, JuegoPantalla juego) {
         stage = new Stage(viewport, game.getBatch());
         audio = game.getAudioManager();
 
@@ -63,7 +63,15 @@ public class PantallaPausa {
         tiempo = etiqueta(etiquetas, 0.55f);
         estado = etiqueta(etiquetas, 0.5f);
         volumen = etiqueta(etiquetas, 0.55f);
-        continuar = boton("Reanudar", botones, reanudar);
+        continuar = boton("Reanudar", botones);
+        continuar.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!continuar.isDisabled()) {
+                    juego.solicitarReanudacion();
+                }
+            }
+        });
 
         Label titulo = etiqueta(etiquetas, 0.85f);
         titulo.setText("Partida en pausa");
@@ -74,11 +82,20 @@ public class PantallaPausa {
         menu.add(continuar).width(240f).height(45f).padBottom(12f).row();
 
         Table ajuste = new Table();
-        ajuste.add(boton("-", botones, () -> ajustarVolumen(-10))).size(42f);
+        ajuste.add(botonVolumen("-", botones, -10)).size(42f);
         ajuste.add(volumen).width(200f);
-        ajuste.add(boton("+", botones, () -> ajustarVolumen(10))).size(42f);
+        ajuste.add(botonVolumen("+", botones, 10)).size(42f);
         menu.add(ajuste).padBottom(12f).row();
-        menu.add(boton("Salir", botones, salir)).width(240f).height(45f);
+        TextButton salir = boton("Salir", botones);
+        salir.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!salir.isDisabled()) {
+                    juego.solicitarSalida();
+                }
+            }
+        });
+        menu.add(salir).width(240f).height(45f);
         actualizarVolumen();
     }
 
@@ -89,14 +106,19 @@ public class PantallaPausa {
         return etiqueta;
     }
 
-    private static TextButton boton(String texto, TextButton.TextButtonStyle estilo, Runnable accion) {
+    private static TextButton boton(String texto, TextButton.TextButtonStyle estilo) {
         TextButton boton = new TextButton(texto, estilo);
         boton.getLabel().setFontScale(0.65f);
+        return boton;
+    }
+
+    private TextButton botonVolumen(String texto, TextButton.TextButtonStyle estilo, int cambio) {
+        TextButton boton = boton(texto, estilo);
         boton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (!boton.isDisabled()) {
-                    accion.run();
+                    ajustarVolumen(cambio);
                 }
             }
         });
