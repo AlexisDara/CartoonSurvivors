@@ -1,5 +1,7 @@
 package com.cartoonsurvivors.game.pantallas;
 
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.Pausa;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -98,9 +100,17 @@ public class JuegoPantalla extends ScreenAdapter {
         game.getAudioManager().detenerMusicaMenu();
         game.getAudioManager().reproducirMusicaJuego();
 
-        jugadorLocal.setPosicion(idJugadorLocal == 1 ? 6340 : 6460, 6400);
-
-        jugadorRemoto.setPosicion(idJugadorLocal == 1 ? 6460 : 6340, 6400);
+        int posicionLocal;
+        int posicionRemota;
+        if (idJugadorLocal == 1) {
+            posicionLocal = 6340;
+            posicionRemota = 6460;
+        } else {
+            posicionLocal = 6460;
+            posicionRemota = 6340;
+        }
+        jugadorLocal.setPosicion(posicionLocal, 6400);
+        jugadorRemoto.setPosicion(posicionRemota, 6400);
 
         camaraSeguirJugador();
     }
@@ -119,13 +129,13 @@ public class JuegoPantalla extends ScreenAdapter {
         boolean escape = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE);
         sincronizadorJugadores.procesarEstadoHud(clienteUDP.consumirEstadoHud());
         EstadisticasPartida estadisticas = sincronizadorJugadores.getEstadisticasPartida();
-        if (estadisticas != null && estadisticas.resultado().esFinal()) {
+        if (estadisticas != null && estadisticas.getResultado().esFinal()) {
             if (escape) {
                 volverAlMenu();
                 return;
             }
             activarEntradaPausa(false);
-            hudJuego.dibujarResultado(estadisticas.resultado(), estadisticas.kills());
+            hudJuego.dibujarResultado(estadisticas.getResultado(), estadisticas.getKills());
             return;
         }
 
@@ -141,9 +151,14 @@ public class JuegoPantalla extends ScreenAdapter {
         }
 
         actualizarEstados();
-        var pausa = estadisticas == null ? null : estadisticas.pausa();
+        Pausa pausa;
+        if (estadisticas == null) {
+            pausa = null;
+        } else {
+            pausa = estadisticas.getPausa();
+        }
         boolean pausaManual = pausa != null && pausa.activa();
-        boolean enMejora = estadisticas != null && estadisticas.rondaMejora() != null;
+        boolean enMejora = estadisticas != null && estadisticas.getRondaMejora() != null;
         if (escape && !pausaManual) {
             controlPausa.solicitar(estadisticas, false);
         }
@@ -165,7 +180,13 @@ public class JuegoPantalla extends ScreenAdapter {
         }
 
         camaraSeguirJugador();
-        dibujarMundo(enPausa ? 0f : delta);
+        float deltaMundo;
+        if (enPausa) {
+            deltaMundo = 0f;
+        } else {
+            deltaMundo = delta;
+        }
+        dibujarMundo(deltaMundo);
 
         hudJuego.dibujarMultijugador(jugadorLocal, jugadorRemoto, sincronizadorJugadores.hayEstadoRecibido(),
             estadisticas, sincronizadorJugadores.getPasivasLocales());
@@ -181,7 +202,7 @@ public class JuegoPantalla extends ScreenAdapter {
     }
 
     private void activarEntradaPausa(boolean activa) {
-        var stage = pantallaPausa.getStage();
+        Stage stage = pantallaPausa.getStage();
         if (activa && Gdx.input.getInputProcessor() != stage) {
             Gdx.input.setInputProcessor(stage);
         } else if (!activa && Gdx.input.getInputProcessor() == stage) {

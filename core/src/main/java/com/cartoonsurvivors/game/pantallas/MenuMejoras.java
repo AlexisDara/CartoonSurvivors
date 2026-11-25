@@ -1,5 +1,6 @@
 package com.cartoonsurvivors.game.pantallas;
 
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.RondaMejora;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -45,8 +46,8 @@ final class MenuMejoras implements Disposable {
 
         float centro = hudViewport.getWorldWidth() / 2f;
         float arriba = arribaMenuMejoras();
-        var ronda = estadisticas.rondaMejora();
-        int segundos = (ronda.milisegundos() + 999) / 1000;
+        RondaMejora ronda = estadisticas.getRondaMejora();
+        int segundos = (ronda.getMilisegundos() + 999) / 1000;
 
         hud.rectangulo(CAPA_PAUSA, 0, 0, hudViewport.getWorldWidth(), hudViewport.getWorldHeight());
         float centroY = hudViewport.getWorldHeight() / 2f;
@@ -55,28 +56,40 @@ final class MenuMejoras implements Disposable {
         float escalaX = font.getScaleX();
         float escalaY = font.getScaleY();
         font.getData().setScale(escalaX * 0.72f, escalaY * 0.72f);
-        hud.textoCentrado("Nivel " + estadisticas.nivel(), centro, arriba - 38, TEXTO_HUD);
+        hud.textoCentrado("Nivel " + estadisticas.getNivel(), centro, arriba - 38, TEXTO_HUD);
         font.getData().setScale(escalaX * 0.39f, escalaY * 0.39f);
         hud.textoCentrado("Tiempo restante " + segundos + " s", centro, arriba - 70, TEXTO_HUD);
-        int cantidad = ronda.opciones().size();
+        int cantidad = ronda.getOpciones().size();
         float y = baseOpciones();
         for (int i = 0; i < cantidad; i++) {
             float x = izquierdaOpcion(i, cantidad);
-            OpcionMejora mejora = ronda.opciones().get(i);
+            OpcionMejora mejora = ronda.getOpciones().get(i);
             hud.dibujarMarcoOpcion(i == seleccion, x, y, TAMANIO_OPCION);
             float centroOpcion = x + TAMANIO_OPCION / 2f;
             hud.textoCentrado(Integer.toString(i + 1), centroOpcion, y + 181, TEXTO_HUD);
-            Texture icono = iconoMejora(mejora.tipo(), jugador);
+            Texture icono = iconoMejora(mejora.getTipo(), jugador);
             if (icono != null) {
                 hud.dibujarIcono(icono, centroOpcion, y + 133, 64);
             }
             font.setColor(TEXTO_HUD);
+            int alturaTexto;
+            if (icono == null) {
+                alturaTexto = 133;
+            } else {
+                alturaTexto = 97;
+            }
             font.draw(batch, etiquetaMejora(mejora, jugador),
-                centroOpcion - 76, y + (icono == null ? 133 : 97), 152, Align.center, true);
+                centroOpcion - 76, y + alturaTexto, 152, Align.center, true);
         }
 
-        String indicacion = seleccion < 0 ? "Elegí con clic o con 1–3"
-            : confirmando ? "Confirmando tu elección…" : "Esperando a tu compañero";
+        String indicacion;
+        if (seleccion < 0) {
+            indicacion = "Elegí con clic o con 1–3";
+        } else if (confirmando) {
+            indicacion = "Confirmando tu elección…";
+        } else {
+            indicacion = "Esperando a tu compañero";
+        }
         hud.textoCentrado(indicacion, centro, arriba - 307, TEXTO_HUD);
         font.getData().setScale(escalaX * 0.55f, escalaY * 0.55f);
         hud.dibujarReaparicion(jugador, jugadorRemoto, centro, hudViewport.getWorldHeight() - 20);
@@ -114,36 +127,60 @@ final class MenuMejoras implements Disposable {
     }
 
     private Texture iconoMejora(String mejora, Jugador jugador) {
-        return switch (mejora) {
-            case "ARMA" -> desbloqueaPistola(jugador) ? pistolaMejora : espadaMejora;
-            case "ESPADA" -> espadaMejora;
-            case "PISTOLA" -> pistolaMejora;
-            default -> hud.iconoPasiva(mejora);
-        };
+        switch (mejora) {
+            case "ARMA":
+                if (desbloqueaPistola(jugador)) {
+                    return pistolaMejora;
+                }
+                return espadaMejora;
+            case "ESPADA":
+                return espadaMejora;
+            case "PISTOLA":
+                return pistolaMejora;
+            default:
+                return hud.iconoPasiva(mejora);
+        }
     }
 
     private boolean desbloqueaPistola(Jugador jugador) {
-        return jugador.getArmas().getFirst() instanceof Espada;
+        return jugador.getArmas().get(0) instanceof Espada;
     }
 
     private String etiquetaMejora(OpcionMejora mejora, Jugador jugador) {
-        return switch (mejora.tipo()) {
-            case "ESPADA" -> etiquetaArma("Espada", mejora);
-            case "PISTOLA" -> etiquetaArma("Pistola", mejora);
-            case "VELOCIDAD" -> "Velocidad de movimiento\n+" + mejora.valor(0) + " %";
-            case "ARMA" -> desbloqueaPistola(jugador) ? "Desbloquear pistola" : "Desbloquear espada";
-            case "VIDA_MAXIMA" -> "+" + mejora.valor(0) + " de vida máxima";
-            case "REGENERACION" -> "Regeneración\n+" + mejora.valor(0) + " vida por segundo";
-            case "ARMADURA" -> "Armadura\n+" + mejora.valor(0) + " puntos de reducción de daño";
-            case "CRITICO" -> "Críticos\n+" + mejora.valor(0) + " puntos de probabilidad\nDaño doble";
-            default -> mejora.tipo();
-        };
+        switch (mejora.getTipo()) {
+            case "ESPADA":
+                return etiquetaArma("Espada", mejora);
+            case "PISTOLA":
+                return etiquetaArma("Pistola", mejora);
+            case "VELOCIDAD":
+                return "Velocidad de movimiento\n+" + mejora.valor(0) + " %";
+            case "ARMA":
+                if (desbloqueaPistola(jugador)) {
+                    return "Desbloquear pistola";
+                }
+                return "Desbloquear espada";
+            case "VIDA_MAXIMA":
+                return "+" + mejora.valor(0) + " de vida máxima";
+            case "REGENERACION":
+                return "Regeneración\n+" + mejora.valor(0) + " vida por segundo";
+            case "ARMADURA":
+                return "Armadura\n+" + mejora.valor(0) + " puntos de reducción de daño";
+            case "CRITICO":
+                return "Críticos\n+" + mejora.valor(0) + " puntos de probabilidad\nDaño doble";
+            default:
+                return mejora.getTipo();
+        }
     }
 
     private String etiquetaArma(String nombre, OpcionMejora mejora) {
         StringBuilder texto = new StringBuilder(nombre);
-        boolean conRebotes = mejora.valores().size() == 5;
-        int balaExtra = conRebotes ? mejora.valor(4) : mejora.valores().size() == 4 ? mejora.valor(3) : 0;
+        boolean conRebotes = mejora.getValores().size() == 5;
+        int balaExtra = 0;
+        if (conRebotes) {
+            balaExtra = mejora.valor(4);
+        } else if (mejora.getValores().size() == 4) {
+            balaExtra = mejora.valor(3);
+        }
         if (balaExtra > 0) {
             texto.append(" · +").append(balaExtra).append(" bala");
         }

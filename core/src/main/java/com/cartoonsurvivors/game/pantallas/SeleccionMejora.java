@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.cartoonsurvivors.game.red.ClienteUDP;
 import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.EstadisticasPartida;
+import com.cartoonsurvivors.game.sistemas.SincronizadorJugadores.RondaMejora;
 
 final class SeleccionMejora {
     private static final float INTERVALO_REINTENTO = 0.15f;
@@ -16,17 +17,22 @@ final class SeleccionMejora {
     private float tiempoReintento;
 
     void actualizar(float delta, EstadisticasPartida estadisticas, ClienteUDP cliente, MenuMejoras menu) {
-        var ronda = estadisticas == null ? null : estadisticas.rondaMejora();
+        RondaMejora ronda;
+        if (estadisticas == null) {
+            ronda = null;
+        } else {
+            ronda = estadisticas.getRondaMejora();
+        }
         if (ronda == null) {
             partidaId = null;
             return;
         }
 
-        if (!estadisticas.partidaId().equals(partidaId) || nivel != estadisticas.nivel()) {
-            partidaId = estadisticas.partidaId();
-            nivel = estadisticas.nivel();
-            seleccion = ronda.seleccion();
-            revision = ronda.revision();
+        if (!estadisticas.getPartidaId().equals(partidaId) || nivel != estadisticas.getNivel()) {
+            partidaId = estadisticas.getPartidaId();
+            nivel = estadisticas.getNivel();
+            seleccion = ronda.getSeleccion();
+            revision = ronda.getRevision();
         }
 
         int opcion = -1;
@@ -37,9 +43,9 @@ final class SeleccionMejora {
             }
         }
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            opcion = menu.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY(), ronda.opciones().size());
+            opcion = menu.obtenerOpcionMejora(Gdx.input.getX(), Gdx.input.getY(), ronda.getOpciones().size());
         }
-        if (opcion >= 0 && opcion < ronda.opciones().size() && opcion != seleccion) {
+        if (opcion >= 0 && opcion < ronda.getOpciones().size() && opcion != seleccion) {
             seleccion = opcion;
             revision++;
             tiempoReintento = 0f;
@@ -57,6 +63,6 @@ final class SeleccionMejora {
     }
 
     boolean esperandoConfirmacion(EstadisticasPartida estadisticas) {
-        return revision > estadisticas.rondaMejora().revision();
+        return revision > estadisticas.getRondaMejora().getRevision();
     }
 }

@@ -10,13 +10,13 @@ import com.cartoonsurvivors.game.entidades.enemigos.Enemigo;
 import com.cartoonsurvivors.game.entidades.enemigos.EnemigoBasico;
 import com.cartoonsurvivors.game.entidades.enemigos.Jefe;
 import com.cartoonsurvivors.game.entidades.enemigos.Muerte;
-import com.cartoonsurvivors.game.utilidades.TipoMapa;
-
 import com.cartoonsurvivors.game.sistemas.EstadoEnemigos.Bala;
 import com.cartoonsurvivors.game.sistemas.EstadoEnemigos.CirculoFuego;
 import com.cartoonsurvivors.game.sistemas.EstadoEnemigos.DatosEnemigo;
+import com.cartoonsurvivors.game.utilidades.TipoMapa;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -62,40 +62,45 @@ public class GestorEnemigos {
             return;
         }
 
-        for (DatosEnemigo datos : estado.enemigos()) {
-            Enemigo enemigo = enemigos.get(datos.id());
+        for (DatosEnemigo datos : estado.getEnemigos()) {
+            Enemigo enemigo = enemigos.get(datos.getId());
             if (enemigo == null) {
                 enemigo = crearEnemigo(datos);
-                enemigos.put(datos.id(), enemigo);
+                enemigos.put(datos.getId(), enemigo);
             }
-            enemigo.setPosicion(datos.x(), datos.y());
-            enemigo.setVida(datos.vida());
-            if (enemigo instanceof Jefe jefe) {
-                jefe.setVidaMaxima(datos.vidaMaxima());
+            enemigo.setPosicion(datos.getX(), datos.getY());
+            enemigo.setVida(datos.getVida());
+            if (enemigo instanceof Jefe) {
+                Jefe jefe = (Jefe) enemigo;
+                jefe.setVidaMaxima(datos.getVidaMaxima());
             }
         }
 
-        var iterador = enemigos.entrySet().iterator();
+        Iterator<Map.Entry<Integer, Enemigo>> iterador = enemigos.entrySet().iterator();
         while (iterador.hasNext()) {
-            var entrada = iterador.next();
-            if (!estado.ids().contains(entrada.getKey())) {
+            Map.Entry<Integer, Enemigo> entrada = iterador.next();
+            if (!estado.getIds().contains(entrada.getKey())) {
                 entrada.getValue().dispose();
                 iterador.remove();
             }
         }
 
-        circulosFuego = estado.fuego();
-        balas = estado.balas();
-        ultimaSecuencia = estado.secuencia();
+        circulosFuego = estado.getFuego();
+        balas = estado.getBalas();
+        ultimaSecuencia = estado.getSecuencia();
     }
 
     private Enemigo crearEnemigo(DatosEnemigo datos) {
-        return switch (datos.tipo()) {
-            case "JEFE" -> new Jefe(datos.vida(), datos.x(), datos.y(), aspectoJefe);
-            case "MUERTE" -> new Muerte(datos.vida(), datos.x(), datos.y(), texturaMuerte);
-            case "VIOLETA" -> new EnemigoBasico(datos.vida(), 225f, datos.x(), datos.y(), aspectoVioleta);
-            default -> new EnemigoBasico(datos.vida(), 80f, datos.x(), datos.y(), aspectoBasico);
-        };
+        switch (datos.getTipo()) {
+            case "JEFE":
+                return new Jefe(datos.getVida(), datos.getX(), datos.getY(), aspectoJefe);
+            case "MUERTE":
+                return new Muerte(datos.getVida(), datos.getX(), datos.getY(), texturaMuerte);
+            case "VIOLETA":
+                return new EnemigoBasico(datos.getVida(), 225f, datos.getX(), datos.getY(), aspectoVioleta);
+            default:
+                return new EnemigoBasico(datos.getVida(), 80f, datos.getX(), datos.getY(), aspectoBasico);
+        }
     }
 
     public void dibujarFuego(Batch batch) {
@@ -104,9 +109,9 @@ public class GestorEnemigos {
         }
         float colorAnterior = batch.getPackedColor();
         for (CirculoFuego circulo : circulosFuego) {
-            float diametro = circulo.radio() * 2f;
-            batch.setColor(1f, 1f, 1f, circulo.opacidad());
-            batch.draw(texturaFuego, circulo.x() - circulo.radio(), circulo.y() - circulo.radio(),
+            float diametro = circulo.getRadio() * 2f;
+            batch.setColor(1f, 1f, 1f, circulo.getOpacidad());
+            batch.draw(texturaFuego, circulo.getX() - circulo.getRadio(), circulo.getY() - circulo.getRadio(),
                 diametro, diametro);
         }
         batch.setPackedColor(colorAnterior);
@@ -150,7 +155,7 @@ public class GestorEnemigos {
 
     public void dibujarBalas(Batch batch) {
         for (Bala bala : balas) {
-            batch.draw(texturaBala, bala.x() - 12f, bala.y() - 6f, 12f, 6f, 24f, 12f, 1f, 1f, bala.angulo());
+            batch.draw(texturaBala, bala.getX() - 12f, bala.getY() - 6f, 12f, 6f, 24f, 12f, 1f, 1f, bala.getAngulo());
         }
     }
 
@@ -163,7 +168,8 @@ public class GestorEnemigos {
             }
         }
         for (Enemigo enemigo : enemigos.values()) {
-            if (enemigo instanceof Jefe jefe && jefe.estaVivo()) {
+            if (enemigo instanceof Jefe && enemigo.estaVivo()) {
+                Jefe jefe = (Jefe) enemigo;
                 jefe.dibujarBarraVida(batch, pixelBarraVida);
             }
         }

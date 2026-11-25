@@ -222,8 +222,14 @@ public class ClienteUDP {
 
     public void enviarPausa(String partidaId, int revision, boolean reanudar) {
         if (estaConectado() && estaPartidaIniciada()) {
+            String accion;
+            if (reanudar) {
+                accion = "REANUDAR";
+            } else {
+                accion = "ABRIR";
+            }
             enviarMensaje(ProtocoloRed.PAUSA + "|" + partidaId + "|" + revision
-                + "|" + (reanudar ? "REANUDAR" : "ABRIR"));
+                + "|" + accion);
         }
     }
 
@@ -388,6 +394,9 @@ public class ClienteUDP {
 
         InetAddress servidor = direccionServidor;
 
-        return servidor == null ? "" : servidor.getHostAddress();
+        if (servidor == null) {
+            return "";
+        }
+        return servidor.getHostAddress();
     }
 }

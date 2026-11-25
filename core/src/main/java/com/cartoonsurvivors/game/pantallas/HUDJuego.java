@@ -1,6 +1,7 @@
 
 package com.cartoonsurvivors.game.pantallas;
 
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -97,9 +98,13 @@ public class HUDJuego {
 
         dibujarContadorBajas(estadisticas, arriba);
 
-        int segundos = estadisticas == null ? 0 : estadisticas.segundos();
-        String tiempo = estadisticas == null ? "--:--"
-            : String.format(Locale.ROOT, "%02d:%02d", segundos / 60, segundos % 60);
+        String tiempo;
+        if (estadisticas == null) {
+            tiempo = "--:--";
+        } else {
+            int segundos = estadisticas.getSegundos();
+            tiempo = String.format(Locale.ROOT, "%02d:%02d", segundos / 60, segundos % 60);
+        }
         batch.draw(fondoHud, centro - 92, arriba - 58, 184, 58);
         textoCentrado(tiempo, centro, arriba - 13, TEXTO_HUD);
 
@@ -108,16 +113,32 @@ public class HUDJuego {
         batch.draw(marcoElegido, derecha - 86, arriba - 86, 78, 78);
         dibujarIcono(jugadorLocal.getTexturaIdle(), derecha - 47, arriba - 47, 48);
 
-        int nivel = estadisticas == null ? 1 : estadisticas.nivel();
-        int experiencia = estadisticas == null ? 0 : estadisticas.experiencia();
-        int meta = estadisticas == null ? 0 : estadisticas.meta();
-        float proporcionXp = meta > 0 ? MathUtils.clamp((float) experiencia / meta, 0f, 1f) : 0f;
+        int nivel = 1;
+        int experiencia = 0;
+        int meta = 0;
+        if (estadisticas != null) {
+            nivel = estadisticas.getNivel();
+            experiencia = estadisticas.getExperiencia();
+            meta = estadisticas.getMeta();
+        }
+        float proporcionXp;
+        if (meta > 0) {
+            proporcionXp = MathUtils.clamp((float) experiencia / meta, 0f, 1f);
+        } else {
+            proporcionXp = 0f;
+        }
         dibujarExperiencia(proporcionXp, izquierdaXp + 12, arriba - 64, 188);
         float escalaX = font.getScaleX();
         float escalaY = font.getScaleY();
         font.getData().setScale(escalaX * 0.55f, escalaY * 0.55f);
         textoCentrado("Nivel " + nivel, izquierdaXp + 106, arriba - 17, TEXTO_HUD);
-        textoCentrado(meta > 0 ? experiencia + " / " + meta + " XP" : "-- XP",
+        String textoXp;
+        if (meta > 0) {
+            textoXp = experiencia + " / " + meta + " XP";
+        } else {
+            textoXp = "-- XP";
+        }
+        textoCentrado(textoXp,
             izquierdaXp + 106, arriba - 66, TEXTO_HUD);
         dibujarArmas(jugadorLocal, izquierdaXp + 12, arriba - 164);
         if (pasivas != null) {
@@ -128,8 +149,8 @@ public class HUDJuego {
 
         if (!estadoRecibido) {
             textoCentrado("Esperando al servidor...", centro, arriba - 76, TEXTO_HUD);
-        } else if (estadisticas == null || (estadisticas.rondaMejora() == null
-                && estadisticas.resultado() == Resultado.EN_CURSO)) {
+        } else if (estadisticas == null || (estadisticas.getRondaMejora() == null
+                && estadisticas.getResultado() == Resultado.EN_CURSO)) {
             dibujarReaparicion(jugadorLocal, jugadorRemoto, centro, arriba);
         }
 
@@ -142,7 +163,12 @@ public class HUDJuego {
         float ancho = 312f;
         float izquierda = 20f;
         batch.draw(fondoHud, izquierda, arriba - 58f, ancho, 58f);
-        String texto = "Kills " + (estadisticas == null ? "--" : estadisticas.kills());
+        String texto;
+        if (estadisticas == null) {
+            texto = "Kills --";
+        } else {
+            texto = "Kills " + estadisticas.getKills();
+        }
         font.setColor(TEXTO_HUD);
         textoCentrado.setText(font, texto);
         float escalaX = font.getScaleX();
@@ -160,7 +186,12 @@ public class HUDJuego {
             return;
         }
 
-        float alto = reapareceLocal && reapareceRemoto ? 68 : 48;
+        float alto;
+        if (reapareceLocal && reapareceRemoto) {
+            alto = 68;
+        } else {
+            alto = 48;
+        }
         batch.draw(fondoHud, centro - 238, arriba - 66 - alto, 476, alto);
         float y = arriba - 80;
         if (reapareceLocal) {
@@ -174,12 +205,18 @@ public class HUDJuego {
 
     private String mensajeReaparicion(String texto, Jugador jugador) {
         int segundos = jugador.getSegundosParaReaparecer();
-        return segundos > 0 ? texto + " en " + segundos + " s" : "Esperando reaparición...";
+        if (segundos > 0) {
+            return texto + " en " + segundos + " s";
+        }
+        return "Esperando reaparición...";
     }
 
     private Texture cargarIcono(String ruta) {
-        var archivo = Gdx.files.internal(ruta);
-        return archivo.exists() ? cargarTextura(ruta) : null;
+        FileHandle archivo = Gdx.files.internal(ruta);
+        if (archivo.exists()) {
+            return cargarTextura(ruta);
+        }
+        return null;
     }
 
     static Texture cargarTextura(String ruta) {
@@ -212,10 +249,21 @@ public class HUDJuego {
     private void dibujarArmas(Jugador jugador, float x, float y) {
         for (Arma arma : jugador.getArmas()) {
             boolean espada = arma instanceof Espada;
-            Texture icono = espada ? iconoEspada : iconoPistola;
+            Texture icono;
+            if (espada) {
+                icono = iconoEspada;
+            } else {
+                icono = iconoPistola;
+            }
             if (icono == null) {
                 batch.draw(marcoNoElegido, x, y, 64, 64);
-                textoCentrado(espada ? "Espada" : "Pistola", x + 32, y + 42, TEXTO_HUD);
+                String nombreArma;
+                if (espada) {
+                    nombreArma = "Espada";
+                } else {
+                    nombreArma = "Pistola";
+                }
+                textoCentrado(nombreArma, x + 32, y + 42, TEXTO_HUD);
             } else {
                 batch.draw(icono, x, y, 64, 64);
             }
@@ -228,11 +276,11 @@ public class HUDJuego {
         float izquierda = x + 12f;
         float primeraFila = arriba - 19f;
         float segundaFila = arriba - 54f;
-        dibujarPasiva("CRITICO", pasivas.critico() + " %", izquierda, primeraFila);
-        dibujarPasiva("ARMADURA", pasivas.armadura() + " %", izquierda + 88f, primeraFila);
-        dibujarPasiva("VELOCIDAD", valorPasiva(pasivas.velocidad()), izquierda + 176f, primeraFila);
-        dibujarPasiva("VIDA_MAXIMA", valorPasiva(pasivas.vidaMaxima()), izquierda, segundaFila);
-        dibujarPasiva("REGENERACION", valorPasiva(pasivas.regeneracion()) + "/s", izquierda + 88f, segundaFila);
+        dibujarPasiva("CRITICO", pasivas.getCritico() + " %", izquierda, primeraFila);
+        dibujarPasiva("ARMADURA", pasivas.getArmadura() + " %", izquierda + 88f, primeraFila);
+        dibujarPasiva("VELOCIDAD", valorPasiva(pasivas.getVelocidad()), izquierda + 176f, primeraFila);
+        dibujarPasiva("VIDA_MAXIMA", valorPasiva(pasivas.getVidaMaxima()), izquierda, segundaFila);
+        dibujarPasiva("REGENERACION", valorPasiva(pasivas.getRegeneracion()) + "/s", izquierda + 88f, segundaFila);
     }
 
     private static Texture crearFlechaCompanero() {
@@ -269,9 +317,10 @@ public class HUDJuego {
     }
 
     private String valorPasiva(float valor) {
-        return valor == Math.rint(valor)
-            ? String.format(Locale.ROOT, "%.0f", valor)
-            : String.format(Locale.ROOT, "%.1f", valor);
+        if (valor == Math.rint(valor)) {
+            return String.format(Locale.ROOT, "%.0f", valor);
+        }
+        return String.format(Locale.ROOT, "%.1f", valor);
     }
 
     void dibujarFondo(float x, float y, float ancho, float alto) {
@@ -279,7 +328,13 @@ public class HUDJuego {
     }
 
     void dibujarMarcoOpcion(boolean seleccionada, float x, float y, float tamano) {
-        batch.draw(seleccionada ? marcoElegido : marcoNoElegido, x, y, tamano, tamano);
+        Texture marco;
+        if (seleccionada) {
+            marco = marcoElegido;
+        } else {
+            marco = marcoNoElegido;
+        }
+        batch.draw(marco, x, y, tamano, tamano);
     }
 
     Texture iconoPasiva(String tipo) {
@@ -352,9 +407,12 @@ public class HUDJuego {
 
         font.setColor(Color.RED);
 
-        String mensaje = servidorDesconectado
-            ? "SERVIDOR DESCONECTADO"
-            : "SESION FINALIZADA";
+        String mensaje;
+        if (servidorDesconectado) {
+            mensaje = "SERVIDOR DESCONECTADO";
+        } else {
+            mensaje = "SESION FINALIZADA";
+        }
 
         font.draw(batch, mensaje, 350, 400);
 
@@ -376,7 +434,12 @@ public class HUDJuego {
 
     public void dibujarResultado(Resultado resultado, int enemigosEliminados) {
         prepararHUD();
-        Texture fondo = resultado == Resultado.VICTORIA ? fondoVictoria : fondoDerrota;
+        Texture fondo;
+        if (resultado == Resultado.VICTORIA) {
+            fondo = fondoVictoria;
+        } else {
+            fondo = fondoDerrota;
+        }
         float ancho = hudViewport.getWorldWidth();
         float alto = hudViewport.getWorldHeight();
         float centroX = ancho / 2f;

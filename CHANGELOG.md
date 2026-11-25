@@ -33,6 +33,8 @@ Todos los cambios importantes del proyecto se documentan en este archivo.
 
 ### Cambiado
 
+* Se simplificó el código Java del cliente con clases de datos tradicionales, tipos explícitos, condicionales y bucles para facilitar su lectura.
+
 * La sala, la pausa y las mejoras usan llamadas directas. La lectura de estados y la actualización de entidades usan bucles explícitos.
 
 * El procesador de mensajes del cliente UDP usa llamadas directas al cliente para registrar el servidor y guardar los estados de partida y del HUD.

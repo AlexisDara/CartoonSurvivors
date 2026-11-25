@@ -20,9 +20,13 @@ public enum TipoPersonaje {
     }
 
     public Jugador crearPersonaje() {
-        return switch (this) {
-            case MORDECAI -> new Mordecai();
-            case FINN -> new Finn();
-        };
+        switch (this) {
+            case MORDECAI:
+                return new Mordecai();
+            case FINN:
+                return new Finn();
+            default:
+                throw new IllegalStateException("Personaje desconocido: " + this);
+        }
     }
 }

@@ -5,11 +5,81 @@ import com.badlogic.gdx.Gdx;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-record EstadoEnemigos(long secuencia, List<DatosEnemigo> enemigos, Set<Integer> ids,
-                      List<CirculoFuego> fuego, List<Bala> balas) {
+final class EstadoEnemigos {
     private static final Set<String> TIPOS_ENEMIGOS = Set.of("BASICO", "VIOLETA", "JEFE", "MUERTE");
+
+    private final long secuencia;
+    private final List<DatosEnemigo> enemigos;
+    private final Set<Integer> ids;
+    private final List<CirculoFuego> fuego;
+    private final List<Bala> balas;
+
+    EstadoEnemigos(long secuencia, List<DatosEnemigo> enemigos, Set<Integer> ids, List<CirculoFuego> fuego, List<Bala> balas) {
+        this.secuencia = secuencia;
+        this.enemigos = enemigos;
+        this.ids = ids;
+        this.fuego = fuego;
+        this.balas = balas;
+    }
+
+    public long getSecuencia() {
+        return secuencia;
+    }
+
+    public List<DatosEnemigo> getEnemigos() {
+        return enemigos;
+    }
+
+    public Set<Integer> getIds() {
+        return ids;
+    }
+
+    public List<CirculoFuego> getFuego() {
+        return fuego;
+    }
+
+    public List<Bala> getBalas() {
+        return balas;
+    }
+
+    @Override
+    public boolean equals(Object objeto) {
+        if (this == objeto) {
+            return true;
+        }
+        if (!(objeto instanceof EstadoEnemigos)) {
+            return false;
+        }
+        EstadoEnemigos otra = (EstadoEnemigos) objeto;
+        return secuencia == otra.secuencia
+            && Objects.equals(enemigos, otra.enemigos)
+            && Objects.equals(ids, otra.ids)
+            && Objects.equals(fuego, otra.fuego)
+            && Objects.equals(balas, otra.balas);
+    }
+
+    @Override
+    public int hashCode() {
+        int resultado = Long.hashCode(secuencia);
+        resultado = 31 * resultado + Objects.hashCode(enemigos);
+        resultado = 31 * resultado + Objects.hashCode(ids);
+        resultado = 31 * resultado + Objects.hashCode(fuego);
+        resultado = 31 * resultado + Objects.hashCode(balas);
+        return resultado;
+    }
+
+    @Override
+    public String toString() {
+        return "EstadoEnemigos[secuencia=" + secuencia
+            + ", enemigos=" + enemigos
+            + ", ids=" + ids
+            + ", fuego=" + fuego
+            + ", balas=" + balas
+            + "]";
+    }
 
     static EstadoEnemigos leer(String mensaje, long ultimaSecuencia) {
 
@@ -104,12 +174,201 @@ record EstadoEnemigos(long secuencia, List<DatosEnemigo> enemigos, Set<Integer> 
         }
     }
 
-    record CirculoFuego(float x, float y, float radio, float opacidad) {
+    static final class CirculoFuego {
+        private final float x;
+        private final float y;
+        private final float radio;
+        private final float opacidad;
+
+        CirculoFuego(float x, float y, float radio, float opacidad) {
+            this.x = x;
+            this.y = y;
+            this.radio = radio;
+            this.opacidad = opacidad;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public float getRadio() {
+            return radio;
+        }
+
+        public float getOpacidad() {
+            return opacidad;
+        }
+
+        @Override
+        public boolean equals(Object objeto) {
+            if (this == objeto) {
+                return true;
+            }
+            if (!(objeto instanceof CirculoFuego)) {
+                return false;
+            }
+            CirculoFuego otro = (CirculoFuego) objeto;
+            return Float.compare(x, otro.x) == 0
+                && Float.compare(y, otro.y) == 0
+                && Float.compare(radio, otro.radio) == 0
+                && Float.compare(opacidad, otro.opacidad) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            int resultado = Float.hashCode(x);
+            resultado = 31 * resultado + Float.hashCode(y);
+            resultado = 31 * resultado + Float.hashCode(radio);
+            resultado = 31 * resultado + Float.hashCode(opacidad);
+            return resultado;
+        }
+
+        @Override
+        public String toString() {
+            return "CirculoFuego[x=" + x
+                + ", y=" + y
+                + ", radio=" + radio
+                + ", opacidad=" + opacidad
+                + "]";
+        }
     }
 
-    record Bala(float x, float y, float angulo) {
+    static final class Bala {
+        private final float x;
+        private final float y;
+        private final float angulo;
+
+        Bala(float x, float y, float angulo) {
+            this.x = x;
+            this.y = y;
+            this.angulo = angulo;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public float getAngulo() {
+            return angulo;
+        }
+
+        @Override
+        public boolean equals(Object objeto) {
+            if (this == objeto) {
+                return true;
+            }
+            if (!(objeto instanceof Bala)) {
+                return false;
+            }
+            Bala otro = (Bala) objeto;
+            return Float.compare(x, otro.x) == 0
+                && Float.compare(y, otro.y) == 0
+                && Float.compare(angulo, otro.angulo) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            int resultado = Float.hashCode(x);
+            resultado = 31 * resultado + Float.hashCode(y);
+            resultado = 31 * resultado + Float.hashCode(angulo);
+            return resultado;
+        }
+
+        @Override
+        public String toString() {
+            return "Bala[x=" + x
+                + ", y=" + y
+                + ", angulo=" + angulo
+                + "]";
+        }
     }
 
-    record DatosEnemigo(int id, String tipo, float x, float y, int vida, int vidaMaxima) {
+    static final class DatosEnemigo {
+        private final int id;
+        private final String tipo;
+        private final float x;
+        private final float y;
+        private final int vida;
+        private final int vidaMaxima;
+
+        DatosEnemigo(int id, String tipo, float x, float y, int vida, int vidaMaxima) {
+            this.id = id;
+            this.tipo = tipo;
+            this.x = x;
+            this.y = y;
+            this.vida = vida;
+            this.vidaMaxima = vidaMaxima;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getTipo() {
+            return tipo;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public int getVida() {
+            return vida;
+        }
+
+        public int getVidaMaxima() {
+            return vidaMaxima;
+        }
+
+        @Override
+        public boolean equals(Object objeto) {
+            if (this == objeto) {
+                return true;
+            }
+            if (!(objeto instanceof DatosEnemigo)) {
+                return false;
+            }
+            DatosEnemigo otro = (DatosEnemigo) objeto;
+            return id == otro.id
+                && Objects.equals(tipo, otro.tipo)
+                && Float.compare(x, otro.x) == 0
+                && Float.compare(y, otro.y) == 0
+                && vida == otro.vida
+                && vidaMaxima == otro.vidaMaxima;
+        }
+
+        @Override
+        public int hashCode() {
+            int resultado = Integer.hashCode(id);
+            resultado = 31 * resultado + Objects.hashCode(tipo);
+            resultado = 31 * resultado + Float.hashCode(x);
+            resultado = 31 * resultado + Float.hashCode(y);
+            resultado = 31 * resultado + Integer.hashCode(vida);
+            resultado = 31 * resultado + Integer.hashCode(vidaMaxima);
+            return resultado;
+        }
+
+        @Override
+        public String toString() {
+            return "DatosEnemigo[id=" + id
+                + ", tipo=" + tipo
+                + ", x=" + x
+                + ", y=" + y
+                + ", vida=" + vida
+                + ", vidaMaxima=" + vidaMaxima
+                + "]";
+        }
     }
 }

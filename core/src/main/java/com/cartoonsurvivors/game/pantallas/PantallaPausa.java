@@ -137,8 +137,12 @@ public class PantallaPausa {
     }
 
     void render(float delta, Pausa pausa, int idLocal, boolean enviandoConfirmacion) {
-        aviso.setText(pausa.solicitante() == idLocal ? "Pausaste la partida" : "Tu compañero pausó la partida");
-        int segundos = (pausa.milisegundos() + 999) / 1000;
+        if (pausa.getSolicitante() == idLocal) {
+            aviso.setText("Pausaste la partida");
+        } else {
+            aviso.setText("Tu compañero pausó la partida");
+        }
+        int segundos = (pausa.getMilisegundos() + 999) / 1000;
         tiempo.setText("Reanudación automática en " + segundos + " s");
         boolean confirmado = pausa.confirmado(idLocal);
         continuar.setDisabled(confirmado || enviandoConfirmacion);

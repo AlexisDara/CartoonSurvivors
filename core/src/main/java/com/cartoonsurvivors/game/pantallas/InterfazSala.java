@@ -203,8 +203,13 @@ final class InterfazSala implements Disposable {
     }
 
     void mostrarListo(boolean listo) {
-        botonListo.setText(listo ? "LISTO" : "NO LISTO");
-        botonListo.setStyle(listo ? estiloListo : estiloNoListo);
+        if (listo) {
+            botonListo.setText("LISTO");
+            botonListo.setStyle(estiloListo);
+        } else {
+            botonListo.setText("NO LISTO");
+            botonListo.setStyle(estiloNoListo);
+        }
     }
 
     @Override

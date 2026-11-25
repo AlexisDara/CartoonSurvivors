@@ -104,8 +104,12 @@ public class ProcesadorMensajes {
         }
 
         if (mensaje.equals(ProtocoloRed.EMPIEZA) || mensaje.startsWith(ProtocoloRed.EMPIEZA + "|")) {
-            TipoMapa mapa = mensaje.equals(ProtocoloRed.EMPIEZA) ? TipoMapa.MAPA1
-                : TipoMapa.desdeId(mensaje.substring(ProtocoloRed.EMPIEZA.length() + 1));
+            TipoMapa mapa;
+            if (mensaje.equals(ProtocoloRed.EMPIEZA)) {
+                mapa = TipoMapa.MAPA1;
+            } else {
+                mapa = TipoMapa.desdeId(mensaje.substring(ProtocoloRed.EMPIEZA.length() + 1));
+            }
             if (mapa != null && estadoConexion.estaConectado() && !estadoConexion.estaPartidaIniciada()
                     && !estadoConexion.estaPartidaFinalizada()) {
                 estadoConexion.iniciarPartida(mapa);

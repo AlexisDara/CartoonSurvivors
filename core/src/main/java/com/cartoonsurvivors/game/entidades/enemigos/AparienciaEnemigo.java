@@ -1,6 +1,7 @@
 package com.cartoonsurvivors.game.entidades.enemigos;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -15,7 +16,7 @@ public final class AparienciaEnemigo implements Disposable {
     }
 
     public AparienciaEnemigo(String ruta, int anchoFotograma, String referencia, int anchoReferencia) {
-        var archivo = Gdx.files.internal(ruta);
+        FileHandle archivo = Gdx.files.internal(ruta);
         textura = new Texture(archivo);
         int cantidad = (textura.getWidth() + anchoFotograma - 1) / anchoFotograma;
         fotogramas = new Fotograma[cantidad];
@@ -36,8 +37,8 @@ public final class AparienciaEnemigo implements Disposable {
                 Area origen = areaVisible(imagen, i * anchoFotograma, anchoFotograma);
                 Area destino = areaVisible(base, xBase, anchoReferencia);
                 fotogramas[i] = new Fotograma(origen,
-                    (destino.x() - xBase) / (float) anchoReferencia, destino.y() / (float) base.getHeight(),
-                    destino.ancho() / (float) anchoReferencia, destino.alto() / (float) base.getHeight());
+                    (destino.getX() - xBase) / (float) anchoReferencia, destino.getY() / (float) base.getHeight(),
+                    destino.getAncho() / (float) anchoReferencia, destino.getAlto() / (float) base.getHeight());
             }
         } finally {
             base.dispose();
@@ -69,11 +70,16 @@ public final class AparienciaEnemigo implements Disposable {
 
     void dibujar(Batch batch, int indice, float x, float y, float ancho, float alto, boolean mirandoIzquierda) {
         Fotograma frame = fotogramas[indice % fotogramas.length];
-        Area origen = frame.origen();
-        float margenX = mirandoIzquierda ? 1f - frame.x() - frame.ancho() : frame.x();
-        float margenY = 1f - frame.y() - frame.alto();
-        batch.draw(textura, x + margenX * ancho, y + margenY * alto, frame.ancho() * ancho, frame.alto() * alto,
-            origen.x(), origen.y(), origen.ancho(), origen.alto(), mirandoIzquierda, false);
+        Area origen = frame.getOrigen();
+        float margenX;
+        if (mirandoIzquierda) {
+            margenX = 1f - frame.getX() - frame.getAncho();
+        } else {
+            margenX = frame.getX();
+        }
+        float margenY = 1f - frame.getY() - frame.getAlto();
+        batch.draw(textura, x + margenX * ancho, y + margenY * alto, frame.getAncho() * ancho, frame.getAlto() * alto,
+            origen.getX(), origen.getY(), origen.getAncho(), origen.getAlto(), mirandoIzquierda, false);
     }
 
     @Override
@@ -81,9 +87,69 @@ public final class AparienciaEnemigo implements Disposable {
         textura.dispose();
     }
 
-    private record Area(int x, int y, int ancho, int alto) {
+    private static final class Area {
+        private final int x;
+        private final int y;
+        private final int ancho;
+        private final int alto;
+
+        Area(int x, int y, int ancho, int alto) {
+            this.x = x;
+            this.y = y;
+            this.ancho = ancho;
+            this.alto = alto;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public int getAncho() {
+            return ancho;
+        }
+
+        public int getAlto() {
+            return alto;
+        }
     }
 
-    private record Fotograma(Area origen, float x, float y, float ancho, float alto) {
+    private static final class Fotograma {
+        private final Area origen;
+        private final float x;
+        private final float y;
+        private final float ancho;
+        private final float alto;
+
+        Fotograma(Area origen, float x, float y, float ancho, float alto) {
+            this.origen = origen;
+            this.x = x;
+            this.y = y;
+            this.ancho = ancho;
+            this.alto = alto;
+        }
+
+        public Area getOrigen() {
+            return origen;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public float getAncho() {
+            return ancho;
+        }
+
+        public float getAlto() {
+            return alto;
+        }
     }
 }

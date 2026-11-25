@@ -38,8 +38,8 @@ public class CartoonSurvivors extends Game {
         audioManager = new AudioManager();
         audioManager.cargarAudio();
 
-        var generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
-        var parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(RUTA_FUENTE));
+        FreeTypeFontGenerator.FreeTypeFontParameter parametrosLetra = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
         parametrosLetra.size = 40;
         parametrosLetra.color = Color.WHITE;
